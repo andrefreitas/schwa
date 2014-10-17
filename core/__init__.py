@@ -1,3 +1,3 @@
-from commit import *
-from file import *
-from repository import *
+from .commit import *
+from .file import *
+from .repository import *

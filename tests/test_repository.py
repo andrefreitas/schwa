@@ -15,8 +15,8 @@ class TestRepository(unittest.TestCase):
       rank1 = r.rankFiles(200)
       rank2 = r.rankFiles(600)
       self.assertEqual(True, rank1["main.java"] > rank2["main.java"] )
-      print rank1
-      print rank2
+      print(rank1)
+      print(rank2)
 
 
 

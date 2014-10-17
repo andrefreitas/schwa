@@ -1,1 +1,1 @@
-from test_commit import *
+from .test_commit import *
