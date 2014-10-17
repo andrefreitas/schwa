@@ -11,7 +11,7 @@ To run tests just do
 ```
 
 # Wiki
-All the knowledge is [in this wiki](wiki)
+All the knowledge is [in this wiki](https://github.com/andrefreitas/schwa/wiki)
 
 # License
 Not defined yet.
