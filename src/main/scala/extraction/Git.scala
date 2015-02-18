@@ -13,7 +13,7 @@ class Git(_path: String) {
   var path: String = _path
   val builder: FileRepositoryBuilder = new FileRepositoryBuilder()
   val repository: Repository = builder.setGitDir(new File(path)).readEnvironment().findGitDir().build()
-  
+
   def getFiles(){
     val head: Ref = repository.getRef("head")
     val walk:RevWalk = new RevWalk(repository)
@@ -26,6 +26,6 @@ class Git(_path: String) {
     while(treeWalk.next()){
       println(treeWalk.getPathString())
     }
-    
+
   }
 }
