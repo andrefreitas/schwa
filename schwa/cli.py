@@ -4,7 +4,7 @@ from schwa import Schwa
 
 
 if len(sys.argv) < 2:
-    print("usage: " + sys.argv[0] + "repository_path " + " [ignore_regex]")
+    print("usage: " + sys.argv[0] + " repository_path " + " [ignore_regex]")
 else:
     ignore_regex = "^$"
     repository_path = sys.argv[1]
