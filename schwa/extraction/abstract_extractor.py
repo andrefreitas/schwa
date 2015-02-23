@@ -14,7 +14,7 @@ class AbstractExtractor:
         """ returns only code files e.g. .php, .java"""
 
     @abc.abstractmethod
-    def commits(self):
+    def commits(self, number):
         """ returns only commits that change code files """
 
     @abc.abstractmethod
@@ -24,5 +24,5 @@ class AbstractExtractor:
 
 
 def is_code_file(path):
-    result = re.search(".+\.(java|php|py|cpp|c|js|html|css|rb)", path)
+    result = re.search(".+\.(java|php|py|cpp|c|js|html|css|rb|h)", path)
     return result

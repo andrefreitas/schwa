@@ -24,12 +24,14 @@ class TimeWeightedRiskAnalysis(AbstractAnalysis):
         current_timestamp = time.time()
         metrics = {file.path: 0 for file in self.repository.files}
         creation_timestamp = self.repository.timestamp
-        bug_fixing_commits = [commit for commit in self.repository.commits if TimeWeightedRiskAnalysis.is_bug_fixing(commit)]
 
-        for commit in bug_fixing_commits:
+        for commit in self.repository.commits:
+            if not TimeWeightedRiskAnalysis.is_bug_fixing(commit):
+                continue
             files = commit.files
             ts = TimeWeightedRiskAnalysis.normalise_timestamp(creation_timestamp, commit.timestamp, current_timestamp)
             calc = 1 / (1 + math.e ** (-12 * ts + 12))
             for f in files:
-                metrics[f] = metrics[f] + calc
+                if f in metrics:
+                    metrics[f] += calc
         return metrics

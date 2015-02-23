@@ -8,10 +8,11 @@ class Schwa:
         self.repo_path = repo_path
         self.ignore_regex = ignore_regex
 
-    def analyze(self):
+    def analyze(self, commits_number=None):
         extractor = GitExtractor(self.repo_path, self.ignore_regex)
         files = extractor.files()
-        commits = extractor.commits()
+        commits = extractor.commits_parallels(commits_number)
+        #commits = extractor.commits(commits_number)
         timestamp = extractor.timestamp()
         repo = Repository(self.repo_path, commits, files, timestamp)
         analysis = TimeWeightedRiskAnalysis(repo)
