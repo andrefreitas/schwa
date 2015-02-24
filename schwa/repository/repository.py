@@ -1,6 +1,4 @@
 class Repository:
-    def __init__(self, path, commits, files, timestamp):
-        self.path = path
+    def __init__(self, commits, timestamp):
         self.commits = commits
-        self.files = files
         self.timestamp = timestamp

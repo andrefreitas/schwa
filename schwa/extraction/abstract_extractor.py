@@ -5,22 +5,12 @@ import re
 class AbstractExtractor:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, path, ignore_regex):
+    def __init__(self, path):
         self.path = path
-        self.ignore_regex = ignore_regex
 
     @abc.abstractmethod
-    def files(self):
-        """ returns only code files e.g. .php, .java"""
-
-    @abc.abstractmethod
-    def commits(self, number):
-        """ returns only commits that change code files """
-
-    @abc.abstractmethod
-    def timestamp(self):
-        """ returns the timestamp of repository creation """
-
+    def extract(self, ignore_regex="^$", max_commits=None):
+        """ extracts all the necessary commits"""
 
 
 def is_code_file(path):

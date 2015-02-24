@@ -3,21 +3,22 @@ import os
 from schwa import Schwa
 
 
-if len(sys.argv) < 2:
-    print("usage: " + sys.argv[0] + " repository_path " + " [ignore_regex]")
+if len(sys.argv) < 3:
+    print("usage:", sys.argv[0], "repository_path", "max_commits", "[ignore_regex]")
 else:
     ignore_regex = "^$"
+    max_commits = sys.argv[2]
     repository_path = sys.argv[1]
 
-    if len(sys.argv) == 3:
-        ignore_regex = sys.argv[2]
+    if len(sys.argv) == 4:
+        ignore_regex = sys.argv[3]
 
     if not os.path.exists(repository_path):
         print("Invalid repository path")
     else:
-        print("Analyzing....")
-        s = Schwa(repository_path, ignore_regex)
-        metrics = s.analyze()
+        print("Analyzing " + max_commits + " commits...")
+        s = Schwa(repository_path)
+        metrics = s.analyze(ignore_regex, max_commits)
         metrics = {k: v for k, v in metrics.items() if v > 0}
 
         if len(metrics.items()) > 0:
@@ -28,6 +29,6 @@ else:
             print("Defect probability based from previous defects:")
             print("")
             for k, v in metrics.items():
-                print(k + "  -  " + "{:.0%}".format(v))
+                print(k + "  -  " + "{:.00%}".format(v))
         else:
-            print("Your repository seems to be clean of defects!")
+            print("Not enough data to compute metrics...")
