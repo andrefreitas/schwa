@@ -21,7 +21,7 @@ class GitExtractor(AbstractExtractor):
 
     def __init__(self, path):
         super().__init__(path)
-        self.repo = git.Repo(path)
+        self.repo = git.Repo(path, odbt=git.GitCmdObjectDB)
 
     def extract(self, ignore_regex="^$", max_commits=None):
         global current_repo
@@ -67,7 +67,7 @@ class GitExtractor(AbstractExtractor):
                 return Commit(_id, message, author, timestamp, files_ids)
             else:
                 return None
-        except Exception:
+        except TypeError:
             return None
 
     def timestamp(self):

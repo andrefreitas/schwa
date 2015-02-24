@@ -1,6 +1,6 @@
 from extraction.git_extractor import GitExtractor
 from repository.repository import  Repository
-from analysis.time_weighted_risk import TimeWeightedRiskAnalysis
+from analysis.schwa_analysis import SchwaAnalysis
 
 
 class Schwa:
@@ -10,7 +10,7 @@ class Schwa:
     def analyze(self,  ignore_regex="^$", max_commits=None):
         extractor = GitExtractor(self.repo_path)
         repo = extractor.extract(ignore_regex, max_commits)
-        analysis = TimeWeightedRiskAnalysis(repo)
+        analysis = SchwaAnalysis(repo)
         metrics = analysis.analyze()
         return metrics
 

@@ -16,19 +16,14 @@ else:
     if not os.path.exists(repository_path):
         print("Invalid repository path")
     else:
-        print("Analyzing " + max_commits + " commits...")
+        print("Analyzing up to " + max_commits + " commits...")
         s = Schwa(repository_path)
         metrics = s.analyze(ignore_regex, max_commits)
-        metrics = {k: v for k, v in metrics.items() if v > 0}
 
-        if len(metrics.items()) > 0:
-            metric_sum = 0
-            for k, v in metrics.items():
-                metric_sum = metric_sum + v
-            metrics = {k: v/metric_sum for k, v in metrics.items()}
-            print("Defect probability based from previous defects:")
+        if len(metrics) > 0:
+            print("Metrics:")
             print("")
             for k, v in metrics.items():
-                print(k + "  -  " + "{:.00%}".format(v))
+                print(k, v)
         else:
             print("Not enough data to compute metrics...")
