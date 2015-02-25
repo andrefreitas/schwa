@@ -26,7 +26,7 @@ class SchwaAnalysis(AbstractAnalysis):
         creation_timestamp = self.repository.timestamp
 
         for commit in self.repository.commits.values():
-            files = commit.files_ids
+            files = commit.files_ids["modified"]
 
             twr = None
             if SchwaAnalysis.is_bug_fixing(commit):

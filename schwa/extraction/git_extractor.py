@@ -54,21 +54,20 @@ class GitExtractor(AbstractExtractor):
             message = commit.message
             author = commit.author.email
             timestamp = commit.committed_date
-            files_ids = []
+            files_ids = {"added": set(), "modified": set(), "renamed": set()}
+            is_good_blob = lambda blob: is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
             for parent in commit.parents:
-                diffs = commit.diff(parent)
+                diffs = parent.diff(commit)
                 for diff in diffs:
-                    is_good_blob = lambda blob: blob is not None \
-                        and is_code_file(blob.path)\
-                        and not re.search(self.ignore_regex, blob.path) \
-                        and not blob.path in files_ids
-                    add_blob = lambda blob: files_ids.append(blob.path) if is_good_blob(blob) else None
-                    add_blob(diff.a_blob)
-                    add_blob(diff.b_blob)
-            if len(files_ids) > 0:
-                return Commit(_id, message, author, timestamp, files_ids)
-            else:
-                return None
+                    if diff.new_file:
+                        files_ids["added"].add(diff.b_blob.path) if is_good_blob(diff.b_blob) else None
+                    elif diff.renamed:
+                        files_ids["renamed"].add((diff.rename_from, diff.rename_to)) if is_good_blob(diff.b_blob) else None
+                    elif not diff.deleted_file:
+                        files_ids["modified"].add(diff.a_blob.path) if is_good_blob(diff.a_blob) else None
+
+            return Commit(_id, message, author, timestamp, files_ids) if (len(files_ids["added"]) + len(files_ids["modified"]) + len(files_ids["renamed"])) > 0 else None
+
         except TypeError:
             return None
 
