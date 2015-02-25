@@ -34,6 +34,8 @@ class SchwaAnalysis(AbstractAnalysis):
                 twr = 1 / (1 + math.e ** (-12 * ts + 12))
 
             for f in files:
+                if f in self.repository.files:
+                    pass
                 if f not in metrics:
                     metrics[f] = {
                         "revisions": 0,

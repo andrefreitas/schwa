@@ -2,6 +2,7 @@ import git
 from extraction.abstract_extractor import *
 from repository.repository import Repository
 from repository.commit import Commit
+from repository.file import File
 import multiprocessing
 
 
@@ -27,8 +28,9 @@ class GitExtractor(AbstractExtractor):
         global current_repo
         current_repo = self
         commits = self.extract_commits(ignore_regex=ignore_regex, max_commits=max_commits)
+        files = self.extract_files(ignore_regex)
         timestamp = self.timestamp()
-        repo = Repository(commits, timestamp)
+        repo = Repository(commits, files, timestamp)
         return repo
 
     def extract_commits(self, ignore_regex="^$", max_commits=None):
@@ -69,6 +71,14 @@ class GitExtractor(AbstractExtractor):
                 return None
         except TypeError:
             return None
+
+    def extract_files(self, ignore_regex):
+        tree_traverse = self.repo.head.commit.tree.traverse()
+        filter_files = lambda item: item.type == 'blob' \
+            and is_code_file(item.path) \
+            and not re.search(ignore_regex, item.path)
+        code_files = {item.path: File(item.path) for item in tree_traverse if filter_files(item)}
+        return code_files
 
     def timestamp(self):
         return list(self.repo.iter_commits())[-1].committed_date
