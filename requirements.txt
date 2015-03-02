@@ -1,3 +1,4 @@
 GitPython==0.3.6
 cx-Freeze==4.3.4
 snakeviz==0.2.1
+plyj==0.2-dev

@@ -1,10 +1,12 @@
+# TODO: Document code
+
 import git
 from extraction.abstract_extractor import *
 from repository.repository import Repository
 from repository.commit import Commit
 from repository.file import File
+from parsing.java_parser import JavaParser
 import multiprocessing
-
 
 current_repo = None
 
@@ -53,21 +55,34 @@ class GitExtractor(AbstractExtractor):
             message = commit.message
             author = commit.author.email
             timestamp = commit.committed_date
-            files_ids = {"added": set(), "modified": set(), "renamed": set(), "deleted": set()}
-            is_good_blob = lambda blob: is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
+            components = {"added": {}, "modified": {}, "renamed": set(), "deleted": {}}
+            is_good_blob = lambda blob: blob and is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
             for parent in commit.parents:
                 diffs = parent.diff(commit)
                 for diff in diffs:
+                    if not is_good_blob(diff.a_blob) and not is_good_blob(diff.b_blob):
+                        continue
                     if diff.new_file:
-                        files_ids["added"].add(diff.b_blob.path) if is_good_blob(diff.b_blob) else None
+                        _file = diff.b_blob.path
+                        source = diff.b_blob.data_stream.read()
+                        classes = GitExtractor.parse_components(_file, source)
+                        components["added"][_file] = classes
                     elif diff.renamed:
-                        files_ids["renamed"].add((diff.rename_from, diff.rename_to)) if is_good_blob(diff.b_blob) else None
+                        """ A PARTIR DAQUI """
+                        if is_good_blob(diff.b_blob):
+                            renamed_pair = (diff.rename_from, diff.rename_to)
+                            components["renamed"].add(renamed_pair)
+                            source_a = diff.a_blob.data_stream.read()
+                            source_b = diff.b_blob.data_stream.read()
+                            components = GitExtractor.parse_components_diff((diff.a_blob.path, source_a), (diff.b_blob.path, source_b))
                     elif diff.deleted_file:
-                        files_ids["deleted"].add(diff.a_blob.path) if is_good_blob(diff.a_blob) else None
+                        components["deleted"][diff.a_blob.path] = {}
                     else:
-                        files_ids["modified"].add(diff.a_blob.path) if is_good_blob(diff.a_blob) else None
+                        source_a = diff.a_blob.data_stream.read()
+                        source_b = diff.b_blob.data_stream.read()
+                        components = GitExtractor.parse_components_diff((diff.a_blob.path, source_a), (diff.b_blob.path, source_b))
 
-            return Commit(_id, message, author, timestamp, files_ids) if (len(files_ids["added"]) + len(files_ids["modified"]) + len(files_ids["renamed"]) + len(files_ids["deleted"]) ) > 0 else None
+            return Commit(_id, message, author, timestamp, components) if (len(components["added"]) + len(components["modified"]) + len(components["renamed"]) + len(components["deleted"])) > 0 else None
 
         except TypeError:
             return None
@@ -82,3 +97,15 @@ class GitExtractor(AbstractExtractor):
 
     def timestamp(self):
         return list(self.repo.iter_commits())[-1].committed_date
+
+    @staticmethod
+    def parse_components(path, source):
+        if "java" in path:
+            components = JavaParser.parse(source)
+            return components
+
+    @staticmethod
+    def parse_components_diff(file_a, file_b):
+        if "java" in file_a[0]:
+            components_diff = JavaParser.diff(file_a[1], file_b[1])
+            return components_diff
