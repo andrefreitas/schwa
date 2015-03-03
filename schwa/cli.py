@@ -20,4 +20,10 @@ else:
         print("Analyzing up to " + max_commits + " commits...")
         s = Schwa(repository_path)
         analytics = s.analyze(ignore_regex, max_commits, method_granularity)
+        print("Repository Analytics:")
+        print("Fixes:", analytics.fixes)
+        print("Java Code Revisions:", analytics.revisions)
+        print("")
+
+
 

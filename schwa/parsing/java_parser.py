@@ -36,8 +36,10 @@ class JavaParser(AbstractParser):
     def diff(file_a, file_b):
         path_a, source_a = file_a
         path_b, source_b = file_b
+        print("JavaParser")
         components_a = JavaParser.parse(source_a)
         components_b = JavaParser.parse(source_b)
+
         diffs = []
 
         classes_a = set(components_a.keys())
@@ -51,7 +53,6 @@ class JavaParser(AbstractParser):
 
         for _class in classes_removed:
             diffs.append(DiffClass(file_name=path_b, class_a=_class, removed=True))
-
         for _class in classes_same:
             class_is_modified = False
             class_a = components_a[_class]
@@ -71,6 +72,7 @@ class JavaParser(AbstractParser):
             class_is_modified = len(functions_added | functions_removed) > 0
 
             for function in functions_same:
+                print(function)
                 code_a = JavaParser.extract_method(_class, function, source_a)
                 code_b = JavaParser.extract_method(_class, function, source_b)
                 functions_is_modified = difflib.SequenceMatcher(None, code_a, code_b).ratio() != 1.0
@@ -79,4 +81,5 @@ class JavaParser(AbstractParser):
                     diffs.append(DiffMethod(file_name=path_b, class_name=_class, modified=True, method_a=function, method_b=function))
             if class_is_modified:
                 diffs.append(DiffClass(file_name=path_b, class_a=_class, class_b=_class, modified=True))
+
         return diffs
