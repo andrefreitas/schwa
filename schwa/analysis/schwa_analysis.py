@@ -2,6 +2,8 @@ import re
 import time
 import math
 from analysis.abstract_analysis import AbstractAnalysis
+from .repository_analytics import *
+from repository import *
 
 
 class SchwaAnalysis(AbstractAnalysis):
@@ -22,46 +24,56 @@ class SchwaAnalysis(AbstractAnalysis):
 
     def analyze(self):
         current_timestamp = time.time()
-        metrics = {}
-        creation_timestamp = self.repository.timestamp
-        commits = self.repository.commits
+        analytics = RepositoryAnalytics()
 
-        for commit in commits:
-            modified_files = commit.files_ids["modified"]
-            added_files = commit.files_ids["added"]
-            deleted_files = commit.files_ids["deleted"]
-            renamed_files = commit.files_ids["renamed"]
-
+        for commit in self.repository.commits:
+            diff_timestamp = current_timestamp - commit.timestamp
             twr = None
             if SchwaAnalysis.is_bug_fixing(commit):
-                ts = SchwaAnalysis.normalise_timestamp(creation_timestamp, commit.timestamp, current_timestamp)
+                ts = SchwaAnalysis.normalise_timestamp(self.repository.timestamp, commit.timestamp, current_timestamp)
                 twr = 1 / (1 + math.e ** (-12 * ts + 12))
 
-            for f in deleted_files:
-                if f in metrics:
-                    del metrics[f]
+            """Repository Granularity"""
+            analytics.revisions += 1
+            analytics.authors.add(commit.author)
+            if twr:
+                analytics.fixes += 1
+                analytics.twr += twr
+            if diff_timestamp > analytics.age:
+                analytics.age = diff_timestamp
 
-            for old_name, new_name in renamed_files:
-                if old_name in metrics:
-                    metrics[new_name] = metrics.pop(old_name)
+            for diff in commit.diffs:
 
-            for f in (modified_files | added_files):
-                if f not in metrics:
-                    metrics[f] = {
-                        "revisions": 0,
-                        "fixes": 0,
-                        "authors": set(),
-                        "twr": 0,
-                        "age": 0,
-                    }
-                # TWR and Fixes
-                if twr:
-                    metrics[f]["twr"] += twr
-                    metrics[f]["fixes"] += 1
-                metrics[f]["revisions"] += 1
-                metrics[f]["authors"].add(commit.author)
-                diff_timestamp = current_timestamp - commit.timestamp
-                if diff_timestamp > metrics[f]["age"]:
-                    metrics[f]["age"] = diff_timestamp
+                """ File Granularity"""
+                if isinstance(diff, DiffFile):
+                    file_analytics = None
+                    if diff.added:
+                        file_analytics = FileAnalytics()
+                        analytics.files_analytics[diff.file_b] = file_analytics
+                    elif diff.modified:
+                        if diff.file_b not in analytics.files_analytics:
+                            file_analytics = FileAnalytics()
+                            analytics.files_analytics[diff.file_b] = file_analytics
+                        else:
+                            file_analytics = analytics.files_analytics[diff.file_b]
+                    elif diff.renamed:
+                        if diff.file_a not in analytics.files_analytics:
+                            file_analytics = FileAnalytics()
+                            analytics.files_analytics[diff.file_b] = file_analytics
+                        else:
+                            analytics.files_analytics[diff.file_b] = analytics.files_analytics.pop(diff.file_a)
+                            file_analytics = analytics.files_analytics[diff.file_b]
+                    elif diff.removed:
+                        if diff.file_a in analytics.files_analytics:
+                            del analytics.files_analytics[diff.file_a]
+                        continue
 
-        return metrics
+                    file_analytics.revisions += 1
+                    file_analytics.authors.add(commit.author)
+                    if twr:
+                        file_analytics.fixes += 1
+                        file_analytics.twr += twr
+                    if diff_timestamp > file_analytics.age:
+                        file_analytics.age = diff_timestamp
+
+        return analytics

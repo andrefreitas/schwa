@@ -1,6 +1,7 @@
 import unittest
 import difflib
 from parsing import JavaParser
+from repository import *
 
 
 class TestJavaParser(unittest.TestCase):
@@ -130,9 +131,32 @@ class TestJavaParser(unittest.TestCase):
                     client.get(url + "/shows", responseHandler);
                 }
 
-            }"""
-        components_diff = JavaParser.diff("API.java", self.code, code_b)
+                public void getShows(AsyncHttpResponseHandler responseHandler) {
+                    client.get(url + "/shows", responseHandler);
+                }
 
+            }"""
+        diffs = JavaParser.diff(("API.java", self.code), ("API.java", code_b))
+
+        # Detect if a method has been added
+        filter_diff = [diff for diff in diffs if isinstance(diff, DiffMethod) and diff.method_b == "recover" and diff.added == True]
+        self.assertTrue(len(filter_diff) > 0)
+
+        # Detect unmodified methods
+        filter_diff = [diff for diff in diffs if isinstance(diff, DiffMethod) and diff.method_a == "getShows"]
+        self.assertTrue(len(filter_diff) == 0)
+
+        # Detect removed methods
+        filter_diff = [diff for diff in diffs if isinstance(diff, DiffMethod) and diff.method_a == "register" and diff.removed == True]
+        self.assertTrue(len(filter_diff) > 0)
+
+        # Detect modified methods
+        filter_diff = [diff for diff in diffs if isinstance(diff, DiffMethod) and diff.method_a == "login" and diff.modified == True]
+        self.assertTrue(len(filter_diff) > 0)
+
+        # Detect modified classes
+        filter_diff = [diff for diff in diffs if isinstance(diff, DiffClass) and diff.class_a == "API" and diff.modified == True]
+        self.assertTrue(len(filter_diff) > 0)
 
 
 if __name__ == '__main__':

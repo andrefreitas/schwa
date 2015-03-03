@@ -1,11 +1,7 @@
-# TODO: Document code
-
 import git
-from extraction.abstract_extractor import *
-from repository.repository import Repository
-from repository.commit import Commit
-from repository.file import File
-from parsing.java_parser import JavaParser
+from .abstract_extractor import *
+from repository import *
+from parsing import JavaParser
 import multiprocessing
 
 current_repo = None
@@ -26,20 +22,21 @@ class GitExtractor(AbstractExtractor):
         super().__init__(path)
         self.repo = git.Repo(path, odbt=git.GitCmdObjectDB)
 
-    def extract(self, ignore_regex="^$", max_commits=None):
+    def extract(self, ignore_regex="^$", max_commits=None, method_granularity=False):
         global current_repo
         current_repo = self
-        commits = self.extract_commits(ignore_regex=ignore_regex, max_commits=max_commits)
+        commits = self.extract_commits(ignore_regex=ignore_regex, max_commits=max_commits, method_granularity=method_granularity)
         timestamp = self.timestamp()
         repo = Repository(commits, timestamp)
         return repo
 
-    def extract_commits(self, ignore_regex="^$", max_commits=None):
+    def extract_commits(self, ignore_regex="^$", max_commits=None, method_granularity=False):
         try:
             cpus = multiprocessing.cpu_count()
         except NotImplementedError:
             cpus = 2   # arbitrary default
         self.ignore_regex = ignore_regex
+        self.method_granularity = method_granularity
 
         iter_commits = self.repo.iter_commits(max_count=max_commits) if max_commits else self.repo.iter_commits()
         commits = [commit.hexsha for commit in iter_commits]
@@ -55,7 +52,7 @@ class GitExtractor(AbstractExtractor):
             message = commit.message
             author = commit.author.email
             timestamp = commit.committed_date
-            components = {"added": {}, "modified": {}, "renamed": set(), "deleted": {}}
+            diffs_list = []
             is_good_blob = lambda blob: blob and is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
             for parent in commit.parents:
                 diffs = parent.diff(commit)
@@ -63,26 +60,31 @@ class GitExtractor(AbstractExtractor):
                     if not is_good_blob(diff.a_blob) and not is_good_blob(diff.b_blob):
                         continue
                     if diff.new_file:
-                        _file = diff.b_blob.path
-                        source = diff.b_blob.data_stream.read()
-                        classes = GitExtractor.parse_components(_file, source)
-                        components["added"][_file] = classes
+                        diffs_list.append(DiffFile(file_b=diff.b_blob.path, added=True))
+                        if self.method_granularity:
+                            source = diff.b_blob.data_stream.read().decode("UTF-8")
+                            components = list(GitExtractor.parse(diff.b_blob.path, source).values())
+                            for _class in components:
+                                diffs_list.append(DiffClass(file_name=diff.b_blob.path, class_b=_class.name, added=True))
+                                for method in _class.functions.values():
+                                    diffs_list.append(DiffMethod(file_name=diff.b_blob.path, class_name=_class.name, method_b=method.name, added=True))
                     elif diff.renamed:
-                        """ A PARTIR DAQUI """
                         if is_good_blob(diff.b_blob):
-                            renamed_pair = (diff.rename_from, diff.rename_to)
-                            components["renamed"].add(renamed_pair)
-                            source_a = diff.a_blob.data_stream.read()
-                            source_b = diff.b_blob.data_stream.read()
-                            components = GitExtractor.parse_components_diff((diff.a_blob.path, source_a), (diff.b_blob.path, source_b))
+                            diffs_list.append(DiffFile(file_a=diff.rename_from, file_b=diff.rename_to, renamed=True))
+                            if self.method_granularity:
+                                source_a = diff.a_blob.data_stream.read().decode("UTF-8")
+                                source_b = diff.b_blob.data_stream.read().decode("UTF-8")
+                                diffs_list.extend(GitExtractor.diff((diff.rename_from, source_a), (diff.rename_to, source_b)))
                     elif diff.deleted_file:
-                        components["deleted"][diff.a_blob.path] = {}
+                        diffs_list.append(DiffFile(file_a=diff.a_blob.path, removed=True))
                     else:
-                        source_a = diff.a_blob.data_stream.read()
-                        source_b = diff.b_blob.data_stream.read()
-                        components = GitExtractor.parse_components_diff((diff.a_blob.path, source_a), (diff.b_blob.path, source_b))
+                        diffs_list.append(DiffFile(file_a=diff.a_blob.path, file_b=diff.b_blob.path, modified=True))
+                        if self.method_granularity:
+                            source_a = diff.a_blob.data_stream.read().decode("UTF-8")
+                            source_b = diff.b_blob.data_stream.read().decode("UTF-8")
+                            diffs_list.extend(GitExtractor.diff((diff.a_blob.path, source_a), (diff.b_blob.path, source_b)))
 
-            return Commit(_id, message, author, timestamp, components) if (len(components["added"]) + len(components["modified"]) + len(components["renamed"]) + len(components["deleted"])) > 0 else None
+            return Commit(_id, message, author, timestamp, diffs_list) if len(diffs_list) > 0 else None
 
         except TypeError:
             return None
@@ -99,13 +101,13 @@ class GitExtractor(AbstractExtractor):
         return list(self.repo.iter_commits())[-1].committed_date
 
     @staticmethod
-    def parse_components(path, source):
+    def parse(path, source):
         if "java" in path:
             components = JavaParser.parse(source)
             return components
 
     @staticmethod
-    def parse_components_diff(file_a, file_b):
+    def diff(file_a, file_b):
         if "java" in file_a[0]:
-            components_diff = JavaParser.diff(file_a[1], file_b[1])
+            components_diff = JavaParser.diff(file_a, file_b)
             return components_diff

@@ -10,7 +10,7 @@ class Commit:
         self.message = message
         self.author = author
         self.timestamp = timestamp
-        self.diff = diffs
+        self.diffs = diffs
 
 
 class Diff:

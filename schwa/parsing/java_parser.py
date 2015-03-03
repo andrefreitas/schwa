@@ -33,7 +33,9 @@ class JavaParser(AbstractParser):
 
     #TODO: Detect renamings
     @staticmethod
-    def diff(file_name, source_a, source_b):
+    def diff(file_a, file_b):
+        path_a, source_a = file_a
+        path_b, source_b = file_b
         components_a = JavaParser.parse(source_a)
         components_b = JavaParser.parse(source_b)
         diffs = []
@@ -45,10 +47,10 @@ class JavaParser(AbstractParser):
         classes_same = classes_a & classes_b
 
         for _class in classes_added:
-            diffs.append(DiffClass(file_name=file_name, class_b=_class, added=True))
+            diffs.append(DiffClass(file_name=path_b, class_b=_class, added=True))
 
         for _class in classes_removed:
-            diffs.append(DiffClass(file_name=file_name, class_a=_class, removed=True))
+            diffs.append(DiffClass(file_name=path_b, class_a=_class, removed=True))
 
         for _class in classes_same:
             class_is_modified = False
@@ -61,10 +63,10 @@ class JavaParser(AbstractParser):
             functions_same = functions_a & functions_b
 
             for function in functions_added:
-                diffs.append(DiffMethod(file_name=file_name, class_name=_class, added=True, method_b=function))
+                diffs.append(DiffMethod(file_name=path_b, class_name=_class, added=True, method_b=function))
 
             for function in functions_removed:
-                diffs.append(DiffMethod(file_name=file_name, class_name=_class, removed=True, method_a=function))
+                diffs.append(DiffMethod(file_name=path_b, class_name=_class, removed=True, method_a=function))
 
             class_is_modified = len(functions_added | functions_removed) > 0
 
@@ -74,7 +76,7 @@ class JavaParser(AbstractParser):
                 functions_is_modified = difflib.SequenceMatcher(None, code_a, code_b).ratio() != 1.0
                 if functions_is_modified:
                     class_is_modified = True
-                    diffs.append(DiffMethod(file_name=file_name, class_name=_class, modified=True, method_a=function, method_b=function))
+                    diffs.append(DiffMethod(file_name=path_b, class_name=_class, modified=True, method_a=function, method_b=function))
             if class_is_modified:
-                diffs.append(DiffClass(file_name=file_name, class_a=_class, class_b=_class, modified=True))
+                diffs.append(DiffClass(file_name=path_b, class_a=_class, class_b=_class, modified=True))
         return diffs
