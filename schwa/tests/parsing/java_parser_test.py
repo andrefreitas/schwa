@@ -61,29 +61,22 @@ class TestJavaParser(unittest.TestCase):
             }"""
 
     def test_parse(self):
+        """
+        JavaParser.parse() should parse a class and methods from source code with their line numbers range
+        """
         components = JavaParser.parse(self.code)
-        self.assertTrue("API" in components)
-        expected_functions = set({"getUrl", "setUrl", "API", "login", "register", "getShows"})
-        actual_functions = set(components["API"].functions.keys())
-        self.assertEqual(expected_functions, actual_functions)
+        self.assertTrue([[9, 11], ['API', 'getUrl']] in components)
+        self.assertTrue([[13, 15], ['API', 'setUrl']] in components)
+        self.assertTrue([[21, 23], ['API', 'API']] in components)
+        self.assertTrue([[25, 27], ['API', 'API']] in components)
+        self.assertTrue([[30, 35], ['API', 'login']] in components)
+        self.assertTrue([[37, 47], ['API', 'register']] in components)
+        self.assertTrue([[49, 51], ['API', 'getShows']] in components)
 
-    def test_extract_method(self):
-        method = JavaParser.extract_method("API", "register", self.code)
-        expected_method = """register(String name, String email, String nif, String password, String ccNumber, String ccType, String ccValidity, AsyncHttpResponseHandler responseHandler){
-                    RequestParams params = new RequestParams();
-                    params.put("name", name);
-                    params.put("email", email);
-                    params.put("password", password);
-                    params.put("nif", nif);
-                    params.put("ccNumber", ccNumber);
-                    params.put("ccType", ccType);
-                    params.put("ccValidity", ccValidity);
-                    client.post(url + "/customers", params, responseHandler);
-                }"""
-        ratio = difflib.SequenceMatcher(None, expected_method, method).ratio()
-        self.assertTrue(ratio == 1.0)
-
-    def test_diff(self):
+    def test_diff_case_a(self):
+        """
+        JavaParser.diff() should detect added, removed and modified methods
+        """
         code_b = """
             package org.feup.meoarenacustomer.app;
             import android.app.DownloadManager;
@@ -119,14 +112,16 @@ class TestJavaParser(unittest.TestCase):
                     client.post(url + "/login", params, responseHandler);
                 }
 
-                // New method
+                // Removed method register()
+
+                // Added method
                 public void recover(String name){
                     RequestParams params = new RequestParams();
                     params.put("name", name);
                     params.put("email", email);
                 }
 
-                // Renamed method
+                // Added method
                 public void outputShows(AsyncHttpResponseHandler responseHandler) {
                     client.get(url + "/shows", responseHandler);
                 }
@@ -136,27 +131,19 @@ class TestJavaParser(unittest.TestCase):
                 }
 
             }"""
+
         diffs = JavaParser.diff(("API.java", self.code), ("API.java", code_b))
-
-        # Detect if a method has been added
-        filter_diff = [diff for diff in diffs if isinstance(diff, DiffMethod) and diff.method_b == "recover" and diff.added == True]
-        self.assertTrue(len(filter_diff) > 0)
-
-        # Detect unmodified methods
-        filter_diff = [diff for diff in diffs if isinstance(diff, DiffMethod) and diff.method_a == "getShows"]
-        self.assertTrue(len(filter_diff) == 0)
-
-        # Detect removed methods
-        filter_diff = [diff for diff in diffs if isinstance(diff, DiffMethod) and diff.method_a == "register" and diff.removed == True]
-        self.assertTrue(len(filter_diff) > 0)
-
-        # Detect modified methods
-        filter_diff = [diff for diff in diffs if isinstance(diff, DiffMethod) and diff.method_a == "login" and diff.modified == True]
-        self.assertTrue(len(filter_diff) > 0)
-
-        # Detect modified classes
-        filter_diff = [diff for diff in diffs if isinstance(diff, DiffClass) and diff.class_a == "API" and diff.modified == True]
-        self.assertTrue(len(filter_diff) > 0)
+        self.assertTrue(DiffClass("API.java", class_a="API", class_b="API", modified=True) in diffs,
+                        msg="It should recognize classes")
+        self.assertTrue(DiffMethod("API.java", class_name="API", method_a="login", method_b="login", modified=True)
+                        in diffs, msg="It should recognize modified methods")
+        self.assertTrue(DiffMethod("API.java", class_name="API", method_a="register", removed=True) in diffs,
+                        msg="It should recognize removed methods")
+        self.assertTrue(DiffMethod("API.java", class_name="API", method_b="recover", added=True) in diffs,
+                        msg="It should recognize added methods")
+        self.assertTrue(DiffMethod("API.java", class_name="API", method_b="outputShows", added=True) in diffs,
+                        msg="It should recognize added methods")
+        self.assertEqual(len(diffs), 6)
 
 
 if __name__ == '__main__':

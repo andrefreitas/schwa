@@ -1,85 +1,135 @@
 from parsing.abstract_parser import AbstractParser
-import plyj.parser as plyj
-from plyj.model import MethodDeclaration, ConstructorDeclaration
-import difflib
-from pyparsing import *
-from repository import *
 
-plyj_parser = plyj.Parser()
+import difflib
+from repository import *
+import re
+
 
 #TODO: Detect functions overloading
 class JavaParser(AbstractParser):
     @staticmethod
     def parse(code):
-        global plyj_parser
-        tree = plyj_parser.parse_string(code)
-        classes = {}
-        for class_declaration in tree.type_declarations:
-            functions = {}
-            for function_declaration in class_declaration.body:
-                if isinstance(function_declaration, MethodDeclaration) or isinstance(function_declaration, ConstructorDeclaration):
-                    functions[function_declaration.name] = Function(function_declaration.name)
-            classes[class_declaration.name] = Class(class_declaration.name, functions)
-        return classes
+        components = []
 
-    #TODO: Parse complete method
-    @staticmethod
-    def extract_method(class_name, method_name, code):
-        class_syntax = originalTextFor(Literal("class " + class_name) + Regex("[^{}]*") + nestedExpr('{', '}'))
-        extracted_code = class_syntax.searchString(code)[0][0]
-        method_syntax = originalTextFor(Literal(method_name) + Regex("[^{}]*") + nestedExpr('{', '}'))
-        extracted_code = method_syntax.searchString(extracted_code)[0][0]
-        return extracted_code
+        """ Regular Expressions to evaluate if a line is a class, function, etc """
+        class_re = re.compile("(class)\s+([a-zA-Z0-1]+)")
+        comment_re = re.compile("^\*((\/\/)|(\/\*\*)|(\*\/)|(\*))")
+        function_re = re.compile("(public|private|protected)\s+([^(){}]*\s+)?([a-zA-Z0-1\s]+)\s*\([^(){}]*\)\s*{?\s*$")
+        closing_bracket_re = re.compile("}\s*$")
 
-    #TODO: Detect renamings
+        """ Helpers for line scanning """
+        current_class = None
+        current_method = None
+        last_closing_bracket_number = None
+        penultimate_closing_bracket_number = None
+        lines = code.split("\n")
+        line_count = len(lines)
+        line_counter = 0
+
+        for line in lines:
+            line_counter += 1
+
+            # Is a comment
+            if comment_re.search(line):
+                continue
+
+            # Is a class
+            search = class_re.search(line)
+            if search:
+                if current_class:
+                    current_class[0][1] = last_closing_bracket_number
+                if current_method:
+                    current_method[0][1] = last_closing_bracket_number
+                    components.append(current_method)
+                current_class = [[line_counter, 0], search.group(2)]
+                continue
+
+            # Is a function
+            search = function_re.search(line)
+            if search:
+                if current_method:
+                    current_method[0][1] = last_closing_bracket_number
+                    components.append(current_method)
+                current_method = [[line_counter, 0], [current_class[1], search.group(3)]]
+                continue
+
+            # Is a closing bracket
+            search = closing_bracket_re.search(line)
+            if search:
+                penultimate_closing_bracket_number = last_closing_bracket_number
+                last_closing_bracket_number = line_counter
+
+            # Is last line
+            if line_count == line_counter:
+                if current_class:
+                    current_class[0][1] = last_closing_bracket_number
+                if current_method:
+                    components.append(current_method)
+                    current_method[0][1] = penultimate_closing_bracket_number
+
+        return components
+
+
+
     @staticmethod
     def diff(file_a, file_b):
         path_a, source_a = file_a
         path_b, source_b = file_b
-        print("JavaParser")
-        components_a = JavaParser.parse(source_a)
-        components_b = JavaParser.parse(source_b)
+        changed_lines = difflib.ndiff(source_a.split("\n"), source_b.split("\n"))
 
-        diffs = []
+        line_number_a = 0
+        line_number_b = 0
+        added_re = re.compile("^\+")
+        removed_re = re.compile("^-")
+        incremental_re = re.compile("^\?")
+        changed_sequence = None
+        changed_sequences = []
 
-        classes_a = set(components_a.keys())
-        classes_b = set(components_b.keys())
-        classes_added = classes_b - classes_a
-        classes_removed = classes_a - classes_b
-        classes_same = classes_a & classes_b
+        for line in changed_lines:
+            print(line)
+            # Added line
+            if added_re.search(line):
+                if changed_sequence and changed_sequence[0] == "-":
+                    changed_sequence[2] = line_number_a
+                    changed_sequences.append(changed_sequence)
+                    changed_sequence = None
 
-        for _class in classes_added:
-            diffs.append(DiffClass(file_name=path_b, class_b=_class, added=True))
+                line_number_b += 1
+                if not changed_sequence:
+                    changed_sequence = ["+", line_number_b, 0]
 
-        for _class in classes_removed:
-            diffs.append(DiffClass(file_name=path_b, class_a=_class, removed=True))
-        for _class in classes_same:
-            class_is_modified = False
-            class_a = components_a[_class]
-            class_b = components_b[_class]
-            functions_a = set(class_a.functions.keys())
-            functions_b = set(class_b.functions.keys())
-            functions_added = functions_b - functions_a
-            functions_removed = functions_a - functions_b
-            functions_same = functions_a & functions_b
+            # Removed line
+            elif removed_re.search(line):
+                if changed_sequence and changed_sequence[0] == "+":
+                    changed_sequence[2] = line_number_b
+                    changed_sequences.append(changed_sequence)
+                    changed_sequence = None
 
-            for function in functions_added:
-                diffs.append(DiffMethod(file_name=path_b, class_name=_class, added=True, method_b=function))
+                line_number_a += 1
+                if not changed_sequence:
+                    changed_sequence = ["-", line_number_a, 0]
 
-            for function in functions_removed:
-                diffs.append(DiffMethod(file_name=path_b, class_name=_class, removed=True, method_a=function))
+            # Incremental or same
+            else:
+                if changed_sequence and changed_sequence[0] == "+":
+                    changed_sequence[2] = line_number_b
+                    changed_sequences.append(changed_sequence)
+                    changed_sequence = None
+                elif changed_sequence and changed_sequence[0] == "-":
+                    changed_sequence[2] = line_number_a
+                    changed_sequences.append(changed_sequence)
+                    changed_sequence = None
+                # Same
+                if not incremental_re.search(line):
+                    line_number_a += 1
+                    line_number_b += 1
 
-            class_is_modified = len(functions_added | functions_removed) > 0
 
-            for function in functions_same:
-                print(function)
-                code_a = JavaParser.extract_method(_class, function, source_a)
-                code_b = JavaParser.extract_method(_class, function, source_b)
-                functions_is_modified = difflib.SequenceMatcher(None, code_a, code_b).ratio() != 1.0
-                if functions_is_modified:
-                    class_is_modified = True
-                    diffs.append(DiffMethod(file_name=path_b, class_name=_class, modified=True, method_a=function, method_b=function))
-            if class_is_modified:
-                diffs.append(DiffClass(file_name=path_b, class_a=_class, class_b=_class, modified=True))
+        return changed_sequences
 
-        return diffs
+
+
+
+
+
+
