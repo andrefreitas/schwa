@@ -13,7 +13,7 @@ class JavaParser(AbstractParser):
 
         """ Regular Expressions to evaluate if a line is a class, function, etc """
         class_re = re.compile("(class)\s+([a-zA-Z0-1]+)")
-        comment_re = re.compile("^\*((\/\/)|(\/\*\*)|(\*\/)|(\*))")
+        comment_re = re.compile("^\s*((\/\/)|(\/\*\*)|(\*\/)|(\*))")
         function_re = re.compile("(public|private|protected)\s+([^(){}]*\s+)?([a-zA-Z0-1\s]+)\s*\([^(){}]*\)\s*{?\s*$")
         closing_bracket_re = re.compile("}\s*$")
 

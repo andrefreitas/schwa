@@ -77,7 +77,13 @@ class SchwaAnalysis(AbstractAnalysis):
             """ Class Granularity """
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
                 class_analytics = None
-                global_class_analytics = analytics.files_analytics[diff.file_name].classes_analytics
+
+                try:
+                    global_class_analytics = analytics.files_analytics[diff.file_name].classes_analytics
+                # File could be already removed
+                except KeyError:
+                    continue
+
                 if diff.added:
                     class_analytics = ClassAnalytics()
                     global_class_analytics[diff.class_b] = class_analytics
@@ -110,7 +116,13 @@ class SchwaAnalysis(AbstractAnalysis):
             """ Method Granularity """
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
                 method_analytics = None
-                global_method_analytics = analytics.files_analytics[diff.file_name].classes_analytics[diff.class_name].methods_analytics
+
+                try:
+                    global_method_analytics = analytics.files_analytics[diff.file_name].classes_analytics[diff.class_name].methods_analytics
+                # Class could be already removed and will raise a KeyError
+                except KeyError:
+                    continue
+
                 if diff.added:
                     method_analytics = MethodAnalytics()
                     global_method_analytics[diff.method_b] = method_analytics
