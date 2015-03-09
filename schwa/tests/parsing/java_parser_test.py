@@ -65,13 +65,13 @@ class TestJavaParser(unittest.TestCase):
         JavaParser.parse() should parse a class and methods from source code with their line numbers range
         """
         components = JavaParser.parse(self.code)
-        self.assertTrue([[9, 11], ['API', 'getUrl']] in components)
-        self.assertTrue([[13, 15], ['API', 'setUrl']] in components)
-        self.assertTrue([[21, 23], ['API', 'API']] in components)
-        self.assertTrue([[25, 27], ['API', 'API']] in components)
-        self.assertTrue([[30, 35], ['API', 'login']] in components)
-        self.assertTrue([[37, 47], ['API', 'register']] in components)
-        self.assertTrue([[49, 51], ['API', 'getShows']] in components)
+        self.assertTrue([9, 11, 'API', 'getUrl'] in components)
+        self.assertTrue([13, 15, 'API', 'setUrl'] in components)
+        self.assertTrue([21, 23, 'API', 'API'] in components)
+        self.assertTrue([25, 27, 'API', 'API'] in components)
+        self.assertTrue([30, 35, 'API', 'login'] in components)
+        self.assertTrue([37, 47, 'API', 'register'] in components)
+        self.assertTrue([49, 51, 'API', 'getShows'] in components)
 
     def test_diff_case_a(self):
         """
@@ -133,6 +133,7 @@ class TestJavaParser(unittest.TestCase):
             }"""
 
         diffs = JavaParser.diff(("API.java", self.code), ("API.java", code_b))
+
         self.assertTrue(DiffClass("API.java", class_a="API", class_b="API", modified=True) in diffs,
                         msg="It should recognize classes")
         self.assertTrue(DiffMethod("API.java", class_name="API", method_a="login", method_b="login", modified=True)
@@ -143,7 +144,7 @@ class TestJavaParser(unittest.TestCase):
                         msg="It should recognize added methods")
         self.assertTrue(DiffMethod("API.java", class_name="API", method_b="outputShows", added=True) in diffs,
                         msg="It should recognize added methods")
-        self.assertEqual(len(diffs), 6)
+        self.assertEqual(len(diffs), 5)
 
 
 if __name__ == '__main__':
