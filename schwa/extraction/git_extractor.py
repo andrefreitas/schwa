@@ -64,11 +64,11 @@ class GitExtractor(AbstractExtractor):
                         diffs_list.append(DiffFile(file_b=diff.b_blob.path, added=True))
                         if self.method_granularity:
                             source = diff.b_blob.data_stream.read().decode("UTF-8")
-                            components = list(GitExtractor.parse(diff.b_blob.path, source).values())
-                            for _class in components:
-                                diffs_list.append(DiffClass(file_name=diff.b_blob.path, class_b=_class.name, added=True))
-                                for method in _class.functions.values():
-                                    diffs_list.append(DiffMethod(file_name=diff.b_blob.path, class_name=_class.name, method_b=method.name, added=True))
+                            components = GitExtractor.parse(diff.b_blob.path, source)
+                            for _, _, c, f in components:
+                                diffs_list.append(DiffMethod(file_name=diff.b_blob.path, class_name=c, method_b=f, added=True))
+                            for c in set(c for _, _, c, f in components):
+                                diffs_list.append(DiffClass(file_name=diff.b_blob.path, class_b=c, added=True))
                     elif diff.renamed:
                         if is_good_blob(diff.b_blob):
                             diffs_list.append(DiffFile(file_a=diff.rename_from, file_b=diff.rename_to, renamed=True))
