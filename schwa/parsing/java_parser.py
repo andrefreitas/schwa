@@ -148,6 +148,7 @@ class JavaParser(AbstractParser):
         methods_removed = methods_a - methods_b
         methods_modified = (changed_a | changed_b) - (methods_added | methods_removed)
 
+
         for c, m in methods_added:
             diffs.append(DiffMethod(file_name=path_b, class_name=c, method_b=m, added=True))
         for c, m in methods_removed:
@@ -170,11 +171,3 @@ class JavaParser(AbstractParser):
             diffs.append(DiffClass(file_name=path_b, class_a=c, class_b=c, modified=True))
 
         return diffs
-
-
-
-
-
-
-
-

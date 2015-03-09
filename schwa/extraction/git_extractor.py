@@ -54,7 +54,7 @@ class GitExtractor(AbstractExtractor):
             timestamp = commit.committed_date
             diffs_list = []
             is_good_blob = lambda blob: blob and is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
-            print("extracting", _id, message)
+            #print("extracting", _id, message)
             for parent in commit.parents:
                 diffs = parent.diff(commit)
                 for diff in diffs:
@@ -88,6 +88,8 @@ class GitExtractor(AbstractExtractor):
             return Commit(_id, message, author, timestamp, diffs_list) if len(diffs_list) > 0 else None
 
         except TypeError:
+            return None
+        except UnicodeDecodeError:
             return None
 
     def extract_files(self, ignore_regex):

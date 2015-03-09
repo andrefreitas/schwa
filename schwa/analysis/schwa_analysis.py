@@ -151,5 +151,5 @@ class SchwaAnalysis(AbstractAnalysis):
                     method_analytics.twr += twr
                 if diff_timestamp > method_analytics.age:
                     method_analytics.age = diff_timestamp
-
+        analytics.compute_defect()
         return analytics
