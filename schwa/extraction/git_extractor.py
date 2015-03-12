@@ -55,6 +55,21 @@ class GitExtractor(AbstractExtractor):
             diffs_list = []
             is_good_blob = lambda blob: blob and is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
             #print("extracting", _id, message)
+
+            # If it's first commit
+            if not commit.parents:
+                blobs = commit.tree.traverse()
+                for blob in blobs:
+                    if is_good_blob(blob):
+                        diffs_list.append(DiffFile(file_b=blob.path, added=True))
+                        if self.method_granularity:
+                            source = blob.data_stream.read().decode("UTF-8")
+                            components = GitExtractor.parse(blob.path, source)
+                            for _, _, c, f in components:
+                                diffs_list.append(DiffMethod(file_name=blob.path, class_name=c, method_b=f, added=True))
+                            for c in set(c for _, _, c, f in components):
+                                diffs_list.append(DiffClass(file_name=blob.path, class_b=c, added=True))
+
             for parent in commit.parents:
                 diffs = parent.diff(commit)
                 for diff in diffs:

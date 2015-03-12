@@ -22,25 +22,23 @@ class SchwaAnalysis(AbstractAnalysis):
         normalized = begin_diff / diff
         return normalized
 
+    @staticmethod
+    def update_analytics(analytics, is_bug_fixing, author, repo_ts, commit_ts, current_ts):
+        analytics.update_revisions(repo_ts, commit_ts, current_ts)
+        if is_bug_fixing:
+            analytics.update_fixes(repo_ts, commit_ts, current_ts)
+        analytics.update_authors(repo_ts, commit_ts, current_ts, author)
+
     def analyze(self):
         current_timestamp = time.time()
         analytics = RepositoryAnalytics()
 
         for commit in self.repository.commits:
-            diff_timestamp = current_timestamp - commit.timestamp
-            twr = None
-            if SchwaAnalysis.is_bug_fixing(commit):
-                ts = SchwaAnalysis.normalise_timestamp(self.repository.timestamp, commit.timestamp, current_timestamp)
-                twr = 1 / (1 + math.e ** (-12 * ts + 12))
+            is_bug_fixing = SchwaAnalysis.is_bug_fixing(commit)
 
-            """Repository Granularity"""
-            analytics.revisions += 1
-            analytics.authors.add(commit.author)
-            if twr:
-                analytics.fixes += 1
-                analytics.twr += twr
-            if diff_timestamp > analytics.age:
-                analytics.age = diff_timestamp
+            """ Repository Granularity """
+            SchwaAnalysis.update_analytics(analytics, is_bug_fixing, commit.author, self.repository.timestamp,
+                                           commit.timestamp, current_timestamp)
 
             """ File Granularity"""
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
@@ -66,13 +64,8 @@ class SchwaAnalysis(AbstractAnalysis):
                         del analytics.files_analytics[diff.file_a]
                     continue
 
-                file_analytics.revisions += 1
-                file_analytics.authors.add(commit.author)
-                if twr:
-                    file_analytics.fixes += 1
-                    file_analytics.twr += twr
-                if diff_timestamp > file_analytics.age:
-                    file_analytics.age = diff_timestamp
+                SchwaAnalysis.update_analytics(file_analytics, is_bug_fixing, commit.author, self.repository.timestamp,
+                                               commit.timestamp, current_timestamp)
 
             """ Class Granularity """
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
@@ -105,13 +98,8 @@ class SchwaAnalysis(AbstractAnalysis):
                         del global_class_analytics[diff.class_a]
                     continue
 
-                class_analytics.revisions += 1
-                class_analytics.authors.add(commit.author)
-                if twr:
-                    class_analytics.fixes += 1
-                    class_analytics.twr += twr
-                if diff_timestamp > class_analytics.age:
-                    class_analytics.age = diff_timestamp
+                SchwaAnalysis.update_analytics(class_analytics, is_bug_fixing, commit.author, self.repository.timestamp,
+                                               commit.timestamp, current_timestamp)
 
             """ Method Granularity """
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
@@ -144,12 +132,7 @@ class SchwaAnalysis(AbstractAnalysis):
                         del global_method_analytics[diff.method_a]
                     continue
 
-                method_analytics.revisions += 1
-                method_analytics.authors.add(commit.author)
-                if twr:
-                    method_analytics.fixes += 1
-                    method_analytics.twr += twr
-                if diff_timestamp > method_analytics.age:
-                    method_analytics.age = diff_timestamp
-        analytics.compute_defect()
+                SchwaAnalysis.update_analytics(method_analytics, is_bug_fixing, commit.author,
+                                               self.repository.timestamp, commit.timestamp, current_timestamp)
+
         return analytics

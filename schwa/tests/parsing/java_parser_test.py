@@ -13,12 +13,12 @@ class TestJavaParser(unittest.TestCase):
             import com.loopj.android.http.*;
 
 
-            public class API {
-                public String getUrl() {
+            static class API {
+                static String getUrl() {
                     return url;
                 }
 
-                public void setUrl(String url) {
+                static void setUrl(String url) {
                     this.url = url;
                 }
 
@@ -26,23 +26,23 @@ class TestJavaParser(unittest.TestCase):
                 private final String PRODUCTION_URL = "http://neo.andrefreitas.pt:8081/api";
                 private static AsyncHttpClient client = new AsyncHttpClient();
 
-                public API(String url ){
+                static API(String url ){
                     this.url = url;
                 }
 
-                public API(){
+                static API(){
                     this.url = PRODUCTION_URL;
                 }
 
 
-                public void login(String email, String password, AsyncHttpResponseHandler responseHandler){
+                static void login(String email, String password, AsyncHttpResponseHandler responseHandler){
                     RequestParams params = new RequestParams();
                     params.put("email", email);
                     params.put("password", password);
                     client.post(url + "/login", params, responseHandler);
                 }
 
-                public void register(String name, String email, String nif, String password, String ccNumber, String ccType, String ccValidity, AsyncHttpResponseHandler responseHandler){
+                static void register(String name, String email, String nif, String password, String ccNumber, String ccType, String ccValidity, AsyncHttpResponseHandler responseHandler){
                     RequestParams params = new RequestParams();
                     params.put("name", name);
                     params.put("email", email);
@@ -54,7 +54,7 @@ class TestJavaParser(unittest.TestCase):
                     client.post(url + "/customers", params, responseHandler);
                 }
 
-                public void getShows(AsyncHttpResponseHandler responseHandler) {
+                static void getShows(AsyncHttpResponseHandler responseHandler) {
                     client.get(url + "/shows", responseHandler);
                 }
 
@@ -84,12 +84,12 @@ class TestJavaParser(unittest.TestCase):
             import com.loopj.android.http.*;
 
 
-            public class API {
-                public String getUrl() {
+            static class API {
+                static String getUrl() {
                     return url;
                 }
 
-                public void setUrl(String url) {
+                static void setUrl(String url) {
                     this.url = url;
                 }
 
@@ -97,16 +97,16 @@ class TestJavaParser(unittest.TestCase):
                 private final String PRODUCTION_URL = "http://neo.andrefreitas.pt:8081/api";
                 private static AsyncHttpClient client = new AsyncHttpClient();
 
-                public API(String url ){
+                static API(String url ){
                     this.url = url;
                 }
 
-                public API(){
+                static API(){
                     this.url = PRODUCTION_URL;
                 }
 
                 // Modified method
-                public void login(String email, String password, AsyncHttpResponseHandler responseHandler){
+                static void login(String email, String password, AsyncHttpResponseHandler responseHandler){
                     RequestParams params = new RequestParams();
                     params.put("email", email);
                     client.post(url + "/login", params, responseHandler);
@@ -115,18 +115,18 @@ class TestJavaParser(unittest.TestCase):
                 // Removed method register()
 
                 // Added method
-                public void recover(String name){
+                static void recover(String name){
                     RequestParams params = new RequestParams();
                     params.put("name", name);
                     params.put("email", email);
                 }
 
                 // Added method
-                public void outputShows(AsyncHttpResponseHandler responseHandler) {
+                static void outputShows(AsyncHttpResponseHandler responseHandler) {
                     client.get(url + "/shows", responseHandler);
                 }
 
-                public void getShows(AsyncHttpResponseHandler responseHandler) {
+                static void getShows(AsyncHttpResponseHandler responseHandler) {
                     client.get(url + "/shows", responseHandler);
                 }
 
