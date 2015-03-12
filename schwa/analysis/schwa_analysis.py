@@ -1,9 +1,7 @@
+from schwa.analysis import *
+from schwa.repository import *
 import re
 import time
-import math
-from analysis.abstract_analysis import AbstractAnalysis
-from .repository_analytics import *
-from repository import *
 
 
 class SchwaAnalysis(AbstractAnalysis):

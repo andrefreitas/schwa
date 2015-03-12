@@ -1,7 +1,6 @@
 import sys
 import os
-from schwa import Schwa
-
+from schwa.schwa import Schwa
 
 if len(sys.argv) < 4:
     print("usage:", sys.argv[0], "repository_path", "max_commits", "granularity", "[ignore_regex]")

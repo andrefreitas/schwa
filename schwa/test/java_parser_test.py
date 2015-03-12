@@ -1,7 +1,6 @@
 import unittest
-import difflib
-from parsing import JavaParser
-from repository import *
+from schwa.parsing import JavaParser
+from schwa.repository import *
 
 
 class TestJavaParser(unittest.TestCase):

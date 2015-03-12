@@ -1,8 +1,8 @@
-import git
 from .abstract_extractor import *
-from repository import *
-from parsing import JavaParser
+from schwa.repository import *
+from schwa.parsing import JavaParser
 import multiprocessing
+import git
 
 current_repo = None
 

@@ -1,6 +1,5 @@
-from extraction.git_extractor import GitExtractor
-from repository.repository import  Repository
-from analysis.schwa_analysis import SchwaAnalysis
+from schwa.extraction import GitExtractor
+from schwa.analysis import SchwaAnalysis
 
 
 class Schwa:
@@ -13,5 +12,3 @@ class Schwa:
         analysis = SchwaAnalysis(repo)
         analytics = analysis.analyze()
         return analytics
-
-

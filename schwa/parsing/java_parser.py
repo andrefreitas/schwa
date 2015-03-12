@@ -1,7 +1,6 @@
-from parsing.abstract_parser import AbstractParser
-
+from .abstract_parser import AbstractParser
+from schwa.repository import *
 import difflib
-from repository import *
 import re
 
 
