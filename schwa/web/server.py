@@ -27,7 +27,3 @@ class Sunburst(object):
     def index(self):
         tmpl = env.get_template('index.html')
         return tmpl.render()
-
-
-s = Server()
-s.run("a")
