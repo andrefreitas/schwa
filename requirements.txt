@@ -1,3 +1,1 @@
 GitPython==0.3.6
-plyj==0.1
-pyparsing==2.0.3
