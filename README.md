@@ -7,3 +7,6 @@ A tool that extracts metrics from software repositories to support defect predic
 1. Install Python3.4
 2. Install GIT
 2. Install requirements `pip install -r requirements.txt`
+
+## Testing
+Run the command `nosetests` in root directory
