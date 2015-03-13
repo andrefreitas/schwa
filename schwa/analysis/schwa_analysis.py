@@ -6,6 +6,8 @@ import time
 
 class SchwaAnalysis(AbstractAnalysis):
 
+    ts = time.time()
+
     def __init__(self, repository):
         super().__init__(repository)
 
@@ -20,23 +22,25 @@ class SchwaAnalysis(AbstractAnalysis):
         normalized = begin_diff / diff
         return normalized
 
-    @staticmethod
-    def update_analytics(analytics, is_bug_fixing, author, repo_ts, commit_ts, current_ts):
-        analytics.update_revisions(repo_ts, commit_ts, current_ts)
+    def update_analytics(self, analytics, is_bug_fixing, author, commit_timestamp):
         if is_bug_fixing:
-            analytics.update_fixes(repo_ts, commit_ts, current_ts)
-        analytics.update_authors(repo_ts, commit_ts, current_ts, author)
+            analytics.update_fixes(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts)
+        analytics.update_revisions(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts)
+        analytics.update_authors(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts,
+                                 author=author)
 
     def analyze(self):
-        current_timestamp = time.time()
         analytics = RepositoryAnalytics()
 
         for commit in self.repository.commits:
             is_bug_fixing = SchwaAnalysis.is_bug_fixing(commit)
 
+
             """ Repository Granularity """
-            SchwaAnalysis.update_analytics(analytics, is_bug_fixing, commit.author, self.repository.timestamp,
-                                           commit.timestamp, current_timestamp)
+            self.update_analytics(analytics, is_bug_fixing, commit.author, commit.timestamp)
+
+            """ Training """
+            analytics.add_to_dataset(self.repository.timestamp, commit.timestamp, is_bug_fixing)
 
             """ File Granularity"""
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
@@ -61,9 +65,7 @@ class SchwaAnalysis(AbstractAnalysis):
                     if diff.file_a in analytics.files_analytics:
                         del analytics.files_analytics[diff.file_a]
                     continue
-
-                SchwaAnalysis.update_analytics(file_analytics, is_bug_fixing, commit.author, self.repository.timestamp,
-                                               commit.timestamp, current_timestamp)
+                self.update_analytics(file_analytics, is_bug_fixing, commit.author, commit.timestamp)
 
             """ Class Granularity """
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
@@ -96,8 +98,7 @@ class SchwaAnalysis(AbstractAnalysis):
                         del global_class_analytics[diff.class_a]
                     continue
 
-                SchwaAnalysis.update_analytics(class_analytics, is_bug_fixing, commit.author, self.repository.timestamp,
-                                               commit.timestamp, current_timestamp)
+                self.update_analytics(class_analytics, is_bug_fixing, commit.author, commit.timestamp)
 
             """ Method Granularity """
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
@@ -130,7 +131,6 @@ class SchwaAnalysis(AbstractAnalysis):
                         del global_method_analytics[diff.method_a]
                     continue
 
-                SchwaAnalysis.update_analytics(method_analytics, is_bug_fixing, commit.author,
-                                               self.repository.timestamp, commit.timestamp, current_timestamp)
-
+                self.update_analytics(method_analytics, is_bug_fixing, commit.author, commit.timestamp)
+        #Metrics.plot()
         return analytics
