@@ -1,7 +1,10 @@
 language: python
 
 python:
-  - "3.4_with_system_site_packages"
+  - "3.2"
+
+virtualenv:
+  system_site_packages: true
 
 before_install:
  - sudo apt-get install -qq python-numpy python-scipy
