@@ -57,6 +57,12 @@ class TestJavaParser(unittest.TestCase):
                     client.get(url + "/shows", responseHandler);
                 }
 
+            }
+
+             private class SOAPAPI{
+                private void login(String name){
+                    params.put("email", email);
+                }
             }"""
 
     def test_parse(self):
@@ -71,6 +77,7 @@ class TestJavaParser(unittest.TestCase):
         self.assertTrue([30, 35, 'API', 'login'] in components)
         self.assertTrue([37, 47, 'API', 'register'] in components)
         self.assertTrue([49, 51, 'API', 'getShows'] in components)
+        self.assertTrue([56, 58, 'SOAPAPI', 'login'] in components)
 
     def test_diff_case_a(self):
         """
@@ -129,12 +136,21 @@ class TestJavaParser(unittest.TestCase):
                     client.get(url + "/shows", responseHandler);
                 }
 
-            }"""
+            }
+
+            private class JSONAPI{
+                private void recover(String name){
+                    RequestParams params = new RequestParams();
+                    params.put("name", name);
+                    params.put("email", email);
+                }
+            }
+            """
 
         diffs = JavaParser.diff(("API.java", self.code), ("API.java", code_b))
 
         self.assertTrue(DiffClass("API.java", class_a="API", class_b="API", modified=True) in diffs,
-                        msg="It should recognize classes")
+                        msg="It should recognize modified classes")
         self.assertTrue(DiffMethod("API.java", class_name="API", method_a="login", method_b="login", modified=True)
                         in diffs, msg="It should recognize modified methods")
         self.assertTrue(DiffMethod("API.java", class_name="API", method_a="register", removed=True) in diffs,
@@ -143,7 +159,16 @@ class TestJavaParser(unittest.TestCase):
                         msg="It should recognize added methods")
         self.assertTrue(DiffMethod("API.java", class_name="API", method_b="outputShows", added=True) in diffs,
                         msg="It should recognize added methods")
-        self.assertEqual(len(diffs), 5)
+        self.assertTrue(DiffClass("API.java", class_a="SOAPAPI", removed=True) in diffs,
+                        msg="It should recognize removed classes")
+        self.assertTrue(DiffClass("API.java", class_b="JSONAPI", added=True) in diffs,
+                        msg="It should recognize added classes")
+        self.assertTrue(DiffMethod("API.java", class_name="SOAPAPI", method_a="login", removed=True) in diffs,
+                        msg="It should recognize removed methods")
+        self.assertTrue(DiffMethod("API.java", class_name="JSONAPI", method_b="recover", added=True) in diffs,
+                        msg="It should recognize added methods")
+
+        self.assertEqual(len(diffs), 9)
 
 
 if __name__ == '__main__':

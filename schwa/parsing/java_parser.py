@@ -40,6 +40,7 @@ class JavaParser(AbstractParser):
                 if current_method:
                     current_method[1] = penultimate_closing_bracket_number
                     components.append(current_method)
+                    current_method = None
                 current_class = [line_counter, 0, search.group(2)]
                 continue
 
