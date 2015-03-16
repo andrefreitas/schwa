@@ -1,20 +1,10 @@
 language: python
 
 python:
-  - "3.2"
+  - 3.4
 
-virtualenv:
-  system_site_packages: true
-
-before_install:
- - sudo apt-get install -qq python-numpy python-scipy
-
-# command to install dependencies
 install:
- - "pip install gitpython"
- - "pip install cherrypy"
- - "pip install Jinja2"
- - "pip install scikit-learn"
+ - pip install -r requirements.txt
 
-# command to run tests
-script: nosetests
+script:
+ - nosetests
