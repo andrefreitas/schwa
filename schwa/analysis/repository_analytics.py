@@ -80,7 +80,7 @@ class Metrics:
         return prob
 
     @staticmethod
-    def plot():
+    def plot(analytics):
 
         # 3 Features
         """
@@ -101,17 +101,30 @@ class Metrics:
         plt.show()
 
         """
-        # Fix features
+        # Revisions Features
         x = []
         y = []
-        for point, bug in zip(Metrics.dataset[0], Metrics.dataset[1]):
-            revisions_twr = point[0]
-            fixes_twr = point[1]
-            x.append(revisions_twr)
-            y.append(fixes_twr)
+        for file_analytics in analytics.files_analytics.values():
+            x.append(file_analytics.revisions_twr)
+            y.append(file_analytics.fixes_twr)
 
-        plt.plot(x, y, 'go')
-        plt.axis([-1, max(x) + 1, -1, max(y) + 1])
+        plt.plot(x, y, 'ro')
+        plt.xlabel('Revisions TWR')
+        plt.ylabel('Fixes TWR')
+        plt.axis([0, max(x) + 1, 0, max(y) + 1])
+        plt.show()
+
+        # Authors Features
+        x = []
+        y = []
+        for file_analytics in analytics.files_analytics.values():
+            x.append(file_analytics.authors_twr)
+            y.append(file_analytics.fixes_twr)
+
+        plt.plot(x, y, 'ro')
+        plt.xlabel('Authors TWR')
+        plt.ylabel('Fixes TWR')
+        plt.axis([0, max(x) + 1, 0, max(y) + 1])
         plt.show()
 
 

@@ -132,5 +132,5 @@ class SchwaAnalysis(AbstractAnalysis):
                     continue
 
                 self.update_analytics(method_analytics, is_bug_fixing, commit.author, commit.timestamp)
-        #Metrics.plot()
+        Metrics.plot(analytics)
         return analytics
