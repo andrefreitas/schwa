@@ -7,13 +7,9 @@ import git
 current_repo = None
 
 
-""" Multiprocessing wrapper """
 def extract_commit_wrapper(hexsha):
+    """ Multiprocessing wrapper """
     return current_repo.extract_commit(hexsha)
-
-""" Multiprocessing wrapper """
-def extract_file_wrapper(path):
-    return current_repo.extract_file(path)
 
 
 class GitExtractor(AbstractExtractor):
@@ -22,26 +18,30 @@ class GitExtractor(AbstractExtractor):
         super().__init__(path)
         self.repo = git.Repo(path, odbt=git.GitCmdObjectDB)
 
-    def extract(self, ignore_regex="^$", max_commits=None, method_granularity=False):
+    def extract(self, ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True):
         global current_repo
         current_repo = self
-        commits = self.extract_commits(ignore_regex=ignore_regex, max_commits=max_commits, method_granularity=method_granularity)
+        commits = self.extract_commits(ignore_regex=ignore_regex, max_commits=max_commits,
+                                       method_granularity=method_granularity, parallel=parallel)
         timestamp = self.timestamp()
         repo = Repository(commits, timestamp)
         return repo
 
-    def extract_commits(self, ignore_regex="^$", max_commits=None, method_granularity=False):
+    def extract_commits(self, ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True):
         try:
             cpus = multiprocessing.cpu_count()
-        except NotImplementedError:
-            cpus = 2   # arbitrary default
+        except NotImplementedError:  # pragma: no cover
+            cpus = 2   # pragma: no cover
         self.ignore_regex = ignore_regex
         self.method_granularity = method_granularity
 
         iter_commits = self.repo.iter_commits(max_count=max_commits) if max_commits else self.repo.iter_commits()
         commits = [commit.hexsha for commit in iter_commits]
         pool = multiprocessing.Pool(processes=cpus)
-        commits = pool.map(extract_commit_wrapper, commits)
+        if parallel:
+            commits = pool.map(extract_commit_wrapper, commits)
+        else:
+            commits = map(extract_commit_wrapper, commits)
         commits = list(reversed([commit for commit in commits if commit]))
         return commits
 
@@ -102,18 +102,10 @@ class GitExtractor(AbstractExtractor):
 
             return Commit(_id, message, author, timestamp, diffs_list) if len(diffs_list) > 0 else None
 
-        except TypeError:
-            return None
-        except UnicodeDecodeError:
-            return None
-
-    def extract_files(self, ignore_regex):
-        tree_traverse = self.repo.head.commit.tree.traverse()
-        filter_files = lambda item: item.type == 'blob' \
-            and is_code_file(item.path) \
-            and not re.search(ignore_regex, item.path)
-        code_files = {item.path: File(item.path) for item in tree_traverse if filter_files(item)}
-        return code_files
+        except TypeError:  # pragma: no cover
+            return None  # pragma: no cover
+        except UnicodeDecodeError:  # pragma: no cover
+            return None  # pragma: no cover
 
     def timestamp(self):
         return list(self.repo.iter_commits())[-1].committed_date
