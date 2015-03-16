@@ -15,7 +15,6 @@ before_install:
 
 install:
  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose dateutil pandas statsmodels
- - conda install --yes -c dan_blanchard python-coveralls nose-cov
  - pip install gitpython
  - pip install cherrypy
  - pip install Jinja2
