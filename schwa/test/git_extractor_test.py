@@ -14,6 +14,8 @@ class TestGitExtractor(unittest.TestCase):
         if os.path.exists(self.temp_dir):
                  shutil.rmtree(self.temp_dir)
         self.repo = git.Repo.init(self.temp_dir)
+        self.repo.git.execute(["git", "config", "user.email", "petergriffin@familyguy.com"])
+        self.repo.git.execute(["git", "config", "user.name", "Peter Griffin"])
 
     def testExtraction(self):
         code = """
@@ -232,6 +234,7 @@ class TestGitExtractor(unittest.TestCase):
         self.assertTrue(repository.timestamp < creation_timestamp, msg="It should extract the timestamp of first commit")
 
         self.assertEqual(repository.commits[0].message, "First commit\n")
+        self.assertEqual(repository.commits[0].author, "petergriffin@familyguy.com")
         diffs = repository.commits[0].diffs
         self.assertEqual(len(diffs), 11)
         self.assertTrue(DiffFile(file_b="API.java", added=True) in diffs)
