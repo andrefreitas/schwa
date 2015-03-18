@@ -115,6 +115,35 @@ class TestJavaParser(unittest.TestCase):
         self.assertTrue([9, 11, 'HelloWorld', 'main'] in components)
         self.assertTrue([14, 30, 'HelloWorld', 'start'] in components)
 
+    def test_parse_class_without_bracket(self):
+        code = """/* CallingMethodsInSameClass.java
+         *
+         * illustrates how to call static methods a class
+         * from a method in the same class
+         */
+
+        public class CallingMethodsInSameClass
+        {
+            public static void main(String[] args) {
+                printOne();
+                printOne();
+                printTwo();
+            }
+
+            public static void printOne() {
+                System.out.println("Hello World");
+            }
+
+            public static void printTwo() {
+                printOne();
+                printOne();
+            }
+        }"""
+        components = JavaParser.parse(code)
+        self.assertTrue([9, 13, 'CallingMethodsInSameClass', 'main'] in components)
+        self.assertTrue([15, 17, 'CallingMethodsInSameClass', 'printOne'] in components)
+        self.assertTrue([19, 22, 'CallingMethodsInSameClass', 'printTwo'] in components)
+
     def test_diff_case_a(self):
         """
         JavaParser.diff() should detect added, removed and modified methods

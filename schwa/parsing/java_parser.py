@@ -46,7 +46,7 @@ class JavaParser(AbstractParser):
                     components.append(current_method)
                     current_method = None
                 current_class = [line_counter, 0, search.group(2)]
-                open_brackets_counter = 0
+                open_brackets_counter = 0 if open_bracket_re.search(line) else -1
                 close_brackets_counter = 0
                 continue
 
@@ -81,7 +81,6 @@ class JavaParser(AbstractParser):
                 open_brackets_counter += 1
             if close_bracket_re.search(line):
                 close_brackets_counter += 1
-
 
         return components
 
