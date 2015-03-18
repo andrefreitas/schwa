@@ -23,18 +23,14 @@ class SchwaAnalysis(AbstractAnalysis):
         return normalized
 
     def update_analytics(self, analytics, is_bug_fixing, author, commit_timestamp):
-        if is_bug_fixing:
-            analytics.update_fixes(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts)
-        analytics.update_revisions(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts)
-        analytics.update_authors(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts,
-                                 author=author)
+        analytics.update(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts,
+                         is_bug_fixing=is_bug_fixing, author=author)
 
     def analyze(self):
         analytics = RepositoryAnalytics()
 
         for commit in self.repository.commits:
             is_bug_fixing = SchwaAnalysis.is_bug_fixing(commit)
-
 
             """ Repository Granularity """
             self.update_analytics(analytics, is_bug_fixing, commit.author, commit.timestamp)
@@ -129,6 +125,5 @@ class SchwaAnalysis(AbstractAnalysis):
                     continue
 
                 self.update_analytics(method_analytics, is_bug_fixing, commit.author, commit.timestamp)
-
-        Metrics.plot(analytics)
+        analytics.compute_defect_probability()
         return analytics

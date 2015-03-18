@@ -1,15 +1,11 @@
 import math
-from sklearn import svm
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
 
 
 class Metrics:
-
-    dataset = [[], []]
-    svm_classifier = svm.SVC(probability=True)
+    fixes_dataset = []
+    fixes_weight = 0.5
+    authors_weight = 0.25
+    revisions_weight = 0.25
 
     def __init__(self):
         self.revisions_timestamps = []
@@ -21,6 +17,7 @@ class Metrics:
         self.authors = set()
         self.fixes = 0
         self.revisions = 0
+        self.defect_prob = 0
 
     @staticmethod
     def normalise_timestamp(begin_ts, ts, current_ts):
@@ -36,96 +33,43 @@ class Metrics:
         return twr
 
     @staticmethod
-    def list_twr(seq, repo_ts, current_ts):
+    def list_twr(seq, begin_ts, current_ts):
         twr_sum = 0
         for ts in seq:
-            twr_sum += Metrics.twr(repo_ts, ts, current_ts)
+            twr_sum += Metrics.twr(begin_ts, ts, current_ts)
         return twr_sum
 
-    def update_revisions(self, begin_ts, ts, current_ts):
+    def update(self, begin_ts, ts, current_ts, author, is_bug_fixing):
+        # Fixes
+        if is_bug_fixing:
+            self.add_to_dataset(begin_ts)
+            self.fixes += 1
+            self.fixes_timestamps.append(ts)
+            self.fixes_twr += Metrics.twr(begin_ts, ts, current_ts)
+        # Revisions
         self.revisions += 1
         self.revisions_timestamps.append(ts)
         self.revisions_twr += Metrics.twr(begin_ts, ts, current_ts)
-
-    def update_fixes(self, begin_ts, ts, current_ts):
-        self.fixes += 1
-        self.fixes_timestamps.append(ts)
-        self.fixes_twr += Metrics.twr(begin_ts, ts, current_ts)
-
-    def update_authors(self, begin_ts, ts, current_ts, author):
+        # Authors
         if author not in self.authors:
             self.authors.add(author)
             self.authors_timestamps.append(ts)
             self.authors_twr += Metrics.twr(begin_ts, ts, current_ts)
 
-    def add_to_dataset(self, repo_ts, current_ts, is_bug_fixing):
-        revisions_twr = Metrics.list_twr(self.revisions_timestamps, repo_ts, current_ts)
-        fixes_twr = Metrics.list_twr(self.fixes_timestamps, repo_ts, current_ts)
-        authors_twr = Metrics.list_twr(self.revisions_timestamps, repo_ts, current_ts)
-        label = 1 if is_bug_fixing else 0
-        Metrics.dataset[0].append([revisions_twr, fixes_twr, authors_twr])
-        Metrics.dataset[1].append(label)
-
-    @staticmethod
-    def fit_data():
-        Metrics.svm_classifier.fit(Metrics.dataset[0], Metrics.dataset[1])
+    def add_to_dataset(self, begin_ts):
+        # Reasoning: In the last revision, this component had a bug
+        if self.revisions_timestamps:
+            last_revision_timestamp = self.revisions_timestamps[-1]
+            revisions_twr = Metrics.list_twr(self.revisions_timestamps, begin_ts, last_revision_timestamp)
+            fixes_twr = Metrics.list_twr(self.fixes_timestamps, begin_ts, last_revision_timestamp)
+            authors_twr = Metrics.list_twr(self.authors_timestamps, begin_ts, last_revision_timestamp)
+            Metrics.fixes_dataset.append((revisions_twr, fixes_twr, authors_twr))
 
     def defect_probability(self):
-        prob = Metrics.svm_classifier.predict_proba([[self.revisions_twr, self.fixes_twr, self.authors_twr]])
-        return prob
-
-    @staticmethod
-    def defect_probability(revisions_twr, fixes_twr, authors_twr):
-        prob = Metrics.svm_classifier.predict_proba([[revisions_twr, fixes_twr, authors_twr]])
-        return prob
-
-    @staticmethod
-    def plot(analytics):
-
-        revisions = []
-        fixes = []
-        authors = []
-        for file_analytics in analytics.files_analytics.values():
-            revisions.append(file_analytics.revisions_twr)
-            fixes.append(file_analytics.fixes_twr)
-            authors.append(file_analytics.authors_twr)
-            for class_analytics in file_analytics.classes_analytics.values():
-                revisions.append(class_analytics.revisions_twr)
-                fixes.append(class_analytics.fixes_twr)
-                authors.append(class_analytics.authors_twr)
-                for method_analytics in class_analytics.methods_analytics.values():
-                    revisions.append(method_analytics.revisions_twr)
-                    fixes.append(method_analytics.fixes_twr)
-                    authors.append(method_analytics.authors_twr)
-
-
-        """ Compute correlation """
-        revisions_correlation = pearsonr(revisions, fixes)
-        authors_correlation = pearsonr(authors, fixes)
-        samples = len(fixes)
-        print("=== Pearson ===")
-        print("Revisions Correlation", revisions_correlation)
-        print("Authors Correlation", authors_correlation)
-        revisions_correlation = spearmanr(revisions, fixes)
-        authors_correlation = spearmanr(authors, fixes)
-        print("=== Spearman ===")
-        print("Revisions Correlation", revisions_correlation)
-        print("Authors Correlation", authors_correlation)
-        print("Rule of thumb", 2 / math.sqrt(samples))
-        print("Samples", samples)
-
-        """ Draw scatter """
-        plt.plot(revisions, fixes, 'ro')
-        plt.xlabel('Revisions TWR')
-        plt.ylabel('Fixes TWR')
-        plt.axis([0, max(revisions) + 1, 0, max(fixes) + 1])
-        plt.show()
-
-        plt.plot(authors, fixes, 'ro')
-        plt.xlabel('Authors TWR')
-        plt.ylabel('Fixes TWR')
-        plt.axis([0, max(authors) + 1, 0, max(fixes) + 1])
-        plt.show()
+        twr = Metrics.fixes_weight * self.fixes_twr + Metrics.revisions_weight * self.revisions_twr \
+            + Metrics.authors_weight * self.authors_twr
+        probability = 1 - math.e ** (- twr)
+        return probability
 
 
 class RepositoryAnalytics(Metrics):
@@ -133,11 +77,21 @@ class RepositoryAnalytics(Metrics):
         super().__init__()
         self.files_analytics = {}
 
+    def compute_defect_probability(self):
+        self.defect_prob = self.defect_probability()
+        for file_analytics in self.files_analytics.values():
+            file_analytics.compute_defect_probability()
+
 
 class FileAnalytics(Metrics):
     def __init__(self):
         super().__init__()
         self.classes_analytics = {}
+
+    def compute_defect_probability(self):
+        self.defect_prob = self.defect_probability()
+        for class_analytics in self.classes_analytics.values():
+            class_analytics.compute_defect_probability()
 
 
 class ClassAnalytics(Metrics):
@@ -145,7 +99,15 @@ class ClassAnalytics(Metrics):
         super().__init__()
         self.methods_analytics = {}
 
+    def compute_defect_probability(self):
+        self.defect_prob = self.defect_probability()
+        for method_analytics in self.methods_analytics.values():
+            method_analytics.compute_defect_probability()
+
 
 class MethodAnalytics(Metrics):
     def __init__(self):
         super().__init__()
+
+    def compute_defect_probability(self):
+        self.defect_prob = self.defect_probability()
