@@ -15,13 +15,6 @@ class SchwaAnalysis(AbstractAnalysis):
     def is_bug_fixing(commit):
         return re.search("bug|fix", commit.message, re.I)
 
-    @staticmethod
-    def normalise_timestamp(begin_ts, ts, current_ts):
-        begin_diff = ts - begin_ts
-        diff = current_ts - begin_ts
-        normalized = begin_diff / diff
-        return normalized
-
     def update_analytics(self, analytics, is_bug_fixing, author, commit_timestamp):
         analytics.update(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts,
                          is_bug_fixing=is_bug_fixing, author=author)
@@ -57,7 +50,7 @@ class SchwaAnalysis(AbstractAnalysis):
                 elif diff.removed:
                     if diff.file_a in analytics.files_analytics:
                         del analytics.files_analytics[diff.file_a]
-                    continue
+                    continue  # To avoid update of removed components pragma: no cover
                 self.update_analytics(file_analytics, is_bug_fixing, commit.author, commit.timestamp)
 
             """ Class Granularity """
@@ -89,7 +82,7 @@ class SchwaAnalysis(AbstractAnalysis):
                 elif diff.removed:
                     if diff.class_a in global_class_analytics:
                         del global_class_analytics[diff.class_a]
-                    continue
+                    continue  # To avoid update of removed components pragma: no cover
 
                 self.update_analytics(class_analytics, is_bug_fixing, commit.author, commit.timestamp)
 
@@ -122,7 +115,7 @@ class SchwaAnalysis(AbstractAnalysis):
                 elif diff.removed:
                     if diff.method_a in global_method_analytics:
                         del global_method_analytics[diff.method_a]
-                    continue
+                    continue  # To avoid update of removed components pragma: no cover
 
                 self.update_analytics(method_analytics, is_bug_fixing, commit.author, commit.timestamp)
         analytics.compute_defect_probability()

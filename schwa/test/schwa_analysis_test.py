@@ -30,6 +30,9 @@ class TestSchwaAnalysis(unittest.TestCase):
         diffs.append(DiffFile(file_b="GUI.java", added=True))
         diffs.append(DiffClass(file_name="GUI.java", class_b="GUI", added=True))
         diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_b="login", added=True))
+        diffs.append(DiffFile(file_b="CLI.java", added=True))
+        diffs.append(DiffClass(file_name="CLI.java", class_b="CLI", added=True))
+        diffs.append(DiffMethod(file_name="CLI.java", class_name="CLI", method_b="login", added=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Second Commit """
@@ -80,30 +83,95 @@ class TestSchwaAnalysis(unittest.TestCase):
         diffs = []
         diffs.append(DiffFile(file_a="GUI.java", file_b="GUI.java", modified=True))
         diffs.append(DiffClass(file_name="GUI.java", class_a="GUI", class_b="GUI", modified=True))
+        diffs.append(DiffClass(file_name="GUI.java", class_b="GUIWindows", added=True))
         diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_a="login", method_b="login",
                                 modified=True))
+        diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_b="recover",
+                                added=True))
+        commits.append(Commit(_id, message, author, timestamp, diffs))
+
+        """ Sixth Commit """
+        _id = "sdf355dfd"
+        message = "Sixth Commit"
+        author = "louis@familyguy.com"
+        timestamp = current_ts - datetime.timedelta(days=2).total_seconds()
+        diffs = []
+        diffs.append(DiffFile(file_a="CLI.java", file_b="LinuxCLI.java", renamed=True))
+        diffs.append(DiffClass(file_name="LinuxCLI.java", class_a="CLI", class_b="LinuxCLI", renamed=True))
+        diffs.append(DiffMethod(file_name="LinuxCLI.java", class_name="LinuxCLI", method_a="login",
+                                method_b="LinuxLogin", renamed=True))
+        commits.append(Commit(_id, message, author, timestamp, diffs))
+
+        """ Seventh Commit """
+        _id = "sdf4445dfd"
+        message = "Seventh Commit"
+        author = "louis@familyguy.com"
+        timestamp = current_ts - datetime.timedelta(days=1).total_seconds()
+        diffs = []
+        diffs.append(DiffFile(file_a="LinuxCLI.java", removed=True))
+        diffs.append(DiffClass(file_name="LinuxCLI.java", class_a="LinuxCLI", removed=True))
+        diffs.append(DiffMethod(file_name="LinuxCLI.java", class_name="LinuxCLI", method_a="LinuxLogin",
+                                removed=True))
+
+        diffs.append(DiffFile(file_a="GUI.java", file_b="GUI.java", modified=True))
+        diffs.append(DiffClass(file_name="GUI.java", class_a="GUIWindows", removed=True))
+        diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_a="recover",
+                                removed=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
 
         """ Create repository """
         self.repository = Repository(commits, current_ts)
+        self.analysis = SchwaAnalysis(self.repository)
 
     def test_revisions_importance(self):
-        analysis = SchwaAnalysis(self.repository)
-        analytics = analysis.analyze()
+        analytics = self.analysis.analyze()
         self.assertTrue(analytics.files_analytics["API.java"].defect_prob >
-                        analytics.files_analytics["Core.java"].defect_prob)
+                        analytics.files_analytics["Core.java"].defect_prob,
+                        msg="It should give importance to revisions")
 
     def test_fixes_importance(self):
-        analysis = SchwaAnalysis(self.repository)
-        analytics = analysis.analyze()
+        analytics = self.analysis.analyze()
         self.assertTrue(analytics.files_analytics["Database.java"].defect_prob >
-                        analytics.files_analytics["API.java"].defect_prob)
+                        analytics.files_analytics["API.java"].defect_prob, msg="It should give importance to fixes")
 
     def test_authors_importance(self):
-        analysis = SchwaAnalysis(self.repository)
-        analytics = analysis.analyze()
+        analytics = self.analysis.analyze()
         self.assertTrue(analytics.files_analytics["GUI.java"].defect_prob >
-                        analytics.files_analytics["Database.java"].defect_prob)
+                        analytics.files_analytics["Database.java"].defect_prob,
+                        msg="It should give importance to authors")
+
+    def test_granularity_analysis(self):
+        """
+        Whitebox testing for  granularity analysis
+        """
+
+        # File Granularity
+        repository = Repository(self.repository.commits[-3:], self.repository.timestamp)
+        analysis = SchwaAnalysis(repository)
+        analytics = analysis.analyze()
+        self.assertTrue("GUI.java" in analytics.files_analytics, msg="It should deal with non added files")
+
+        repository = Repository(self.repository.commits[:-1], self.repository.timestamp) # Except last commit
+        analysis = SchwaAnalysis(repository)
+        analytics = analysis.analyze()
+        self.assertTrue("LinuxCLI.java" in analytics.files_analytics, msg="It should deal with renamed files")
+        self.assertEqual(analytics.files_analytics["LinuxCLI.java"].revisions, 2,
+                         msg="It should deal with renamed files")
+
+        analytics = self.analysis.analyze()
+        self.assertTrue("LinuxCLI.java" not in analytics.files_analytics, msg="It should deal with removed files")
+
+        self.assertEqual(len(analytics.files_analytics["GUI.java"].authors), 3)
+        self.assertEqual(analytics.files_analytics["GUI.java"].fixes, 1)
+        self.assertEqual(analytics.files_analytics["GUI.java"].revisions, 4)
+
+        # Class granularity
+        self.assertTrue("GUIWindows" not in analytics.files_analytics["GUI.java"].classes_analytics,
+                        msg="It should recognize removed classes")
+
+        # Method granularity
+        self.assertTrue("recover" not in analytics.files_analytics["GUI.java"].classes_analytics["GUI"].methods_analytics,
+                        msg="It should recognize removed methods")
 
 
