@@ -2,6 +2,7 @@ language: python
 
 notifications:
   slack: tqrg:DG1XxjmXD2SaipTTftQ73PFu
+  email: false
 
 python:
   - 3.4
