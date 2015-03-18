@@ -15,6 +15,8 @@ class JavaParser(AbstractParser):
         comment_re = re.compile("^\s*((\/\/)|(\/\*\*)|(\*\/)|(\*))")
         function_re = re.compile("(static|private|protected|public)\s+([^(){}]*\s+)?([a-zA-Z0-1\s]+)\s*\([^(){}]*\)\s*{?\s*$")
         closing_bracket_re = re.compile("}\s*$")
+        open_bracket_re = re.compile("{")
+        close_bracket_re = re.compile("}")
 
         """ Helpers for line scanning """
         current_class = None
@@ -24,6 +26,8 @@ class JavaParser(AbstractParser):
         lines = code.split("\n")
         line_count = len(lines)
         line_counter = 0
+        open_brackets_counter = 0
+        close_brackets_counter = 0
 
         for line in lines:
             line_counter += 1
@@ -42,16 +46,21 @@ class JavaParser(AbstractParser):
                     components.append(current_method)
                     current_method = None
                 current_class = [line_counter, 0, search.group(2)]
+                open_brackets_counter = 0
+                close_brackets_counter = 0
                 continue
 
             # Is a function
             search = function_re.search(line)
             if search:
-                if current_method:
-                    current_method[1] = last_closing_bracket_number
-                    components.append(current_method)
-                current_method = [line_counter, 0, current_class[2], search.group(3)]
-                continue
+                # Evaluate if is pending closing a function declaration
+                if open_brackets_counter == close_brackets_counter:
+                    if current_method:
+                        current_method[1] = last_closing_bracket_number
+                        components.append(current_method)
+                    current_method = [line_counter, 0, current_class[2], search.group(3)]
+                    open_brackets_counter = 0
+                    close_brackets_counter = 0
 
             # Is a closing bracket
             search = closing_bracket_re.search(line)
@@ -66,6 +75,13 @@ class JavaParser(AbstractParser):
                 if current_method:
                     components.append(current_method)
                     current_method[1] = penultimate_closing_bracket_number
+
+            # Brackets
+            if open_bracket_re.search(line):
+                open_brackets_counter += 1
+            if close_bracket_re.search(line):
+                close_brackets_counter += 1
+
 
         return components
 
