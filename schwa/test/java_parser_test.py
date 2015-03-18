@@ -112,7 +112,8 @@ class TestJavaParser(unittest.TestCase):
                     }
                 }"""
         components = JavaParser.parse(code)
-        a = 1
+        self.assertTrue([9, 11, 'HelloWorld', 'main'] in components)
+        self.assertTrue([14, 30, 'HelloWorld', 'start'] in components)
 
     def test_diff_case_a(self):
         """
