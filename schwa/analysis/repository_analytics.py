@@ -2,6 +2,8 @@ import math
 from sklearn import svm
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+from scipy.stats import pearsonr
+from scipy.stats import spearmanr
 
 
 class Metrics:
@@ -80,51 +82,50 @@ class Metrics:
     @staticmethod
     def plot(analytics):
 
-        # 3 Features
-        """
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        for point, bug in zip(Metrics.dataset[0], Metrics.dataset[1]):
-            revisions_twr = point[0]
-            fixes_twr = point[1]
-            authors_twr = point[2]
-
-            if bug == 1:
-                ax.scatter(revisions_twr, fixes_twr, 0 ,c='r', marker='o')
-            else:
-                ax.scatter(revisions_twr, fixes_twr, 0, c='g', marker='o')
-        ax.set_xlabel('Revisions')
-        ax.set_ylabel('Fixes')
-        ax.set_zlabel('Authors')
-        plt.show()
-
-        """
-        # Revisions Features
-        x = []
-        y = []
+        revisions = []
+        fixes = []
+        authors = []
         for file_analytics in analytics.files_analytics.values():
-            x.append(file_analytics.revisions_twr)
-            y.append(file_analytics.fixes_twr)
+            revisions.append(file_analytics.revisions_twr)
+            fixes.append(file_analytics.fixes_twr)
+            authors.append(file_analytics.authors_twr)
+            for class_analytics in file_analytics.classes_analytics.values():
+                revisions.append(class_analytics.revisions_twr)
+                fixes.append(class_analytics.fixes_twr)
+                authors.append(class_analytics.authors_twr)
+                for method_analytics in class_analytics.methods_analytics.values():
+                    revisions.append(method_analytics.revisions_twr)
+                    fixes.append(method_analytics.fixes_twr)
+                    authors.append(method_analytics.authors_twr)
 
-        plt.plot(x, y, 'ro')
+
+        """ Compute correlation """
+        revisions_correlation = pearsonr(revisions, fixes)
+        authors_correlation = pearsonr(authors, fixes)
+        samples = len(fixes)
+        print("=== Pearson ===")
+        print("Revisions Correlation", revisions_correlation)
+        print("Authors Correlation", authors_correlation)
+        revisions_correlation = spearmanr(revisions, fixes)
+        authors_correlation = spearmanr(authors, fixes)
+        print("=== Spearman ===")
+        print("Revisions Correlation", revisions_correlation)
+        print("Authors Correlation", authors_correlation)
+        print("Rule of thumb", 2 / math.sqrt(samples))
+        print("Samples", samples)
+
+        """ Draw scatter """
+        plt.plot(revisions, fixes, 'ro')
         plt.xlabel('Revisions TWR')
         plt.ylabel('Fixes TWR')
-        plt.axis([0, max(x) + 1, 0, max(y) + 1])
+        plt.axis([0, max(revisions) + 1, 0, max(fixes) + 1])
         plt.show()
 
-        # Authors Features
-        x = []
-        y = []
-        for file_analytics in analytics.files_analytics.values():
-            x.append(file_analytics.authors_twr)
-            y.append(file_analytics.fixes_twr)
-
-        plt.plot(x, y, 'ro')
+        plt.plot(authors, fixes, 'ro')
         plt.xlabel('Authors TWR')
         plt.ylabel('Fixes TWR')
-        plt.axis([0, max(x) + 1, 0, max(y) + 1])
+        plt.axis([0, max(authors) + 1, 0, max(fixes) + 1])
         plt.show()
-
 
 
 class RepositoryAnalytics(Metrics):

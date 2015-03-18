@@ -39,9 +39,6 @@ class SchwaAnalysis(AbstractAnalysis):
             """ Repository Granularity """
             self.update_analytics(analytics, is_bug_fixing, commit.author, commit.timestamp)
 
-            """ Training """
-            analytics.add_to_dataset(self.repository.timestamp, commit.timestamp, is_bug_fixing)
-
             """ File Granularity"""
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
                 file_analytics = None
@@ -132,5 +129,6 @@ class SchwaAnalysis(AbstractAnalysis):
                     continue
 
                 self.update_analytics(method_analytics, is_bug_fixing, commit.author, commit.timestamp)
+
         Metrics.plot(analytics)
         return analytics

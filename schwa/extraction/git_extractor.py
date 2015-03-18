@@ -54,7 +54,7 @@ class GitExtractor(AbstractExtractor):
             timestamp = commit.committed_date
             diffs_list = []
             is_good_blob = lambda blob: blob and is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
-            #print("extracting", _id, message)
+            print("extracting", _id, message)
 
             # If it's first commit
             if not commit.parents:
@@ -105,6 +105,8 @@ class GitExtractor(AbstractExtractor):
         except TypeError:  # pragma: no cover
             return None  # pragma: no cover
         except UnicodeDecodeError:  # pragma: no cover
+            return None  # pragma: no cover
+        except AttributeError:  # pragma: no cover
             return None  # pragma: no cover
 
     def timestamp(self):
