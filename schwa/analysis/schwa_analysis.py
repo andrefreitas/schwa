@@ -13,7 +13,7 @@ class SchwaAnalysis(AbstractAnalysis):
 
     @staticmethod
     def is_bug_fixing(commit):
-        return re.search("bug|fix", commit.message, re.I)
+        return re.search("bug|fix|corrigido", commit.message, re.I)
 
     def update_analytics(self, analytics, is_bug_fixing, author, commit_timestamp):
         analytics.update(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts,
