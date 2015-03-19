@@ -23,8 +23,9 @@ class GitExtractor(AbstractExtractor):
         current_repo = self
         commits = self.extract_commits(ignore_regex=ignore_regex, max_commits=max_commits,
                                        method_granularity=method_granularity, parallel=parallel)
-        timestamp = self.timestamp()
-        repo = Repository(commits, timestamp)
+        begin_ts = list(self.repo.iter_commits())[-1].committed_date
+        last_ts = list(self.repo.iter_commits(max_count=1))[0].committed_date
+        repo = Repository(commits, begin_ts, last_ts)
         return repo
 
     def extract_commits(self, ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True):
@@ -108,9 +109,6 @@ class GitExtractor(AbstractExtractor):
             return None  # pragma: no cover
         except AttributeError:  # pragma: no cover
             return None  # pragma: no cover
-
-    def timestamp(self):
-        return list(self.repo.iter_commits())[-1].committed_date
 
     @staticmethod
     def parse(path, source):

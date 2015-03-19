@@ -231,7 +231,7 @@ class TestGitExtractor(unittest.TestCase):
 
         """ Tests """
         self.assertEqual(len(repository.commits), 4, msg="It should only extract commits related to code")
-        self.assertTrue(repository.timestamp < creation_timestamp, msg="It should extract the timestamp of first commit")
+        self.assertTrue(repository.begin_ts < creation_timestamp, msg="It should extract the timestamp of first commit")
 
         self.assertEqual(repository.commits[0].message, "First commit\n")
         self.assertEqual(repository.commits[0].author, "petergriffin@familyguy.com")

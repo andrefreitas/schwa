@@ -1,12 +1,9 @@
 from schwa.analysis import *
 from schwa.repository import *
 import re
-import time
 
 
 class SchwaAnalysis(AbstractAnalysis):
-
-    ts = time.time()
 
     def __init__(self, repository):
         super().__init__(repository)
@@ -16,7 +13,7 @@ class SchwaAnalysis(AbstractAnalysis):
         return re.search("bug|fix|corrigido", commit.message, re.I)
 
     def update_analytics(self, analytics, is_bug_fixing, author, commit_timestamp):
-        analytics.update(ts=commit_timestamp, begin_ts=self.repository.timestamp, current_ts=SchwaAnalysis.ts,
+        analytics.update(ts=commit_timestamp, begin_ts=self.repository.begin_ts, current_ts=self.repository.last_ts,
                          is_bug_fixing=is_bug_fixing, author=author)
 
     def analyze(self):

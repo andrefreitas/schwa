@@ -121,7 +121,7 @@ class TestSchwaAnalysis(unittest.TestCase):
 
 
         """ Create repository """
-        self.repository = Repository(commits, current_ts)
+        self.repository = Repository(commits, current_ts, timestamp)
         self.analysis = SchwaAnalysis(self.repository)
 
     def test_revisions_importance(self):
@@ -147,12 +147,14 @@ class TestSchwaAnalysis(unittest.TestCase):
         """
 
         # File Granularity
-        repository = Repository(self.repository.commits[-3:], self.repository.timestamp)
+        repository = Repository(self.repository.commits[-3:], self.repository.begin_ts,
+                                self.repository.commits[-1].timestamp)
         analysis = SchwaAnalysis(repository)
         analytics = analysis.analyze()
         self.assertTrue("GUI.java" in analytics.files_analytics, msg="It should deal with non added files")
 
-        repository = Repository(self.repository.commits[:-1], self.repository.timestamp) # Except last commit
+        repository = Repository(self.repository.commits[:-1], self.repository.begin_ts,
+                                self.repository.commits[:-1][-1].timestamp) # Except last commit
         analysis = SchwaAnalysis(repository)
         analytics = analysis.analyze()
         self.assertTrue("LinuxCLI.java" in analytics.files_analytics, msg="It should deal with renamed files")

@@ -1,7 +1,8 @@
 class Repository:
-    def __init__(self, commits, timestamp):
+    def __init__(self, commits, begin_ts, last_ts):
         self.commits = commits
-        self.timestamp = timestamp
+        self.begin_ts = begin_ts
+        self.last_ts = last_ts
 
 
 class Commit:
