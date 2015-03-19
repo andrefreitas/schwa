@@ -3,24 +3,12 @@ language: python
 notifications:
   slack: tqrg:DG1XxjmXD2SaipTTftQ73PFu
   email: false
-
-
+  
 python:
   - 3.4
 
-before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-  - chmod +x miniconda.sh
-  - ./miniconda.sh -b
-  - export PATH=/home/travis/miniconda/bin:$PATH
-  - conda update --yes conda
-
 install:
- - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose dateutil pandas statsmodels
- - pip install gitpython
- - pip install cherrypy
- - pip install Jinja2
- - pip install -U scikit-learn
+ - pip install -r requirements.txt
 
 script:
  - nosetests
