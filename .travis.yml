@@ -1,10 +1,7 @@
 language: python
 
 notifications:
-  slack: tqrg:DG1XxjmXD2SaipTTftQ73PFu
-    on_success: change
-    on_failure: change
-  email: false
+  slack: tqrg:DG1XxjmXD2SaipTTftQ73PFu@andrefreitas
 
 
 python:
