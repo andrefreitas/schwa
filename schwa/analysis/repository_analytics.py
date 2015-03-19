@@ -1,4 +1,6 @@
 import math
+import re
+
 
 
 class Metrics:
@@ -72,6 +74,12 @@ class Metrics:
         return probability
 
 
+def strip_path(path):
+    name_re = re.compile("[^/]*\.java$")
+    return name_re.search(path).group(0)
+
+
+
 class RepositoryAnalytics(Metrics):
     def __init__(self):
         super().__init__()
@@ -81,6 +89,54 @@ class RepositoryAnalytics(Metrics):
         self.defect_prob = self.defect_probability()
         for file_analytics in self.files_analytics.values():
             file_analytics.compute_defect_probability()
+
+    def to_dict(self):
+        children = []
+        # For every file
+        for f_path, f_metrics in self.files_analytics.items():
+            f_name = strip_path(f_path)
+            f_children = []
+            # For every class
+            for c_name, c_metrics in f_metrics.classes_analytics.items():
+                c_children = []
+                # For every method
+                for m_name, m_metrics in c_metrics.methods_analytics.items():
+                    c_children.append({
+                        "name": m_name,
+                        "size": m_metrics.defect_prob,
+                        "prob": m_metrics.defect_prob,
+                        "revisions": m_metrics.revisions,
+                        "fixes": m_metrics.fixes,
+                        "authors": len(m_metrics.authors),
+                        "type": "method"
+                    })
+                f_children.append({
+                    "name": c_name,
+                    "size": c_metrics.defect_prob,
+                    "prob": c_metrics.defect_prob,
+                    "revisions": c_metrics.revisions,
+                    "fixes": c_metrics.fixes,
+                    "authors": len(c_metrics.authors),
+                    "children": c_children,
+                    "type": "class"
+
+
+                })
+            children.append({
+                "name": f_name,
+                "path": f_path,
+                "size": f_metrics.defect_prob,
+                "prob": f_metrics.defect_prob,
+                "revisions": f_metrics.revisions,
+                "fixes": f_metrics.fixes,
+                "authors": len(f_metrics.authors),
+                "children": f_children,
+                "type": "file"
+            })
+        return {
+            "name": "root",
+            "children": children
+        }
 
 
 class FileAnalytics(Metrics):
@@ -92,6 +148,7 @@ class FileAnalytics(Metrics):
         self.defect_prob = self.defect_probability()
         for class_analytics in self.classes_analytics.values():
             class_analytics.compute_defect_probability()
+
 
 
 class ClassAnalytics(Metrics):

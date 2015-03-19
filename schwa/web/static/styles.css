@@ -1,10 +1,47 @@
 body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  margin: auto;
-  position: relative;
-  width: 960px; }
+  font-family: "Open Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 10px; }
 
-form {
+#main {
+  width: 750px;
+  margin: 0 auto; }
+
+#sequence {
+  width: 600px;
+  height: 70px; }
+  #sequence text {
+    font-weight: 600;
+    fill: white; }
+
+#chart {
+  position: relative; }
+  #chart path {
+    stroke: white; }
+
+#explanation {
   position: absolute;
-  right: 10px;
-  top: 10px; }
+  top: 260px;
+  left: 305px;
+  width: 140px;
+  text-align: center;
+  color: #666666;
+  z-index: -1; }
+  #explanation #percentage {
+    font-size: 2.5em; }
+  #explanation #name {
+    font-weight: bold;
+    color: #7b615c; }
+  #explanation .metrics {
+    font-style: italic;
+    padding-top: 10px;
+    color: #7b615c; }
+
+.path {
+  text-align: center;
+  margin-top: 20px;
+  background: #bbbbbb;
+  font-weight: bold;
+  color: white;
+  padding: 10px; }

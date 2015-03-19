@@ -1,29 +1,25 @@
-import cherrypy
-import os
-from jinja2 import Environment, FileSystemLoader
+from bottle import Bottle, run, static_file, template, response
+import webbrowser
 
-env = Environment(loader=FileSystemLoader('static'))
-current_dir = os.path.dirname(os.path.abspath(__file__))
+app = Bottle()
+
+@app.route('/')
+def index():
+    return template('schwa/web/views/index')
+
+@app.route('/static/<filename>')
+def server_static(filename):
+    return static_file(filename, root='schwa/web/static')
+
+@app.route("/analytics")
+def analytics():
+    response.content_type = 'application/json'
+    return Server.analytics.to_dict()
 
 
-class Server:
+class Server(Bottle):
     @staticmethod
     def run(analytics):
-        cherrypy.config.update({'server.socket_port': 3456, 'engine.autoreload.on': False})
-        conf = {
-            '/static': {
-                'tools.staticdir.on': True,
-                'tools.staticdir.dir': os.path.join(current_dir, 'static')
-            }
-        }
-        cherrypy.quickstart(root=Sunburst(analytics), config=conf)
-
-
-class Sunburst(object):
-    def __init__(self, analytics):
-        self.analytics = analytics
-
-    @cherrypy.expose
-    def index(self):
-        tmpl = env.get_template('index.html')
-        return tmpl.render()
+        Server.analytics = analytics
+        webbrowser.open_new("http://localhost:8081")
+        run(app, host='localhost', port=8081)
