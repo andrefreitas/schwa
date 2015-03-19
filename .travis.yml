@@ -1,7 +1,8 @@
 language: python
 
 notifications:
-  slack: tqrg:DG1XxjmXD2SaipTTftQ73PFu@andrefreitas
+  slack: tqrg:DG1XxjmXD2SaipTTftQ73PFu
+  email: false
 
 
 python:
