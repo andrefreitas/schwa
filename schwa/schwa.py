@@ -1,5 +1,8 @@
 from schwa.extraction import GitExtractor
 from schwa.analysis import SchwaAnalysis
+from schwa.web import Server
+import sys
+import os
 
 
 class Schwa:
@@ -12,3 +15,21 @@ class Schwa:
         analysis = SchwaAnalysis(repo)
         analytics = analysis.analyze()
         return analytics
+
+
+def main():
+    print("Schwa experimental version!!!")
+    if len(sys.argv) < 2:
+        print("usage:", "schwa", "repository_path", "[max_commits]")
+    else:
+        max_commits = None
+        repository_path = sys.argv[1]
+        if len(sys.argv) == 3:
+            max_commits = int(sys.argv[2])
+        if not os.path.exists(repository_path):
+            print("Invalid repository path")
+        else:
+            print("Analyzing commits...")
+            s = Schwa(repository_path)
+            analytics = s.analyze(max_commits=max_commits)
+            Server.run(analytics)

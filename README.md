@@ -2,8 +2,15 @@
 
 A tool that extracts metrics from software repositories to support defect prediction. 
 
-## Project Setup
+## Install
+1. Install Python3.4 
+2. Clone this repository and cd
+3. `python3.4 setup.py install`
 
+## Usage
+`schwa repository_path [max_commits]`
+
+## Development Setup
 1. Install Python3.4
 2. Install GIT
 2. Install requirements `pip install -r requirements.txt`
