@@ -1,13 +1,51 @@
-from .abstract_parser import AbstractParser
-from schwa.repository import *
+# Copyright (c) 2015 Faculty of Engineering of the University of Porto
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+""" Module for the Java Parser """
+
 import difflib
 import re
+from .abstract_parser import AbstractParser
+from schwa.repository import *
 
 
-#TODO: Detect functions overloading
 class JavaParser(AbstractParser):
+    """ A Java Parser.
+
+    It parses Java Code using regexs since it's faster.
+    """
+
     @staticmethod
     def parse(code):
+        """ Parses Java code.
+
+        Iterates over the lines to parse components a return a list of components with their start and end line.
+        For example: [[9, 11, 'API', 'getUrl'], [13, 15, 'API', 'setUrl']].
+
+        Args:
+            code: A string representing Java source code.
+
+        Returns:
+            A list of lists that have the start and end line for each component.
+        """
+
         components = []
 
         """ Regular Expressions to evaluate if a line is a class, function, etc """
@@ -86,6 +124,19 @@ class JavaParser(AbstractParser):
 
     @staticmethod
     def extract_changed_sequences(source_a, source_b):
+        """ Extracts sequences of changes.
+
+        It returns a list of sequences changed between source A and source B.
+        For example: [["-", 1, 10], ["+", 15, 35], ["-", 100, 110]]
+
+        Args:
+            source_a: A string representing Java source of version A.
+            source_b: A string representing Java source of version B.
+
+        Returns:
+            A list of lists with changed sequences.
+        """
+
         changed_lines = difflib.ndiff(source_a.split("\n"), source_b.split("\n"))
         line_number_a = 0
         line_number_b = 0
@@ -137,6 +188,18 @@ class JavaParser(AbstractParser):
 
     @staticmethod
     def diff(file_a, file_b):
+        """ Computes diffs between 2 version of a file.
+
+        By giving files paths and source code, outputs Diffs instances at the Class and Method granularity.
+
+        Args:
+            file_a: A tuple with (File Path, Source Code) of version A.
+            file_b: A tuple with (File Path, Source Code) of version B.
+
+        Returns:
+            A list of Diff instances.
+        """
+
         path_a, source_a = file_a
         path_b, source_b = file_b
         diffs = []

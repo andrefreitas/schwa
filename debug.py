@@ -18,33 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-""" Module for declaring an Abstract class for Analysis.
+""" For Pycharm debuging. """
 
-If we want to add a new way of analyzing a repository, it's necessary to create a subclass
-of AbstractAnalysis and override abstract methods.
-"""
+from schwa import main
 
-import abc
-
-
-class AbstractAnalysis:
-    """ Abstract class for Analysis.
-
-    An Abstract Analysis class using Template Design Pattern to ensure a standard.
-
-    Attributes:
-        repository: A repository instance.
-    """
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, repository):
-        """ Inits AbstractAnalysis.
-
-        Args:
-            repository: A Repository instance.
-        """
-        self.repository = repository
-
-    @abc.abstractmethod
-    def analyze(self):
-        """ Analyzes a repository and returns a RepositoryAnalytics instance. """
+main()

@@ -1,1 +1,1 @@
-from .schwa import Schwa
+from .schwa import *
