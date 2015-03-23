@@ -134,6 +134,34 @@ class TestJavaParser(unittest.TestCase):
         self.assertTrue([9, 11, 'HelloWorld', 'main'] in components)
         self.assertTrue([14, 30, 'HelloWorld', 'start'] in components)
 
+    def test_parse_nested_classes(self):
+        code = """public class ShadowTest {
+
+            public int x = 0;
+
+            class FirstLevel {
+
+                public int x = 1;
+
+                void methodInFirstLevel(int x) {
+                    System.out.println("x = " + x);
+                    System.out.println("this.x = " + this.x);
+                    System.out.println("ShadowTest.this.x = " + ShadowTest.this.x);
+                }
+            }
+
+            public static void main(String... args) {
+                ShadowTest st = new ShadowTest();
+                ShadowTest.FirstLevel fl = st.new FirstLevel();
+                fl.methodInFirstLevel(23);
+            }
+        }"""
+        # NOT IMPLEMENTED
+        #components = JavaParser.parse(code)
+        #self.assertTrue([16, 20, "ShadowTest", "main"] in components)
+        #self.assertTrue([9, 13, "ShadowTest.FirstLevel", "methodInFirstLevel"] in components)
+
+
     def test_parse_class_without_bracket(self):
         code = """/* CallingMethodsInSameClass.java
          *
