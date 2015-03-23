@@ -1,7 +1,7 @@
 language: python
 
 notifications:
-  slack: tqrg:DG1XxjmXD2SaipTTftQ73PFu
+  slack: tqrg:pDwyKZ3Wwp8tGnJT4qtnm10I
   email: false
 
 python:
