@@ -23,7 +23,7 @@
 from setuptools import setup
 from pip.req import parse_requirements
 
-INSTALL_REQUIREMENTS = [str(ir.req) for ir in parse_requirements("requirements.txt")]
+INSTALL_REQUIREMENTS = [str(ir.req) for ir in parse_requirements("requirements.txt", session=True)]
 
 setup(name='Schwa',
       version='0.1-dev',

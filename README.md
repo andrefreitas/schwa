@@ -11,10 +11,12 @@ A tool that analyzes GIT Repositories of Java Projects and estimates the defect 
 ## Usage
 `schwa repository_path [max_commits]`
 
-## Development Setup
+## Build
+Tip: Run this commands as administrator.
 1. Install Python3.4
-2. Install GIT
-2. Install requirements `pip install -r requirements.txt`
+2. Install Python pip https://pip.pypa.io/en/latest/installing.html
+3. Install Git
+2. Install requirements `pip3.4 install -r requirements.txt`
 
 ## Testing
 Run the command `nosetests` in root directory
