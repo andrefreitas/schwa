@@ -44,7 +44,7 @@ class GitExtractor(AbstractExtractor):
         super().__init__(path)
         self.repo = git.Repo(path, odbt=git.GitCmdObjectDB)
 
-    def extract(self, ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True):
+    def extract(self, ignore_regex="^$", max_commits=None, method_granularity=False, parallel=False):
         """ Extract a repository.
 
         It extracts commits from a repository that are important to the analysis. Therefore, only commits

@@ -36,4 +36,4 @@ class AbstractParser:
 
     @abc.abstractstaticmethod
     def diff(source_a, source_b):
-        """ Parses all the components till method"""
+        """ Parses differences till method"""

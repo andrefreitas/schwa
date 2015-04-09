@@ -22,8 +22,13 @@
 
 import difflib
 import re
+import plyj.parser as plyj
+from plyj.model import *
+from plyj.parser import *
 from .abstract_parser import AbstractParser
 from schwa.repository import *
+
+parser = plyj.Parser()
 
 
 class JavaParser(AbstractParser):
@@ -36,7 +41,7 @@ class JavaParser(AbstractParser):
     def parse(code):
         """ Parses Java code.
 
-        Iterates over the lines to parse components a return a list of components with their start and end line.
+        Iterates over the lines to parse components and returns a list of components with their start and end line.
         For example: [[9, 11, 'API', 'getUrl'], [13, 15, 'API', 'setUrl']].
 
         Args:
@@ -45,81 +50,20 @@ class JavaParser(AbstractParser):
         Returns:
             A list of lists that have the start and end line for each component.
         """
-
         components = []
-
-        """ Regular Expressions to evaluate if a line is a class, function, etc """
-        class_re = re.compile("(class)\s+([a-zA-Z0-1]+)")
-        comment_re = re.compile("^\s*((\/\/)|(\/\*\*)|(\*\/)|(\*))")
-        function_re = re.compile("(static|private|protected|public)\s+([^(){}]*\s+)?([a-zA-Z0-1\s]+)\s*\([^(){}]*\)\s*{?\s*$")
-        closing_bracket_re = re.compile("}\s*$")
-        open_bracket_re = re.compile("{")
-        close_bracket_re = re.compile("}")
-
-        """ Helpers for line scanning """
-        current_class = None
-        current_method = None
-        last_closing_bracket_number = None
-        penultimate_closing_bracket_number = None
-        lines = code.split("\n")
-        line_count = len(lines)
-        line_counter = 0
-        open_brackets_counter = 0
-        close_brackets_counter = 0
-
-        for line in lines:
-            line_counter += 1
-
-            # Is a comment
-            if comment_re.search(line):
-                continue
-
-            # Is a class
-            search = class_re.search(line)
-            if search:
-                if current_class:
-                    current_class[1] = last_closing_bracket_number
-                if current_method:
-                    current_method[1] = penultimate_closing_bracket_number
-                    components.append(current_method)
-                    current_method = None
-                current_class = [line_counter, 0, search.group(2)]
-                open_brackets_counter = 0 if open_bracket_re.search(line) else -1
-                close_brackets_counter = 0
-                continue
-
-            # Is a function
-            search = function_re.search(line)
-            if search:
-                # Evaluate if is pending closing a function declaration
-                if open_brackets_counter == close_brackets_counter:
-                    if current_method:
-                        current_method[1] = last_closing_bracket_number
-                        components.append(current_method)
-                    current_method = [line_counter, 0, current_class[2], search.group(3)]
-                    open_brackets_counter = 0
-                    close_brackets_counter = 0
-
-            # Is a closing bracket
-            search = closing_bracket_re.search(line)
-            if search:
-                penultimate_closing_bracket_number = last_closing_bracket_number
-                last_closing_bracket_number = line_counter
-
-            # Is last line
-            if line_count == line_counter:
-                if current_class:
-                    current_class[1] = last_closing_bracket_number
-                if current_method:
-                    components.append(current_method)
-                    current_method[1] = penultimate_closing_bracket_number
-
-            # Brackets
-            if open_bracket_re.search(line):
-                open_brackets_counter += 1
-            if close_bracket_re.search(line):
-                close_brackets_counter += 1
-
+        ignored = 0
+        try:
+            tree = parser.parse_string(code)
+            classes = [c for c in tree.type_declarations if isinstance(c, ClassDeclaration)]
+            for _class in classes:
+                methods = [m for m in _class.body if isinstance(m, (MethodDeclaration, ConstructorDeclaration))]
+                for method in methods:
+                    if method.end_line:
+                        components.append([method.start_line, method.end_line, _class.name, method.name])
+                    else:
+                        ignored += 1
+        except ParsingError:
+            return []
         return components
 
     @staticmethod
