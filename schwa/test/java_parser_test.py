@@ -88,15 +88,15 @@ class TestJavaParser(unittest.TestCase):
             }"""
 
     def test_parse(self):
-        components = JavaParser.parse(self.code)
-        self.assertTrue([9, 11, 'API', 'getUrl'] in components)
-        self.assertTrue([13, 15, 'API', 'setUrl'] in components)
-        self.assertTrue([21, 23, 'API', 'API'] in components)
-        self.assertTrue([25, 27, 'API', 'API'] in components)
-        self.assertTrue([30, 35, 'API', 'login'] in components)
-        self.assertTrue([37, 47, 'API', 'register'] in components)
-        self.assertTrue([49, 51, 'API', 'getShows'] in components)
-        self.assertTrue([56, 58, 'SOAPAPI', 'login'] in components)
+        _, components_methods = JavaParser.parse(self.code)
+        self.assertTrue([9, 11, 'API', 'getUrl'] in components_methods)
+        self.assertTrue([13, 15, 'API', 'setUrl'] in components_methods)
+        self.assertTrue([21, 23, 'API', 'API'] in components_methods)
+        self.assertTrue([25, 27, 'API', 'API'] in components_methods)
+        self.assertTrue([30, 35, 'API', 'login'] in components_methods)
+        self.assertTrue([37, 47, 'API', 'register'] in components_methods)
+        self.assertTrue([49, 51, 'API', 'getShows'] in components_methods)
+        self.assertTrue([56, 58, 'SOAPAPI', 'login'] in components_methods)
 
     def test_parse_with_anonymous_classes(self):
         code = """import javafx.event.ActionEvent;
@@ -130,9 +130,9 @@ class TestJavaParser(unittest.TestCase):
                         primaryStage.show();
                     }
                 }"""
-        components = JavaParser.parse(code)
-        self.assertTrue([9, 11, 'HelloWorld', 'main'] in components)
-        self.assertTrue([14, 30, 'HelloWorld', 'start'] in components)
+        _, components_methods = JavaParser.parse(code)
+        self.assertTrue([9, 11, 'HelloWorld', 'main'] in components_methods)
+        self.assertTrue([14, 30, 'HelloWorld', 'start'] in components_methods)
 
     def test_parse_nested_classes(self):
         """ Nested classes are supported with dot notation """
@@ -158,9 +158,9 @@ class TestJavaParser(unittest.TestCase):
             }
         }"""
 
-        components = JavaParser.parse(code)
-        self.assertTrue([16, 20, "ShadowTest", "main"] in components, msg="It should recognize nested classes")
-        self.assertTrue([9, 13, "ShadowTest.FirstLevel", "methodInFirstLevel"] in components,
+        _, components_methods = JavaParser.parse(code)
+        self.assertTrue([16, 20, "ShadowTest", "main"] in components_methods, msg="It should recognize nested classes")
+        self.assertTrue([9, 13, "ShadowTest.FirstLevel", "methodInFirstLevel"] in components_methods,
                         msg="It should recognize nested classes")
 
     def test_compressed_code(self):
@@ -169,9 +169,9 @@ class TestJavaParser(unittest.TestCase):
             + """System.out.println("ShadowTest.this.x = "+ShadowTest.this.x);}}public static void main(String...""" \
             + """args){ShadowTest st=new ShadowTest();ShadowTest.FirstLevel fl=st.new FirstLevel();""" \
             + "fl.methodInFirstLevel(23);}}"""
-        components = JavaParser.parse(code)
-        self.assertTrue([1, 1, "ShadowTest", "main"] in components)
-        self.assertTrue([1, 1, "ShadowTest.FirstLevel", "methodInFirstLevel"] in components)
+        _, components_methods = JavaParser.parse(code)
+        self.assertTrue([1, 1, "ShadowTest", "main"] in components_methods)
+        self.assertTrue([1, 1, "ShadowTest.FirstLevel", "methodInFirstLevel"] in components_methods)
 
     def test_abstract_class(self):
         code = """public abstract class GraphicObject {
@@ -179,19 +179,21 @@ class TestJavaParser(unittest.TestCase):
            // declare nonabstract methods
            abstract void draw();
         }"""
-        components = JavaParser.parse(code)
-        self.assertTrue([4, 4, "GraphicObject", "draw"] in components)
+        _, components_methods = JavaParser.parse(code)
+        self.assertTrue([4, 4, "GraphicObject", "draw"] in components_methods)
 
     def test_empty_methods(self):
         code = """private class SOAPAPI{
-                private void login(String name){
+                private void login(String name)
+                {
 
                 }
                 private void login2(String name){
 
                 }}"""
-        components = JavaParser.parse(code)
-        self.assertTrue([2, 4, "SOAPAPI", "login"] in components)
+        _, components_methods = JavaParser.parse(code)
+        self.assertTrue([2, 5, "SOAPAPI", "login"] in components_methods)
+        self.assertTrue([6, 8, "SOAPAPI", "login2"] in components_methods)
 
     def test_diff_case_a(self):
         code_b = """

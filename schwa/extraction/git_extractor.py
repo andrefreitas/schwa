@@ -166,8 +166,8 @@ class GitExtractor(AbstractExtractor):
     @staticmethod
     def parse(path, source):
         if "java" in path:
-            components = JavaParser.parse(source)
-            return components
+            _, components_methods = JavaParser.parse(source)
+            return components_methods
 
     @staticmethod
     def diff(file_a, file_b):

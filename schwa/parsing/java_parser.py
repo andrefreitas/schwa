@@ -39,6 +39,7 @@ class JavaParser(AbstractParser):
 
     @staticmethod
     def parse(code):
+        #TODO: Update documentation and change list to classes!
         """ Parses Java code.
 
         Iterates over the lines to parse components and returns a list of components with their start and end line.
@@ -60,6 +61,7 @@ class JavaParser(AbstractParser):
 
     @staticmethod
     def parse_tree(tree, parent_classes=[]):
+        #TODO: Update documentation and change list to classes!
         """ Parses a tree recursively.
 
         It iterates trough methods and parses nested classes using dot notation.
@@ -69,24 +71,28 @@ class JavaParser(AbstractParser):
             parent_classes: An optional list of strings of the parent classes
 
         Returns:
-            A list of lists that have the start and end line for each component.
+            A tuple of lists that have the start and end line for each component.
         """
-        components = []
+        components_methods = []
+        components_classes = []
         my_parent_classes = parent_classes[:]
 
         if isinstance(tree, ClassDeclaration):
             my_parent_classes.append(tree.name)
+            components_classes.append([tree.start_line, tree.end_line, ".".join(my_parent_classes)])
+
 
         methods = [m for m in tree.body if isinstance(m, (MethodDeclaration, ConstructorDeclaration))]
         for method in methods:
             if method.end_line:
-                components.append([method.start_line, method.end_line, ".".join(my_parent_classes), method.name])
+                components_methods.append([method.start_line, method.end_line, ".".join(my_parent_classes), method.name])
 
         classes = [c for c in tree.body if isinstance(c, ClassDeclaration)]
         for tree in classes:
-                components.extend(JavaParser.parse_tree(tree, my_parent_classes))
+                components_classes.extend(JavaParser.parse_tree(tree, my_parent_classes)[0])
+                components_methods.extend(JavaParser.parse_tree(tree, my_parent_classes)[1])
 
-        return components
+        return (components_classes, components_methods)
 
 
     @staticmethod
@@ -170,8 +176,13 @@ class JavaParser(AbstractParser):
         path_a, source_a = file_a
         path_b, source_b = file_b
         diffs = []
-        components_a = JavaParser.parse(source_a)
-        components_b = JavaParser.parse(source_b)
+        #TODO: Update this workaround later
+        try:
+            _, components_a = JavaParser.parse(source_a)
+            _, components_b = JavaParser.parse(source_b)
+        except ValueError:
+            return []
+
         changed_a = set()
         changed_b = set()
         changed_sequences = JavaParser.extract_changed_sequences(source_a, source_b)

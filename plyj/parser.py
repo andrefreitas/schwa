@@ -1552,6 +1552,9 @@ class ClassParser(object):
                                 extends=p[1]['extends'], implements=p[1]['implements'],
                                 type_parameters=p[1]['type_parameters'])
         p[0].line_number = lineno
+        p[0].start_line = p[1]['lineno']
+        p[0].end_line = p.slice[2].end_line
+
 
     def p_class_header(self, p):
         '''class_header : class_header_name class_header_extends_opt class_header_implements_opt'''
@@ -1567,6 +1570,7 @@ class ClassParser(object):
         else:
             p[1]['type_parameters'] = p[2]
         p[0] = p[1]
+        p[0]['lineno'] = p.lexer.lineno
 
     def p_class_header_name1(self, p):
         '''class_header_name1 : modifiers_opt CLASS NAME'''
@@ -1605,6 +1609,8 @@ class ClassParser(object):
     def p_class_body(self, p):
         '''class_body : '{' class_body_declarations_opt '}' '''
         p[0] = p[2]
+        p.slice[0].start_line = p.slice[1].lineno
+        p.slice[0].end_line = p.slice[3].lineno
 
     def p_class_body_declarations_opt(self, p):
         '''class_body_declarations_opt : class_body_declarations'''
@@ -1756,7 +1762,7 @@ class ClassParser(object):
                                      throws=p[1]['throws'], body=p[2])
             p[0].line_number = lineno
             p[0].end_line = p.slice[2].end_line
-            p[0].start_line = p.slice[2].start_line
+            p[0].start_line = p[1]['lineno']
 
     def p_abstract_method_declaration(self, p):
         '''abstract_method_declaration : method_header ';' '''
@@ -1775,7 +1781,6 @@ class ClassParser(object):
         p[1]['parameters'] = p[2]
         p[1]['extended_dims'] = p[4]
         p[1]['throws'] = p[5]
-        p[1]['lineno'] = p.lexer.lineno
         p[0] = p[1]
 
     def p_method_header_name(self, p):
@@ -1785,6 +1790,7 @@ class ClassParser(object):
             p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
         else:
             p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
+        p[0]["lineno"] = p.lexer.lineno
 
     def p_method_header_extended_dims(self, p):
         '''method_header_extended_dims : dims_opt'''
