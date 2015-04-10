@@ -135,6 +135,7 @@ class TestJavaParser(unittest.TestCase):
         self.assertTrue([14, 30, 'HelloWorld', 'start'] in components)
 
     def test_parse_nested_classes(self):
+        """ Nested classes are supported with dot notation """
         code = """public class ShadowTest {
 
             public int x = 0;
@@ -156,40 +157,41 @@ class TestJavaParser(unittest.TestCase):
                 fl.methodInFirstLevel(23);
             }
         }"""
-        # NOT IMPLEMENTED
-        #components = JavaParser.parse(code)
-        #self.assertTrue([16, 20, "ShadowTest", "main"] in components)
-        #self.assertTrue([9, 13, "ShadowTest.FirstLevel", "methodInFirstLevel"] in components)
 
+        components = JavaParser.parse(code)
+        self.assertTrue([16, 20, "ShadowTest", "main"] in components, msg="It should recognize nested classes")
+        self.assertTrue([9, 13, "ShadowTest.FirstLevel", "methodInFirstLevel"] in components,
+                        msg="It should recognize nested classes")
 
-    def test_parse_class_without_bracket(self):
-        code = """/* CallingMethodsInSameClass.java
-         *
-         * illustrates how to call static methods a class
-         * from a method in the same class
-         */
+    def test_compressed_code(self):
+        code = """public class ShadowTest{public int x=0;class FirstLevel{public int x=1;void methodInFirstLevel""" \
+            + """(int x){System.out.println("x = "+x);System.out.println("this.x = "+this.x);""" \
+            + """System.out.println("ShadowTest.this.x = "+ShadowTest.this.x);}}public static void main(String...""" \
+            + """args){ShadowTest st=new ShadowTest();ShadowTest.FirstLevel fl=st.new FirstLevel();""" \
+            + "fl.methodInFirstLevel(23);}}"""
+        components = JavaParser.parse(code)
+        self.assertTrue([1, 1, "ShadowTest", "main"] in components)
+        self.assertTrue([1, 1, "ShadowTest.FirstLevel", "methodInFirstLevel"] in components)
 
-        public class CallingMethodsInSameClass
-        {
-            public static void main(String[] args) {
-                printOne();
-                printOne();
-                printTwo();
-            }
-
-            public static void printOne() {
-                System.out.println("Hello World");
-            }
-
-            public static void printTwo() {
-                printOne();
-                printOne();
-            }
+    def test_abstract_class(self):
+        code = """public abstract class GraphicObject {
+           // declare fields
+           // declare nonabstract methods
+           abstract void draw();
         }"""
         components = JavaParser.parse(code)
-        self.assertTrue([9, 13, 'CallingMethodsInSameClass', 'main'] in components)
-        self.assertTrue([15, 17, 'CallingMethodsInSameClass', 'printOne'] in components)
-        self.assertTrue([19, 22, 'CallingMethodsInSameClass', 'printTwo'] in components)
+        self.assertTrue([4, 4, "GraphicObject", "draw"] in components)
+
+    def test_empty_methods(self):
+        code = """private class SOAPAPI{
+                private void login(String name){
+
+                }
+                private void login2(String name){
+
+                }}"""
+        components = JavaParser.parse(code)
+        self.assertTrue([2, 4, "SOAPAPI", "login"] in components)
 
     def test_diff_case_a(self):
         code_b = """

@@ -50,21 +50,44 @@ class JavaParser(AbstractParser):
         Returns:
             A list of lists that have the start and end line for each component.
         """
-        components = []
-        ignored = 0
         try:
             tree = parser.parse_string(code)
-            classes = [c for c in tree.type_declarations if isinstance(c, ClassDeclaration)]
-            for _class in classes:
-                methods = [m for m in _class.body if isinstance(m, (MethodDeclaration, ConstructorDeclaration))]
-                for method in methods:
-                    if method.end_line:
-                        components.append([method.start_line, method.end_line, _class.name, method.name])
-                    else:
-                        ignored += 1
-        except ParsingError:
+            tree.body = tree.type_declarations
+            components = JavaParser.parse_tree(tree)
+        except (ParsingError, IndexError):
             return []
         return components
+
+    @staticmethod
+    def parse_tree(tree, parent_classes=[]):
+        """ Parses a tree recursively.
+
+        It iterates trough methods and parses nested classes using dot notation.
+
+        Args:
+            tree: A tree parsed from plyj
+            parent_classes: An optional list of strings of the parent classes
+
+        Returns:
+            A list of lists that have the start and end line for each component.
+        """
+        components = []
+        my_parent_classes = parent_classes[:]
+
+        if isinstance(tree, ClassDeclaration):
+            my_parent_classes.append(tree.name)
+
+        methods = [m for m in tree.body if isinstance(m, (MethodDeclaration, ConstructorDeclaration))]
+        for method in methods:
+            if method.end_line:
+                components.append([method.start_line, method.end_line, ".".join(my_parent_classes), method.name])
+
+        classes = [c for c in tree.body if isinstance(c, ClassDeclaration)]
+        for tree in classes:
+                components.extend(JavaParser.parse_tree(tree, my_parent_classes))
+
+        return components
+
 
     @staticmethod
     def extract_changed_sequences(source_a, source_b):

@@ -1739,6 +1739,9 @@ class ClassParser(object):
     def p_method_body(self, p):
         '''method_body : '{' block_statements_opt '}' '''
         p[0] = p[2]
+        p.slice[0].start_line = p.slice[1].lineno
+        p.slice[0].end_line = p.slice[3].lineno
+
 
     def p_method_declaration(self, p):
         '''method_declaration : abstract_method_declaration
@@ -1751,10 +1754,9 @@ class ClassParser(object):
                                      extended_dims=p[1]['extended_dims'], type_parameters=p[1]['type_parameters'],
                                      return_type=p[1]['type'], modifiers=p[1]['modifiers'],
                                      throws=p[1]['throws'], body=p[2])
-        p[0].line_number = lineno
-        body = p[2]
-        p[0].end_line = body[-1].line_number if body else None
-        p[0].start_line = p[1]['lineno']
+            p[0].line_number = lineno
+            p[0].end_line = p.slice[2].end_line
+            p[0].start_line = p.slice[2].start_line
 
     def p_abstract_method_declaration(self, p):
         '''abstract_method_declaration : method_header ';' '''
@@ -1764,6 +1766,9 @@ class ClassParser(object):
                                  return_type=p[1]['type'], modifiers=p[1]['modifiers'],
                                  throws=p[1]['throws'])
         p[0].line_number = lineno
+        if p[1]:
+            p[0].end_line = p[0].start_line = p[1]['lineno']
+
 
     def p_method_header(self, p):
         '''method_header : method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
