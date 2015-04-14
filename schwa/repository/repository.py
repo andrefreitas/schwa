@@ -85,6 +85,16 @@ class Diff:
         return self.renamed == other.renamed and self.modified == other.modified and self.added == other.added \
             and self.removed == other.removed
 
+    def __repr__(self):
+        if self.renamed:
+            return "renamed"
+        elif self.modified:
+            return "modified"
+        elif self.added:
+            return "added"
+        elif self.removed:
+            return "removed"
+
 
 class DiffFile(Diff):
     """ Diff of a File component.
@@ -106,6 +116,9 @@ class DiffFile(Diff):
             return self.file_a == other.file_a and self.file_b == other.file_b and super().__eq__(other)
         else:
             return False
+
+    def __repr__(self):
+        return "%s file %s,%s" % (super().__repr__(), self.file_a, self.file_b)
 
 
 class DiffClass(Diff):
@@ -133,6 +146,9 @@ class DiffClass(Diff):
         else:
             return False
 
+    def __repr__(self):
+        return "%s class %s,%s in file %s" % (super().__repr__(), self.class_a, self.class_b, self.file_name)
+
 
 class DiffMethod(Diff):
     """ Diff of a Method component.
@@ -159,3 +175,7 @@ class DiffMethod(Diff):
                 self.method_a == other.method_a and self.method_b == other.method_b and super().__eq__(other)
         else:
             return False
+
+    def __repr__(self):
+        return "%s method %s,%s in class %s and file %s" % (super().__repr__(), self.method_a, self.method_b,
+                                                            self.class_name, self.file_name)

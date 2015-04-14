@@ -44,7 +44,7 @@ class GitExtractor(AbstractExtractor):
         super().__init__(path)
         self.repo = git.Repo(path, odbt=git.GitCmdObjectDB)
 
-    def extract(self, ignore_regex="^$", max_commits=None, method_granularity=False, parallel=False):
+    def extract(self, ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True):
         """ Extract a repository.
 
         It extracts commits from a repository that are important to the analysis. Therefore, only commits
@@ -101,76 +101,80 @@ class GitExtractor(AbstractExtractor):
             A Commit instance.
         """
         commit = self.repo.commit(hexsha)
-        try:
-            _id = hexsha
-            message = commit.message
-            author = commit.author.email
-            timestamp = commit.committed_date
-            diffs_list = []
-            is_good_blob = lambda blob: blob and is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
-            # print("extracting", _id, message)
+        _id = hexsha
+        message = commit.message
+        author = commit.author.email
+        timestamp = commit.committed_date
+        diffs_list = []
 
-            # If it's first commit
-            if not commit.parents:
-                blobs = commit.tree.traverse()
-                for blob in blobs:
-                    if is_good_blob(blob):
-                        diffs_list.append(DiffFile(file_b=blob.path, added=True))
-                        if self.method_granularity:
-                            source = blob.data_stream.read().decode("UTF-8")
-                            components = GitExtractor.parse(blob.path, source)
-                            for _, _, c, f in components:  # Iterates over methods
-                                diffs_list.append(DiffMethod(file_name=blob.path, class_name=c, method_b=f, added=True))
-                            for c in set(c for _, _, c, f in components):  # Iterates over classes
-                                diffs_list.append(DiffClass(file_name=blob.path, class_b=c, added=True))
-
+        # First commit
+        if not commit.parents:
+            for blob in commit.tree.traverse():
+                if self.is_good_blob(blob):
+                    diffs_list.extend(self.get_new_file_diffs(blob))
+        else:
             for parent in commit.parents:
-                diffs = parent.diff(commit)
-                for diff in diffs:
-                    if not is_good_blob(diff.a_blob) and not is_good_blob(diff.b_blob):
+                for diff in parent.diff(commit):
+                    # Shortcut
+                    if not self.is_good_blob(diff.a_blob) and not self.is_good_blob(diff.b_blob):
                         continue
-                    if diff.new_file:
-                        diffs_list.append(DiffFile(file_b=diff.b_blob.path, added=True))
-                        if self.method_granularity:
-                            source = diff.b_blob.data_stream.read().decode("UTF-8")
-                            components = GitExtractor.parse(diff.b_blob.path, source)
-                            for _, _, c, f in components:
-                                diffs_list.append(DiffMethod(file_name=diff.b_blob.path, class_name=c, method_b=f, added=True))
-                            for c in set(c for _, _, c, f in components):
-                                diffs_list.append(DiffClass(file_name=diff.b_blob.path, class_b=c, added=True))
-                    elif diff.renamed:
-                        if is_good_blob(diff.b_blob):
-                            diffs_list.append(DiffFile(file_a=diff.rename_from, file_b=diff.rename_to, renamed=True))
-                            if self.method_granularity:
-                                source_a = diff.a_blob.data_stream.read().decode("UTF-8")
-                                source_b = diff.b_blob.data_stream.read().decode("UTF-8")
-                                diffs_list.extend(GitExtractor.diff((diff.rename_from, source_a), (diff.rename_to, source_b)))
+                    # New file
+                    if diff.new_file and self.is_good_blob(diff.b_blob):
+                        diffs_list.extend(self.get_new_file_diffs(diff.b_blob))
+                    # Renamed file
+                    elif diff.renamed and self.is_good_blob(diff.a_blob) and self.is_good_blob(diff.b_blob):
+                        diffs_list.extend(self.get_renamed_file_diffs(diff.a_blob, diff.b_blob))
+                    # Deleted file
                     elif diff.deleted_file:
                         diffs_list.append(DiffFile(file_a=diff.a_blob.path, removed=True))
+                    # Modified file
                     else:
-                        diffs_list.append(DiffFile(file_a=diff.a_blob.path, file_b=diff.b_blob.path, modified=True))
-                        if self.method_granularity:
-                            source_a = diff.a_blob.data_stream.read().decode("UTF-8")
-                            source_b = diff.b_blob.data_stream.read().decode("UTF-8")
-                            diffs_list.extend(GitExtractor.diff((diff.a_blob.path, source_a), (diff.b_blob.path, source_b)))
+                        diffs_list.extend(self.get_modified_file_diffs(diff.a_blob, diff.b_blob))
 
-            return Commit(_id, message, author, timestamp, diffs_list) if len(diffs_list) > 0 else None
+        return Commit(_id, message, author, timestamp, diffs_list) if len(diffs_list) > 0 else None
 
-        except TypeError:  # pragma: no cover
-            return None  # pragma: no cover
-        except UnicodeDecodeError:  # pragma: no cover
-            return None  # pragma: no cover
-        except AttributeError:  # pragma: no cover
-            return None  # pragma: no cover
+    def get_new_file_diffs(self, blob):
+        diffs_list = [DiffFile(file_b=blob.path, added=True)]
+        if can_parse_file(blob.path) and self.method_granularity:
+            source = blob.data_stream.read().decode("UTF-8")
+            file_parsed = GitExtractor.parse(blob.path, source)
+            classes_set = file_parsed.get_classes_set()
+            methods_set = file_parsed.get_functions_set()
+            for c in classes_set:
+                diffs_list.append(DiffClass(file_name=blob.path, class_b=c, added=True))
+            for c, m in methods_set:
+                diffs_list.append(DiffMethod(file_name=blob.path, class_name=c, method_b=m, added=True))
+        return diffs_list
+
+    def get_modified_file_diffs(self, blob_a, blob_b):
+        diffs_list = [DiffFile(file_a=blob_a.path, file_b=blob_b.path, modified=True)]
+        if can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.method_granularity:
+            source_a = blob_a.data_stream.read().decode("UTF-8")
+            source_b = blob_b.data_stream.read().decode("UTF-8")
+            diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
+        return diffs_list
+
+    def get_renamed_file_diffs(self, blob_a, blob_b):
+        diffs_list = [DiffFile(file_a=blob_a.path, file_b=blob_b.path, renamed=True)]
+        if can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.method_granularity:
+            source_a = blob_a.data_stream.read().decode("UTF-8")
+            source_b = blob_b.data_stream.read().decode("UTF-8")
+            diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
+        return diffs_list
+
+    def is_good_blob(self, blob):
+        return blob and is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
 
     @staticmethod
     def parse(path, source):
         if "java" in path:
-            _, components_methods = JavaParser.parse(source)
-            return components_methods
+            components = JavaParser.parse(source)
+            return components
+        return False
 
     @staticmethod
     def diff(file_a, file_b):
         if "java" in file_a[0]:
             components_diff = JavaParser.diff(file_a, file_b)
             return components_diff
+        return False

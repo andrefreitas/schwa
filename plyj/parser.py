@@ -1675,7 +1675,7 @@ class ClassParser(object):
                                       parameters=p[1]['parameters'], throws=p[1]['throws'])
         p[0].line_number = lineno
         body = p[2]
-        p[0].end_line = body[-1].line_number if body else None
+        p[0].end_line = p.slice[2].end_line
         p[0].start_line = p[1]['lineno']
 
     def p_constructor_header(self, p):

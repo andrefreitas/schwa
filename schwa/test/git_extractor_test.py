@@ -258,7 +258,7 @@ class TestGitExtractor(unittest.TestCase):
         self.assertEqual(repository.commits[0].message, "First commit\n")
         self.assertEqual(repository.commits[0].author, "petergriffin@familyguy.com")
         diffs = repository.commits[0].diffs
-        self.assertEqual(len(diffs), 11)
+        self.assertEqual(len(diffs), 10)
         self.assertTrue(DiffFile(file_b="API.java", added=True) in diffs)
         self.assertTrue(DiffClass(file_name="API.java", class_b="SOAPAPI", added=True) in diffs)
         self.assertTrue(DiffClass(file_name="API.java", class_b="API", added=True) in diffs)

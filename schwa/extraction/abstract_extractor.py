@@ -46,5 +46,10 @@ class AbstractExtractor:
 
 
 def is_code_file(path):
+    result = re.search(".+\.(java|php|py|cpp|c|js|html|css|rb|h)$", path)
+    return result
+
+
+def can_parse_file(path):
     result = re.search(".+\.(java)$", path)
     return result

@@ -34,65 +34,63 @@ parser = plyj.Parser()
 class JavaParser(AbstractParser):
     """ A Java Parser.
 
-    It parses Java Code using regexs since it's faster.
+    It parses Java Code using Plyj.
     """
 
     @staticmethod
     def parse(code):
-        #TODO: Update documentation and change list to classes!
         """ Parses Java code.
 
-        Iterates over the lines to parse components and returns a list of components with their start and end line.
-        For example: [[9, 11, 'API', 'getUrl'], [13, 15, 'API', 'setUrl']].
+        Uses a modified version of Plyj (line annotations) to parse Java.
 
         Args:
-            code: A string representing Java source code.
+            code: A string of Java code.
 
         Returns:
-            A list of lists that have the start and end line for each component.
+            A File instance.
+
+        Raises:
+            ParsingError: When the source code is not valid Java.
         """
-        try:
-            tree = parser.parse_string(code)
-            tree.body = tree.type_declarations
-            components = JavaParser.parse_tree(tree)
-        except (ParsingError, IndexError):
-            return []
-        return components
+        tree = parser.parse_string(code)
+        tree.body = tree.type_declarations
+        classes = JavaParser.parse_tree(tree)
+        _file = File()
+        _file.classes = classes
+        return _file
 
     @staticmethod
-    def parse_tree(tree, parent_classes=[]):
-        #TODO: Update documentation and change list to classes!
+    def parse_tree(tree):
         """ Parses a tree recursively.
 
-        It iterates trough methods and parses nested classes using dot notation.
+        It iterates trough methods and parses nested classes and methods.
 
         Args:
-            tree: A tree parsed from plyj
-            parent_classes: An optional list of strings of the parent classes
+            tree: A tree parsed from plyj.
 
         Returns:
-            A tuple of lists that have the start and end line for each component.
+            A list of Components, that can be nested Classes and Methods.
         """
-        components_methods = []
-        components_classes = []
-        my_parent_classes = parent_classes[:]
 
+        # Child classes
+        child_classes = []
+        for declaration in tree.body:
+            if isinstance(declaration, ClassDeclaration):
+                components = JavaParser.parse_tree(declaration)
+                child_classes.append(components)
+
+        # Is a class
         if isinstance(tree, ClassDeclaration):
-            my_parent_classes.append(tree.name)
-            components_classes.append([tree.start_line, tree.end_line, ".".join(my_parent_classes)])
-
-
-        methods = [m for m in tree.body if isinstance(m, (MethodDeclaration, ConstructorDeclaration))]
-        for method in methods:
-            if method.end_line:
-                components_methods.append([method.start_line, method.end_line, ".".join(my_parent_classes), method.name])
-
-        classes = [c for c in tree.body if isinstance(c, ClassDeclaration)]
-        for tree in classes:
-                components_classes.extend(JavaParser.parse_tree(tree, my_parent_classes)[0])
-                components_methods.extend(JavaParser.parse_tree(tree, my_parent_classes)[1])
-
-        return (components_classes, components_methods)
+            class_component = Class(name=tree.name, start_line=tree.start_line, end_line=tree.end_line)
+            for declaration in tree.body:
+                if isinstance(declaration, (MethodDeclaration, ConstructorDeclaration)):
+                    method = declaration
+                    method_component = Method(name=method.name, start_line=method.start_line, end_line=method.end_line)
+                    class_component.methods.append(method_component)
+            class_component.classes.extend(child_classes)
+            return class_component
+        else:
+            return child_classes
 
 
     @staticmethod
@@ -163,7 +161,7 @@ class JavaParser(AbstractParser):
     def diff(file_a, file_b):
         """ Computes diffs between 2 version of a file.
 
-        By giving files paths and source code, outputs Diffs instances at the Class and Method granularity.
+        By giving files paths and source code, outputs Diffs instances.
 
         Args:
             file_a: A tuple with (File Path, Source Code) of version A.
@@ -172,39 +170,34 @@ class JavaParser(AbstractParser):
         Returns:
             A list of Diff instances.
         """
-
+        diffs = []
         path_a, source_a = file_a
         path_b, source_b = file_b
-        diffs = []
-        #TODO: Update this workaround later
         try:
-            _, components_a = JavaParser.parse(source_a)
-            _, components_b = JavaParser.parse(source_b)
-        except ValueError:
-            return []
-
+            parsed_file_a = JavaParser.parse(source_a)
+            parsed_file_b = JavaParser.parse(source_b)
+        except ParsingError:
+            return diffs
         changed_a = set()
         changed_b = set()
         changed_sequences = JavaParser.extract_changed_sequences(source_a, source_b)
 
+        # Obtain changed components of each version
         for operation, start_line, end_line in changed_sequences:
             if operation == "-":
-                for start1, end1, class_name, function_name in components_a:
-                    if (start_line >= start1 and start_line <= end1) or (end_line >= start1 and end_line <= end1):
-                        changed_a.add((class_name, function_name))
+                changed_a = changed_a | parsed_file_a.get_components_hit(start_line, end_line)
             if operation == "+":
-                for start1, end1, class_name, function_name in components_b:
-                    if (start_line >= start1 and start_line <= end1) or (end_line >= start1 and end_line <= end1):
-                        changed_b.add((class_name, function_name))
+                changed_b = changed_b | parsed_file_b.get_components_hit(start_line, end_line)
 
-        # Method granularity
-        methods_a = set((c, f) for _, _, c, f in components_a)
-        methods_b = set((c, f) for _, _, c, f in components_b)
+
+        # Method granularity differences
+        methods_changed_a = set(c for c in changed_a if isinstance(c, tuple))
+        methods_changed_b = set(c for c in changed_b if isinstance(c, tuple))
+        methods_a = parsed_file_a.get_functions_set()
+        methods_b = parsed_file_b.get_functions_set()
         methods_added = methods_b - methods_a
         methods_removed = methods_a - methods_b
-        methods_modified = (changed_a | changed_b) - (methods_added | methods_removed)
-
-
+        methods_modified = (methods_changed_a | methods_changed_b) - (methods_added | methods_removed)
         for c, m in methods_added:
             diffs.append(DiffMethod(file_name=path_b, class_name=c, method_b=m, added=True))
         for c, m in methods_removed:
@@ -212,13 +205,14 @@ class JavaParser(AbstractParser):
         for c, m in methods_modified:
             diffs.append(DiffMethod(file_name=path_b, class_name=c, method_a=m, method_b=m, modified=True))
 
-        # Class granularity
-        classes_a = set(c for _, _, c, _ in components_a)
-        classes_b = set(c for _, _, c, _ in components_b)
+        # Class granularity differences
+        classes_changed_a = set(c for c in changed_a if isinstance(c, str))
+        classes_changed_b = set(c for c in changed_b if isinstance(c, str))
+        classes_a = parsed_file_a.get_classes_set()
+        classes_b = parsed_file_b.get_classes_set()
         classes_added = classes_b - classes_a
         classes_removed = classes_a - classes_b
-        classes_modified = (classes_a & classes_b) & (set(c for c, f in methods_added) | set(c for c, f in methods_removed) | set(c for c, f in methods_modified))
-
+        classes_modified = (classes_changed_a | classes_changed_b) - (classes_added | classes_removed)
         for c in classes_added:
             diffs.append(DiffClass(file_name=path_b, class_b=c, added=True))
         for c in classes_removed:
