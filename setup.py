@@ -20,7 +20,7 @@
 
 """ Installation and deployment script. """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from pip.req import parse_requirements
 
 INSTALL_REQUIREMENTS = [str(ir.req) for ir in parse_requirements("requirements.txt", session=True)]
@@ -34,6 +34,6 @@ setup(name='Schwa',
       author='Andre Freitas',
       author_email='p.andrefreitas@gmail.com',
       url='https://github.com/andrefreitas/schwa',
-      packages=['schwa', 'schwa.analysis', 'schwa.extraction',
-                'schwa.parsing', 'schwa.repository', 'schwa.web'],
+      packages=find_packages('.'),
+      package_data={'schwa': ['web/static/*.js', 'web/static/*.css', 'web/views/*.tpl']},
       install_requires=INSTALL_REQUIREMENTS)

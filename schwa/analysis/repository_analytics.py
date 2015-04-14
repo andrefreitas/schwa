@@ -187,6 +187,9 @@ class RepositoryAnalytics(Metrics):
         super().__init__()
         self.files_analytics = {}
 
+    def is_empty(self):
+        return len(self.files_analytics) == 0
+
     def compute_defect_probability(self):
         """ Computes the defect probability for every child """
         self.defect_prob = self.defect_probability()

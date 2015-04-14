@@ -10,7 +10,19 @@ A tool that analyzes GIT Repositories of Java Projects and estimates the defect 
 ## Usage
 Command line:
 
-`schwa repository_path [max_commits]`
+```shell
+usage: schwa [-h] [--commits COMMITS] repository
+
+Predicts defects from GIT repositories.
+
+positional arguments:
+  repository         repository full path on local file system
+
+optional arguments:
+  -h, --help         show this help message and exit
+  --commits COMMITS  maximum number of commits, since the last one, to be
+                     analyzed
+```
 
 Importing class:
 ```python

@@ -54,3 +54,8 @@ crashlytics-build.properties
 lextab.py
 parser.out
 parsetab.py
+
+# Python build
+build/*
+dist/*
+*.egg-info

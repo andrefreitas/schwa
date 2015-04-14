@@ -8,3 +8,4 @@ install:
 
 script:
  - nosetests
+ - python setup.py install

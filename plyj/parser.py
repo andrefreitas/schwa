@@ -27,6 +27,7 @@ import ply.lex as lex
 import ply.yacc as yacc
 from .model import *
 
+
 class MyLexer(object):
 
     keywords = ('this', 'class', 'void', 'super', 'extends', 'implements', 'enum', 'interface',
@@ -2287,8 +2288,8 @@ class ParsingError(NameError):
 class Parser(object):
 
     def __init__(self):
-        self.lexer = lex.lex(module=MyLexer(), optimize=1)
-        self.parser = yacc.yacc(module=MyParser(), start='goal', optimize=1)
+        self.lexer = lex.lex(module=MyLexer(), optimize=1, errorlog=lex.NullLogger())
+        self.parser = yacc.yacc(module=MyParser(), start='goal', optimize=1, errorlog=yacc.NullLogger())
 
     def tokenize_string(self, code):
         self.lexer.input(code)

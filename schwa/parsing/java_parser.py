@@ -28,8 +28,7 @@ from plyj.parser import *
 from .abstract_parser import AbstractParser
 from schwa.repository import *
 
-parser = plyj.Parser()
-
+parser = None
 
 class JavaParser(AbstractParser):
     """ A Java Parser.
@@ -52,6 +51,9 @@ class JavaParser(AbstractParser):
         Raises:
             ParsingError: When the source code is not valid Java.
         """
+        global parser
+        if not parser:
+            parser = plyj.Parser()
         tree = parser.parse_string(code)
         tree.body = tree.type_declarations
         classes = JavaParser.parse_tree(tree)

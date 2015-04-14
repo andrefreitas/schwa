@@ -19,19 +19,21 @@
 # THE SOFTWARE.
 
 """ Module for the Web Server with the Sunburst interface. """
-
-from bottle import Bottle, run, static_file, template, response
+import os
+from bottle import Bottle, run, static_file, template, response, TEMPLATE_PATH
 import webbrowser
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_PATH.insert(0, os.path.join(current_dir, 'views'))
 app = Bottle()
 
 @app.route('/')
 def index():
-    return template('schwa/web/views/index')
+    return template('index')
 
 @app.route('/static/<filename>')
 def server_static(filename):
-    return static_file(filename, root='schwa/web/static')
+    return static_file(filename, root=os.path.join(current_dir, 'static'))
 
 @app.route("/analytics")
 def analytics():
@@ -56,4 +58,4 @@ class Server(Bottle):
         """
         Server.analytics = analytics
         webbrowser.open_new("http://localhost:8081")
-        run(app, host='localhost', port=8081)
+        run(app, host='localhost', port=8081, quiet=True)
