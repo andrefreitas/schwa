@@ -99,7 +99,7 @@ class Metrics:
         and the most current timestamp.
 
         Args:
-            seq: A list of timestamps.
+            seq: A list of timestamps ints.
             begin_ts: An int representing the beginning timestamp.
             current_ts: An int representing the most recent timestamp.
 
@@ -276,7 +276,7 @@ class FileAnalytics(Metrics):
 class ClassAnalytics(Metrics):
     """ A class to represent Class Analytics.
 
-    It stores child methods with a dict.
+    It stores child methods and classes with a dict.
 
     Attributes:
         methods_analytics: A dict that maps methods names to Method Analytics instances.
@@ -285,6 +285,7 @@ class ClassAnalytics(Metrics):
     def __init__(self):
         super().__init__()
         self.methods_analytics = {}
+        self.classes_analytics = {}
 
     def compute_defect_probability(self):
         self.defect_prob = self.defect_probability()

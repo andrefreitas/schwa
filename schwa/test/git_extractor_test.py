@@ -247,14 +247,45 @@ class TestGitExtractor(unittest.TestCase):
         self.repo.git.add(file_path)
         self.repo.git.commit(m='Fifth commit')
 
+        """ Sixth Commit"""
+        # Added ShadowTest.java
+        code = """public class ShadowTest {
+
+            public int x = 0;
+
+            class FirstLevel {
+
+                public int x = 1;
+
+                void methodInFirstLevel(int x) {
+                    System.out.println("x = " + x);
+                    System.out.println("this.x = " + this.x);
+                    System.out.println("ShadowTest.this.x = " + ShadowTest.this.x);
+                }
+            }
+
+            public static void main(String... args) {
+                ShadowTest st = new ShadowTest();
+                ShadowTest.FirstLevel fl = st.new FirstLevel();
+                fl.methodInFirstLevel(23);
+            }
+        }"""
+        file_path = os.path.join(self.temp_dir, "ShadowTest.java")
+        f = open(file_path, "w")
+        f.write(code)
+        f.close()
+        self.repo.git.add(file_path)
+        self.repo.git.commit(m='Sixth commit')
+
         """ Extract """
         extractor = GitExtractor(self.temp_dir)
         repository = extractor.extract(method_granularity=True, parallel=False)
 
         """ Tests """
-        self.assertEqual(len(repository.commits), 4, msg="It should only extract commits related to code")
+        self.assertEqual(len(repository.commits), 5, msg="It should only extract commits related to code")
         self.assertTrue(repository.begin_ts < creation_timestamp, msg="It should extract the timestamp of first commit")
 
+        # First commit
         self.assertEqual(repository.commits[0].message, "First commit\n")
         self.assertEqual(repository.commits[0].author, "petergriffin@familyguy.com")
         diffs = repository.commits[0].diffs
@@ -270,6 +301,7 @@ class TestGitExtractor(unittest.TestCase):
         self.assertTrue(DiffMethod(file_name="API.java", class_name="API", method_b="getShows", added=True) in diffs)
         self.assertTrue(DiffMethod(file_name="API.java", class_name="SOAPAPI", method_b="login", added=True) in diffs)
 
+        # Second commit
         self.assertEqual(repository.commits[1].message, "Second commit\n")
         diffs = repository.commits[1].diffs
         self.assertEqual(len(diffs), 10)
@@ -293,6 +325,7 @@ class TestGitExtractor(unittest.TestCase):
         self.assertTrue(DiffMethod("API.java", class_name="JSONAPI", method_b="recover", added=True) in diffs,
                         msg="It should recognize added methods")
 
+        # Third commit
         self.assertEqual(repository.commits[2].message, "Third commit\n")
         diffs = repository.commits[2].diffs
         self.assertEqual(len(diffs), 5)
@@ -306,11 +339,27 @@ class TestGitExtractor(unittest.TestCase):
         self.assertTrue(DiffMethod(file_name="CallingMethodsInSameClass.java", class_name="CallingMethodsInSameClass",
                                    method_b="printTwo", added=True) in diffs)
 
+        # Fourth commit
         self.assertEqual(repository.commits[3].message, "Fourth commit\n")
         diffs = repository.commits[3].diffs
         self.assertEqual(len(diffs), 2)
         self.assertTrue(DiffFile(file_a="API.java", file_b="API2.java", renamed=True) in diffs)
         self.assertTrue(DiffFile(file_a="CallingMethodsInSameClass.java", removed=True) in diffs)
+
+        # Sixth commit
+        self.assertEqual(repository.commits[4].message, "Sixth commit\n")
+        diffs = repository.commits[4].diffs
+        self.assertEqual(len(diffs), 5)
+        self.assertTrue(DiffFile(file_b="ShadowTest.java", added=True) in diffs)
+        self.assertTrue(DiffClass(file_name="ShadowTest.java", class_b="ShadowTest.FirstLevel",
+                                  added=True) in diffs, msg="It should recognize nested classes")
+        self.assertTrue(DiffClass(file_name="ShadowTest.java", class_b="ShadowTest",
+                                  added=True) in diffs)
+        self.assertTrue(DiffMethod(file_name="ShadowTest.java", class_name="ShadowTest.FirstLevel",
+                                   method_b="methodInFirstLevel", added=True) in diffs,
+                        msg="It should recognize nested classes")
+        self.assertTrue(DiffMethod(file_name="ShadowTest.java", class_name="ShadowTest",
+                                   method_b="main", added=True) in diffs)
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir)

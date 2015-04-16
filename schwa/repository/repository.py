@@ -120,6 +120,12 @@ class DiffFile(Diff):
     def __repr__(self):
         return "%s file %s,%s" % (super().__repr__(), self.file_a, self.file_b)
 
+    def component_a(self):
+        return self.file_a
+
+    def component_b(self):
+        return self.file_b
+
 
 class DiffClass(Diff):
     """ Diff of a Class component.
@@ -148,6 +154,12 @@ class DiffClass(Diff):
 
     def __repr__(self):
         return "%s class %s,%s in file %s" % (super().__repr__(), self.class_a, self.class_b, self.file_name)
+
+    def component_a(self):
+        return self.class_a
+
+    def component_b(self):
+        return self.class_b
 
 
 class DiffMethod(Diff):
@@ -179,3 +191,9 @@ class DiffMethod(Diff):
     def __repr__(self):
         return "%s method %s,%s in class %s and file %s" % (super().__repr__(), self.method_a, self.method_b,
                                                             self.class_name, self.file_name)
+
+    def component_a(self):
+        return self.method_a
+
+    def component_b(self):
+        return self.method_b

@@ -30,6 +30,7 @@ from schwa.repository import *
 
 parser = None
 
+
 class JavaParser(AbstractParser):
     """ A Java Parser.
 

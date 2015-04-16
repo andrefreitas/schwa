@@ -35,8 +35,47 @@ class SchwaAnalysis(AbstractAnalysis):
         return re.search("bug|fix|corrigido", commit.message, re.I)
 
     def update_analytics(self, analytics, is_bug_fixing, author, commit_timestamp):
+        """ Updates analytics.
+
+        By giving commit data updates the component analytics.
+
+        Args:
+            analytics: An instance of analytics.
+            is_bug_fixing: A boolean that indicates if the commit is a bug fix.
+            author: A string with the author email.
+            commit_timestamp: An integer with the commit timestamp.
+        """
         analytics.update(ts=commit_timestamp, begin_ts=self.repository.begin_ts, current_ts=self.repository.last_ts,
                          is_bug_fixing=is_bug_fixing, author=author)
+    @staticmethod
+    def get_analytics_from_tree(parent_analytics_dict, diff, instance):
+        #TODO: Documentation
+        analytics = None
+
+        if diff.added:
+            analytics = instance
+            parent_analytics_dict[diff.component_b()] = analytics
+
+        elif diff.modified:
+            if diff.component_b() not in parent_analytics_dict:
+                analytics = instance
+                parent_analytics_dict[diff.component_b()] = analytics
+            else:
+                analytics = parent_analytics_dict[diff.component_b()]
+
+        elif diff.renamed:
+            if diff.component_a() not in parent_analytics_dict:
+                analytics = instance
+                parent_analytics_dict[diff.component_b()] = analytics
+            else:
+                analytics = parent_analytics_dict.pop(diff.component_a())
+                parent_analytics_dict[diff.component_b()] = analytics
+
+        elif diff.removed:
+            if diff.component_a() in parent_analytics_dict:
+                del parent_analytics_dict[diff.component_a()]
+
+        return analytics
 
     def analyze(self):
         """ Analyzes a repository and creates analytics.
@@ -55,94 +94,31 @@ class SchwaAnalysis(AbstractAnalysis):
             self.update_analytics(analytics, is_bug_fixing, commit.author, commit.timestamp)
 
             """ File Granularity"""
+            parent_analytics_dict = analytics.files_analytics
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
-                file_analytics = None
-                if diff.added:
-                    file_analytics = FileAnalytics()
-                    analytics.files_analytics[diff.file_b] = file_analytics
-                elif diff.modified:
-                    if diff.file_b not in analytics.files_analytics:
-                        file_analytics = FileAnalytics()
-                        analytics.files_analytics[diff.file_b] = file_analytics
-                    else:
-                        file_analytics = analytics.files_analytics[diff.file_b]
-                elif diff.renamed:
-                    if diff.file_a not in analytics.files_analytics:
-                        file_analytics = FileAnalytics()
-                        analytics.files_analytics[diff.file_b] = file_analytics
-                    else:
-                        analytics.files_analytics[diff.file_b] = analytics.files_analytics.pop(diff.file_a)
-                        file_analytics = analytics.files_analytics[diff.file_b]
-                elif diff.removed:
-                    if diff.file_a in analytics.files_analytics:
-                        del analytics.files_analytics[diff.file_a]
-                    continue  # To avoid update of removed components pragma: no cover
-                self.update_analytics(file_analytics, is_bug_fixing, commit.author, commit.timestamp)
+                file_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, FileAnalytics())
+                if file_analytics:
+                    self.update_analytics(file_analytics, is_bug_fixing, commit.author, commit.timestamp)
 
             """ Class Granularity """
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
-                class_analytics = None
-
-                try:
-                    global_class_analytics = analytics.files_analytics[diff.file_name].classes_analytics
-                # File could be already removed
+                try:  # Parent component can be already removed
+                    parent_analytics_dict = analytics.files_analytics[diff.file_name].classes_analytics
+                    class_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, ClassAnalytics())
+                    if class_analytics:
+                        self.update_analytics(class_analytics, is_bug_fixing, commit.author, commit.timestamp)
                 except KeyError:
                     continue
-
-                if diff.added:
-                    class_analytics = ClassAnalytics()
-                    global_class_analytics[diff.class_b] = class_analytics
-                elif diff.modified:
-                    if diff.class_b not in global_class_analytics:
-                        class_analytics = ClassAnalytics()
-                        global_class_analytics[diff.class_b] = class_analytics
-                    else:
-                        class_analytics = global_class_analytics[diff.class_b]
-                elif diff.renamed:
-                    if diff.class_a not in global_class_analytics:
-                        class_analytics = ClassAnalytics()
-                        global_class_analytics[diff.class_b] = class_analytics
-                    else:
-                        global_class_analytics[diff.class_b] = global_class_analytics.pop(diff.class_a)
-                        class_analytics = global_class_analytics[diff.class_b]
-                elif diff.removed:
-                    if diff.class_a in global_class_analytics:
-                        del global_class_analytics[diff.class_a]
-                    continue  # To avoid update of removed components pragma: no cover
-
-                self.update_analytics(class_analytics, is_bug_fixing, commit.author, commit.timestamp)
 
             """ Method Granularity """
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
-                method_analytics = None
-
-                try:
-                    global_method_analytics = analytics.files_analytics[diff.file_name].classes_analytics[diff.class_name].methods_analytics
-                # Class could be already removed and will raise a KeyError
+                try:  # Parent component can be already removed
+                    parent_analytics_dict = analytics.files_analytics[diff.file_name].classes_analytics[diff.class_name].methods_analytics
+                    method_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, MethodAnalytics())
+                    if method_analytics:
+                        self.update_analytics(method_analytics, is_bug_fixing, commit.author, commit.timestamp)
                 except KeyError:
                     continue
 
-                if diff.added:
-                    method_analytics = MethodAnalytics()
-                    global_method_analytics[diff.method_b] = method_analytics
-                elif diff.modified:
-                    if diff.method_b not in global_method_analytics:
-                        method_analytics = MethodAnalytics()
-                        global_method_analytics[diff.method_b] = method_analytics
-                    else:
-                        method_analytics = global_method_analytics[diff.method_b]
-                elif diff.renamed:
-                    if diff.method_a not in global_method_analytics:
-                        method_analytics = MethodAnalytics()
-                        global_method_analytics[diff.method_b] = method_analytics
-                    else:
-                        global_method_analytics[diff.method_b] = global_method_analytics.pop(diff.method_a)
-                        method_analytics = global_method_analytics[diff.method_b]
-                elif diff.removed:
-                    if diff.method_a in global_method_analytics:
-                        del global_method_analytics[diff.method_a]
-                    continue  # To avoid update of removed components pragma: no cover
-
-                self.update_analytics(method_analytics, is_bug_fixing, commit.author, commit.timestamp)
         analytics.compute_defect_probability()
         return analytics

@@ -20,7 +20,6 @@
 
 """ Main entry point to start using Schwa. """
 
-import sys
 import os
 import argparse
 from schwa.extraction import GitExtractor
