@@ -20,6 +20,7 @@
 
 """ Module for the Web Server with the Sunburst interface. """
 import os
+import socket
 from bottle import Bottle, run, static_file, template, response, TEMPLATE_PATH
 import webbrowser
 
@@ -38,7 +39,8 @@ def server_static(filename):
 @app.route("/analytics")
 def analytics():
     response.content_type = 'application/json'
-    return Server.analytics.to_dict()
+    analytics_dict = Server.analytics.to_dict()
+    return analytics_dict
 
 
 class Server(Bottle):
@@ -57,5 +59,14 @@ class Server(Bottle):
             analytics: A RepositoryAnalytics instance
         """
         Server.analytics = analytics
-        webbrowser.open_new("http://localhost:8081")
-        run(app, host='localhost', port=8081, quiet=True)
+        port = Server.pick_unused_port()
+        webbrowser.open_new("http://localhost:%i" % (port))
+        run(app, host='localhost', port=port, quiet=True)
+
+    @staticmethod
+    def pick_unused_port():
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(('localhost', 0))
+        _, port = s.getsockname()
+        s.close()
+        return port

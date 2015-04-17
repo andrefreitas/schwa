@@ -80,7 +80,8 @@ class SchwaAnalysis(AbstractAnalysis):
     def analyze(self):
         """ Analyzes a repository and creates analytics.
 
-        It iterates over commits to analyze all the information.
+        It iterates over commits to analyze all the information. The granularity order must be
+        preserved because child components depend of the parents.
 
         Returns:
             A RepositoryAnalytics instance.
@@ -90,17 +91,17 @@ class SchwaAnalysis(AbstractAnalysis):
         for commit in self.repository.commits:
             is_bug_fixing = SchwaAnalysis.is_bug_fixing(commit)
 
-            """ Repository Granularity """
+            # Repository Granularity
             self.update_analytics(analytics, is_bug_fixing, commit.author, commit.timestamp)
 
-            """ File Granularity"""
+            # File Granularity
             parent_analytics_dict = analytics.files_analytics
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
                 file_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, FileAnalytics())
                 if file_analytics:
                     self.update_analytics(file_analytics, is_bug_fixing, commit.author, commit.timestamp)
 
-            """ Class Granularity """
+            # Class Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
                 try:  # Parent component can be already removed
                     parent_analytics_dict = analytics.files_analytics[diff.file_name].classes_analytics
@@ -110,7 +111,7 @@ class SchwaAnalysis(AbstractAnalysis):
                 except KeyError:
                     continue
 
-            """ Method Granularity """
+            # Method Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
                 try:  # Parent component can be already removed
                     parent_analytics_dict = analytics.files_analytics[diff.file_name].classes_analytics[diff.class_name].methods_analytics
@@ -121,4 +122,5 @@ class SchwaAnalysis(AbstractAnalysis):
                     continue
 
         analytics.compute_defect_probability()
+
         return analytics

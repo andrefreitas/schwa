@@ -166,6 +166,16 @@ class Metrics:
         probability = 1 - math.e ** (- twr)
         return probability
 
+    def to_dict(self):
+        metrics_dict = {
+            "size": self.defect_prob,
+            "prob": self.defect_prob,
+            "revisions": self.revisions,
+            "fixes": self.fixes,
+            "authors": len(self.authors)
+        }
+        return metrics_dict
+
 
 def strip_path(path):
     """ Extracts only the file name of a path """
@@ -206,52 +216,12 @@ class RepositoryAnalytics(Metrics):
             A dict of all the analytics collected from the repository.
         """
 
-        children = []
-        # For every file
-        for f_path, f_metrics in self.files_analytics.items():
-            f_name = strip_path(f_path)
-            f_children = []
-            # For every class
-            for c_name, c_metrics in f_metrics.classes_analytics.items():
-                c_children = []
-                # For every method
-                for m_name, m_metrics in c_metrics.methods_analytics.items():
-                    c_children.append({
-                        "name": m_name,
-                        "size": m_metrics.defect_prob,
-                        "prob": m_metrics.defect_prob,
-                        "revisions": m_metrics.revisions,
-                        "fixes": m_metrics.fixes,
-                        "authors": len(m_metrics.authors),
-                        "type": "method"
-                    })
-                f_children.append({
-                    "name": c_name,
-                    "size": c_metrics.defect_prob,
-                    "prob": c_metrics.defect_prob,
-                    "revisions": c_metrics.revisions,
-                    "fixes": c_metrics.fixes,
-                    "authors": len(c_metrics.authors),
-                    "children": c_children,
-                    "type": "class"
-
-
-                })
-            children.append({
-                "name": f_name,
-                "path": f_path,
-                "size": f_metrics.defect_prob,
-                "prob": f_metrics.defect_prob,
-                "revisions": f_metrics.revisions,
-                "fixes": f_metrics.fixes,
-                "authors": len(f_metrics.authors),
-                "children": f_children,
-                "type": "file"
-            })
-        return {
+        children = [f_metrics.to_dict(f_path) for f_path, f_metrics in self.files_analytics.items()]
+        metrics = {
             "name": "root",
             "children": children
         }
+        return metrics
 
 
 class FileAnalytics(Metrics):
@@ -272,6 +242,14 @@ class FileAnalytics(Metrics):
         for class_analytics in self.classes_analytics.values():
             class_analytics.compute_defect_probability()
 
+    def to_dict(self, path):
+        metrics_dict = super().to_dict()
+        metrics_dict["type"] = "file"
+        metrics_dict["path"] = path
+        metrics_dict["name"] = strip_path(path)
+        metrics_dict["children"] = [c_metrics.to_dict(c_name) for c_name, c_metrics in self.classes_analytics.items()]
+        return metrics_dict
+
 
 class ClassAnalytics(Metrics):
     """ A class to represent Class Analytics.
@@ -279,7 +257,8 @@ class ClassAnalytics(Metrics):
     It stores child methods and classes with a dict.
 
     Attributes:
-        methods_analytics: A dict that maps methods names to Method Analytics instances.
+        methods_analytics: A dict that maps methods names to MethodAnalytics instances.
+        classes_analytics: A dict that maps classes names to ClassAnalytics instances.
     """
 
     def __init__(self):
@@ -292,6 +271,15 @@ class ClassAnalytics(Metrics):
         for method_analytics in self.methods_analytics.values():
             method_analytics.compute_defect_probability()
 
+    def to_dict(self, name):
+        metrics_dict = super().to_dict()
+        metrics_dict["type"] = "class"
+        metrics_dict["name"] = name
+        metrics_dict["children"] = [m_metrics.to_dict(m_name) for m_name, m_metrics in self.methods_analytics.items()]
+        metrics_dict["children"].extend([c_metrics.to_dict(c_name) for c_name,
+                                                                       c_metrics in self.classes_analytics.items()])
+        return metrics_dict
+
 
 class MethodAnalytics(Metrics):
     """ A class to represent Method Analytics
@@ -303,3 +291,9 @@ class MethodAnalytics(Metrics):
 
     def compute_defect_probability(self):
         self.defect_prob = self.defect_probability()
+
+    def to_dict(self, name):
+        metrics_dict = super().to_dict()
+        metrics_dict["type"] = "method"
+        metrics_dict["name"] = name
+        return metrics_dict
