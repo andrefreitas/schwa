@@ -34,7 +34,6 @@ def get_base_dir():
     return dir
 
 current_dir = get_base_dir()
-print(current_dir)
 TEMPLATE_PATH.insert(0, os.path.join(current_dir, 'views'))
 app = Bottle()
 
