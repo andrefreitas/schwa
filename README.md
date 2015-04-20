@@ -3,6 +3,10 @@
 A tool that analyzes GIT Repositories of Java Projects and estimates the defect probability of Software components to help developers focusing their resources to fix bugs where they really are.
 
 ## Install
+`pip3.4 install schwa --pre`
+
+or 
+
 1. Install Python 3.4 and pip
 2. Install Git
 3. Run `python3.4 setup.py install`

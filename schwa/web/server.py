@@ -72,6 +72,8 @@ class Server(Bottle):
         webbrowser.open_new("http://localhost:%i" % port)
         run(app, host='localhost', port=port, quiet=True)
 
+
+
     @staticmethod
     def pick_unused_port():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -87,7 +87,10 @@ class Metrics:
 
         begin_diff = ts - begin_ts
         diff = current_ts - begin_ts
-        normalized = begin_diff / diff
+        if diff == 0:
+            normalized = 0
+        else:
+            normalized = begin_diff / diff
         twr = 1 / (1 + math.e ** (-12 * normalized + 12))
         return twr
 

@@ -22,15 +22,9 @@
 
 import os
 import argparse
-from multiprocessing import Process
-import signal
-import time
 from schwa.extraction import GitExtractor
 from schwa.analysis import SchwaAnalysis
 from schwa.web import Server
-
-
-VERSION = "0.1"
 
 
 class Schwa:
@@ -47,7 +41,7 @@ class Schwa:
         """ Inits Schwa with the repository local path. """
         self.repo_path = repo_path
 
-    def analyze(self,  ignore_regex="^$", max_commits=None, method_granularity=True):
+    def analyze(self,  ignore_regex="^$", max_commits=None, method_granularity=True, parallel=True):
         """ Analyze commits.
 
         Extracts commits and call an analyzer to output analytics.
@@ -61,7 +55,7 @@ class Schwa:
             A RepositoryAnalytics instance.
         """
         extractor = GitExtractor(self.repo_path)
-        repo = extractor.extract(ignore_regex, max_commits, method_granularity)
+        repo = extractor.extract(ignore_regex, max_commits, method_granularity, parallel)
         analysis = SchwaAnalysis(repo)
         analytics = analysis.analyze()
         return analytics
@@ -75,19 +69,18 @@ def main():
     parser = argparse.ArgumentParser(description='Predicts defects from GIT repositories.')
     parser.add_argument('repository', help="repository full path on local file system")
     parser.add_argument('--commits', help="maximum number of commits, since the last one, to be analyzed", default=None)
-    parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
+    parser.add_argument('-s', '--single', action='store_true', help="Runs in a single process instead of parallel.")
+    parser.add_argument('--version', action='version', version='%(prog)s ' + "0.1.5-dev")
+
     args = parser.parse_args()
     if os.path.exists(args.repository):
         print("Please wait...")
         s = Schwa(args.repository)
-        analytics = s.analyze(max_commits=args.commits)
+        analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
         if analytics.is_empty():
             print("Couldn't find enough data to produce results.")
         else:
-            p = Process(target=Server.run, args=(analytics,))
-            p.start()
-            time.sleep(1)
-            os.kill(p.pid, signal.SIGTERM)
-
+            print("Press ctrl+c to exit")
+            Server.run(analytics)
     else:
         print("Invalid repository path!")

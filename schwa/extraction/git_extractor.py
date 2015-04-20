@@ -24,7 +24,7 @@ import multiprocessing
 import git
 from .abstract_extractor import *
 from schwa.repository import *
-from schwa.parsing import JavaParser
+from schwa.parsing import JavaParser, ParsingError
 
 current_repo = None  # Curent repository wrapper
 
@@ -102,7 +102,12 @@ class GitExtractor(AbstractExtractor):
         """
         commit = self.repo.commit(hexsha)
         _id = hexsha
-        message = commit.message
+
+        try:
+            message = commit.message
+        except UnicodeDecodeError:  # pragma: no cover
+            return None  # pragma: no cover
+
         author = commit.author.email
         timestamp = commit.committed_date
         diffs_list = []
@@ -136,45 +141,67 @@ class GitExtractor(AbstractExtractor):
     def get_new_file_diffs(self, blob):
         diffs_list = [DiffFile(file_b=blob.path, added=True)]
         if can_parse_file(blob.path) and self.method_granularity:
-            source = blob.data_stream.read().decode("UTF-8")
+            source = GitExtractor.get_source(blob)
             file_parsed = GitExtractor.parse(blob.path, source)
-            classes_set = file_parsed.get_classes_set()
-            methods_set = file_parsed.get_functions_set()
-            for c in classes_set:
-                diffs_list.append(DiffClass(file_name=blob.path, class_b=c, added=True))
-            for c, m in methods_set:
-                diffs_list.append(DiffMethod(file_name=blob.path, class_name=c, method_b=m, added=True))
+            if file_parsed:
+                classes_set = file_parsed.get_classes_set()
+                methods_set = file_parsed.get_functions_set()
+                for c in classes_set:
+                    diffs_list.append(DiffClass(file_name=blob.path, class_b=c, added=True))
+                for c, m in methods_set:
+                    diffs_list.append(DiffMethod(file_name=blob.path, class_name=c, method_b=m, added=True))
         return diffs_list
 
     def get_modified_file_diffs(self, blob_a, blob_b):
         diffs_list = [DiffFile(file_a=blob_a.path, file_b=blob_b.path, modified=True)]
-        if can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.method_granularity:
-            source_a = blob_a.data_stream.read().decode("UTF-8")
-            source_b = blob_b.data_stream.read().decode("UTF-8")
-            diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
+        try:
+            if can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.method_granularity:
+                source_a = GitExtractor.get_source(blob_a)
+                source_b = GitExtractor.get_source(blob_b)
+                diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
+        except ParsingError:
+            pass
         return diffs_list
 
     def get_renamed_file_diffs(self, blob_a, blob_b):
         diffs_list = [DiffFile(file_a=blob_a.path, file_b=blob_b.path, renamed=True)]
-        if can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.method_granularity:
-            source_a = blob_a.data_stream.read().decode("UTF-8")
-            source_b = blob_b.data_stream.read().decode("UTF-8")
-            diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
+        try:
+            if can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.method_granularity:
+                source_a = GitExtractor.get_source(blob_a)
+                source_b = GitExtractor.get_source(blob_b)
+                diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
+        except ParsingError:
+            pass
         return diffs_list
 
     def is_good_blob(self, blob):
         return blob and is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
 
     @staticmethod
+    def get_source(blob):
+        try:
+            stream = blob.data_stream.read()
+            source = stream.decode("UTF-8")
+        except AttributeError:
+            raise ParsingError
+        return source
+
+    @staticmethod
     def parse(path, source):
-        if "java" in path:
-            components = JavaParser.parse(source)
-            return components
+        try:
+            if "java" in path:
+                components = JavaParser.parse(source)
+                return components
+        except ParsingError:
+            pass
         return False
 
     @staticmethod
     def diff(file_a, file_b):
-        if "java" in file_a[0]:
-            components_diff = JavaParser.diff(file_a, file_b)
-            return components_diff
-        return False
+        try:
+            if "java" in file_a[0]:
+                components_diff = JavaParser.diff(file_a, file_b)
+                return components_diff
+        except ParsingError:
+            pass
+        return []

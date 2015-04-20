@@ -20,21 +20,23 @@
 
 """ Installation and deployment script. """
 
-from setuptools import setup, find_packages
-from pip.req import parse_requirements
-from schwa.schwa import VERSION
 
-INSTALL_REQUIREMENTS = [str(ir.req) for ir in parse_requirements("requirements.txt", session=True)]
+from setuptools import setup, find_packages
+
+requirements = ["GitPython==0.3.6", "nose==1.3.4", "bottle==0.12.7", "ply==3.4"]
+packages = find_packages('.')
 
 setup(name='Schwa',
-      version=VERSION,
-      description='Git Repositories Mining',
+      version="0.1.5-dev",
+      description='A tool that predicts Software defects from GIT repositories.',
       entry_points={
           "console_scripts": ['schwa = schwa.schwa:main']
       },
       author='Andre Freitas',
       author_email='p.andrefreitas@gmail.com',
       url='https://github.com/andrefreitas/schwa',
-      packages=find_packages('.'),
+      packages=packages,
       package_data={'schwa': ['web/static/*.js', 'web/static/*.css', 'web/views/*.tpl']},
-      install_requires=INSTALL_REQUIREMENTS)
+      install_requires=requirements,
+      keywords=['testing', 'bugs', 'software'],
+      classifiers=[])
