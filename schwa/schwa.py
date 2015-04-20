@@ -29,6 +29,10 @@ from schwa.extraction import GitExtractor
 from schwa.analysis import SchwaAnalysis
 from schwa.web import Server
 
+
+VERSION = "0.1"
+
+
 class Schwa:
     """ GIT repositories analyzer.
 
@@ -71,6 +75,7 @@ def main():
     parser = argparse.ArgumentParser(description='Predicts defects from GIT repositories.')
     parser.add_argument('repository', help="repository full path on local file system")
     parser.add_argument('--commits', help="maximum number of commits, since the last one, to be analyzed", default=None)
+    parser.add_argument('--version', action='version', version='%(prog)s ' + VERSION)
     args = parser.parse_args()
     if os.path.exists(args.repository):
         print("Please wait...")

@@ -21,6 +21,7 @@
 """ Script to build binaries. """
 
 from cx_Freeze import setup, Executable
+from schwa.schwa import VERSION
 
 include_files = [
     ("schwa/web/views/index.tpl", "views/index.tpl"),
@@ -31,7 +32,7 @@ include_files = [
 
 setup(
     name="schwa",
-    version="0.1",
+    version=VERSION,
     description="A tool that predicts Software defects from GIT repositories.",
     executables=[Executable(script="debug.py", targetName="schwa")],
     options=dict(build_exe={"include_files": include_files})

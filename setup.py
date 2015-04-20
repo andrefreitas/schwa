@@ -22,11 +22,12 @@
 
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
+from schwa.schwa import VERSION
 
 INSTALL_REQUIREMENTS = [str(ir.req) for ir in parse_requirements("requirements.txt", session=True)]
 
 setup(name='Schwa',
-      version='0.1-dev',
+      version=VERSION,
       description='Git Repositories Mining',
       entry_points={
           "console_scripts": ['schwa = schwa.schwa:main']
