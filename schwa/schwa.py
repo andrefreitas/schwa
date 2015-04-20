@@ -22,10 +22,12 @@
 
 import os
 import argparse
+from multiprocessing import Process
+import signal
+import time
 from schwa.extraction import GitExtractor
 from schwa.analysis import SchwaAnalysis
 from schwa.web import Server
-
 
 class Schwa:
     """ GIT repositories analyzer.
@@ -77,6 +79,10 @@ def main():
         if analytics.is_empty():
             print("Couldn't find enough data to produce results.")
         else:
-            Server.run(analytics)
+            p = Process(target=Server.run, args=(analytics,))
+            p.start()
+            time.sleep(1)
+            os.kill(p.pid, signal.SIGTERM)
+
     else:
-        print("Invalid repository path")
+        print("Invalid repository path!")

@@ -20,11 +20,21 @@
 
 """ Module for the Web Server with the Sunburst interface. """
 import os
+import sys
 import socket
 from bottle import Bottle, run, static_file, template, response, TEMPLATE_PATH
 import webbrowser
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
+
+def get_base_dir():
+    if getattr(sys, 'frozen', False):
+        dir = os.path.dirname(sys.executable)
+    else:
+        dir = os.path.dirname(os.path.abspath(__file__))
+    return dir
+
+current_dir = get_base_dir()
+print(current_dir)
 TEMPLATE_PATH.insert(0, os.path.join(current_dir, 'views'))
 app = Bottle()
 
@@ -60,7 +70,7 @@ class Server(Bottle):
         """
         Server.analytics = analytics
         port = Server.pick_unused_port()
-        webbrowser.open_new("http://localhost:%i" % (port))
+        webbrowser.open_new("http://localhost:%i" % port)
         run(app, host='localhost', port=port, quiet=True)
 
     @staticmethod

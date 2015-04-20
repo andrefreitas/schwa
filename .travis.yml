@@ -9,3 +9,4 @@ install:
 script:
  - nosetests
  - python setup.py install
+ - python build.py build

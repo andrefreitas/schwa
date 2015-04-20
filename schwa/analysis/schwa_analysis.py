@@ -31,8 +31,8 @@ class SchwaAnalysis(AbstractAnalysis):
         super().__init__(repository)
 
     @staticmethod
-    def is_bug_fixing(commit):
-        return re.search("bug|fix|corrigido", commit.message, re.I)
+    def is_bug_fixing(message):
+        return re.search("fix(e[ds])?|bugs?|defects?|patch|corrigidos?|close([sd])?|resolve([sd])?", message, re.I)
 
     def update_analytics(self, analytics, is_bug_fixing, author, commit_timestamp):
         """ Updates analytics.
@@ -89,7 +89,7 @@ class SchwaAnalysis(AbstractAnalysis):
         analytics = RepositoryAnalytics()
 
         for commit in self.repository.commits:
-            is_bug_fixing = SchwaAnalysis.is_bug_fixing(commit)
+            is_bug_fixing = SchwaAnalysis.is_bug_fixing(commit.message)
 
             # Repository Granularity
             self.update_analytics(analytics, is_bug_fixing, commit.author, commit.timestamp)
