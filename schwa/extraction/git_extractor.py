@@ -21,10 +21,12 @@
 """ Module for the Git Extractor. """
 
 import multiprocessing
+import os
 import git
 from .abstract_extractor import *
 from schwa.repository import *
 from schwa.parsing import JavaParser, ParsingError
+
 
 current_repo = None  # Curent repository wrapper
 
@@ -75,7 +77,7 @@ class GitExtractor(AbstractExtractor):
         iter_commits = self.repo.iter_commits(max_count=max_commits) if max_commits else self.repo.iter_commits()
         commits = [commit.hexsha for commit in iter_commits]
         pool = multiprocessing.Pool(processes=cpus)
-        if parallel:
+        if parallel and os.name != "nt":
             commits = pool.map(extract_commit_wrapper, commits)
         else:
             commits = map(extract_commit_wrapper, commits)
