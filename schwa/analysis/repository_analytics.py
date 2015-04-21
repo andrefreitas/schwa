@@ -182,7 +182,7 @@ class Metrics:
 
 def strip_path(path):
     """ Extracts only the file name of a path """
-    name_re = re.compile("[^/]*\.(java|php|py|cpp|c|js|html|css|rb|h)$")
+    name_re = re.compile("[^/]*\.([a-z]+)$")
     return name_re.search(path).group(0)
 
 
