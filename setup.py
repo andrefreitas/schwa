@@ -22,12 +22,18 @@
 
 
 from setuptools import setup, find_packages
+import os
+
+dir = os.path.dirname(os.path.abspath(__file__))
+version = {}
+with open(os.path.join(dir, "schwa", "version.py")) as fp:
+    exec(fp.read(), version)
 
 requirements = ["GitPython==0.3.6", "nose==1.3.4", "bottle==0.12.7", "ply==3.4"]
 packages = find_packages('.')
 
 setup(name='Schwa',
-      version="0.1.5-dev",
+      version=version["__version__"],
       description='A tool that predicts Software defects from GIT repositories.',
       entry_points={
           "console_scripts": ['schwa = schwa.schwa:main']
