@@ -75,15 +75,23 @@ def main():
     parser.add_argument('repository', help="repository full path on local file system")
     parser.add_argument('--commits', help="maximum number of commits, since the last one, to be analyzed", default=None)
     parser.add_argument('-s', '--single', action='store_true', help="Runs in a single process instead of parallel")
+    parser.add_argument('-j', '--json', action='store_true', help="Outputs results as JSON")
     parser.add_argument('--version', action='version', version='%(prog)s ' + version['__version__'])
 
     args = parser.parse_args()
     if os.path.exists(args.repository):
-        print("Please wait...")
+        if not args.json:
+            print("Please wait...")
+
         s = Schwa(args.repository)
         analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
-        if analytics.is_empty():
+
+        if args.json:
+            print(analytics.to_dict())
+
+        elif analytics.is_empty():
             print("Couldn't find enough data to produce results.")
+
         else:
             print("Press ctrl+c to exit")
             Server.run(analytics)
