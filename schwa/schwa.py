@@ -87,7 +87,8 @@ def main():
         analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
 
         if args.json:
-            print(analytics.to_dict())
+            if not analytics.is_empty():
+                print(analytics.to_dict())
 
         elif analytics.is_empty():
             print("Couldn't find enough data to produce results.")
