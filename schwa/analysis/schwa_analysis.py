@@ -37,7 +37,7 @@ class SchwaAnalysis(AbstractAnalysis):
     def update_analytics(self, analytics, is_bug_fixing, author, commit_timestamp):
         """ Updates analytics.
 
-        By giving commit data updates the component analytics.
+        By giving commit data, updates the component analytics.
 
         Args:
             analytics: An instance of analytics.
