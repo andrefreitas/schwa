@@ -21,7 +21,9 @@
 """ Module for the Feature Weight Learner """
 
 import deap
+import numpy
 
 
+# http://nbviewer.ipython.org/github/DEAP/notebooks/blob/master/OneMax.ipynb
 class FeatureWeightLearner:
     pass
