@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 python3.4 setup.py register -r pypitest
 python3.4 setup.py sdist upload -r pypitest
 python3.4 setup.py register -r pypi
