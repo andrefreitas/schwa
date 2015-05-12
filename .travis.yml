@@ -11,13 +11,12 @@ before_install:
   - conda update --yes conda
 
 install:
- - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy
+ - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy matplotlib
  - pip install gitpython
  - pip install nose
  - pip install bottle
  - pip install ply
  - pip install deap==1.0.1
- - pip install matplotlib
 
 
 script:
