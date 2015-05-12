@@ -22,6 +22,7 @@
 
 
 from setuptools import setup, find_packages
+from pip.req import parse_requirements
 import os
 
 dir = os.path.dirname(os.path.abspath(__file__))
@@ -29,7 +30,7 @@ version = {}
 with open(os.path.join(dir, "schwa", "version.py")) as fp:
     exec(fp.read(), version)
 
-requirements = ["GitPython==0.3.6", "nose==1.3.4", "bottle==0.12.7", "ply==3.4", "deap==1.0.1", "numpy==1.9.2", "matplotlib==1.4.3"]
+requirements = [str(ir.req) for ir in parse_requirements("requirements.txt", session=True)]
 packages = find_packages('.')
 
 setup(name='Schwa',
