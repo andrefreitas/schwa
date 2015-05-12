@@ -12,7 +12,7 @@ before_install:
 
 install:
  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy matplotlib
- - pip install gitpython
+ - pip install gitpython==0.3.6
  - pip install nose
  - pip install bottle
  - pip install ply
