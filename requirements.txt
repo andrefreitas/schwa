@@ -4,3 +4,4 @@ bottle==0.12.7
 ply==3.4
 deap==1.0.1
 numpy==1.9.2
+matplotlib==1.4.3

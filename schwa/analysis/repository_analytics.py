@@ -36,9 +36,9 @@ class Metrics:
 
     Attributes:
         fixes_dataset: A list of (revisions_twr, fixes_twr, authors_twr) that had a bug.
-        fixes_weight: A float having the fixes weight for the defect probability computation.
-        authors_weight: A float having the authors weight for the defect probability computation.
-        revisions_weight: A float having the revisions weight for the defect probability computation.
+        FIXES_WEIGHT: A float having the fixes weight for the defect probability computation.
+        AUTHORS_WEIGHT: A float having the authors weight for the defect probability computation.
+        REVISIONS_WEIGHT: A float having the revisions weight for the defect probability computation.
         revisions_timestamps: A list that stores the timestamps of every revision.
         fixes_timestamps: A list that stores the timestamps of every bug fixing.
         authors_timestamps: A list that stores the timestamps of when a component had a new author.
@@ -52,9 +52,9 @@ class Metrics:
     """
 
     fixes_dataset = []
-    fixes_weight = 0.5
-    authors_weight = 0.25
-    revisions_weight = 0.25
+    FIXES_WEIGHT = 0.5
+    AUTHORS_WEIGHT = 0.25
+    REVISIONS_WEIGHT = 0.25
 
     def __init__(self):
         """ Inits all metrics. """
@@ -69,6 +69,7 @@ class Metrics:
         self.fixes = 0
         self.revisions = 0
         self.defect_prob = 0
+        self.last_defect_prob = None
 
     @staticmethod
     def twr(begin_ts, ts, current_ts):
@@ -88,7 +89,7 @@ class Metrics:
         begin_diff = ts - begin_ts
         diff = current_ts - begin_ts
         if diff == 0:
-            normalized = 0
+            normalized = 1
         else:
             normalized = begin_diff / diff
         twr = 1 / (1 + math.e ** (-12 * normalized + 12))
@@ -160,12 +161,20 @@ class Metrics:
             revisions_twr = Metrics.list_twr(self.revisions_timestamps, begin_ts, last_revision_timestamp)
             fixes_twr = Metrics.list_twr(self.fixes_timestamps, begin_ts, last_revision_timestamp)
             authors_twr = Metrics.list_twr(self.authors_timestamps, begin_ts, last_revision_timestamp)
+            self.last_defect_prob = self.defect_probability(revisions_twr, fixes_twr, authors_twr)
             Metrics.fixes_dataset.append((revisions_twr, fixes_twr, authors_twr))
 
-    def defect_probability(self):
+    def defect_probability(self, revisions_twr=None, fixes_twr=None, authors_twr=None):
+        if not revisions_twr:
+            revisions_twr = self.revisions_twr
+        if not fixes_twr:
+            fixes_twr = self.fixes_twr
+        if not authors_twr:
+            authors_twr = self.authors_twr
+
         """ Computes the defect probability. """
-        twr = Metrics.fixes_weight * self.fixes_twr + Metrics.revisions_weight * self.revisions_twr \
-            + Metrics.authors_weight * self.authors_twr
+        twr = Metrics.FIXES_WEIGHT * fixes_twr + Metrics.REVISIONS_WEIGHT * revisions_twr \
+            + Metrics.AUTHORS_WEIGHT * authors_twr
         probability = 1 - math.e ** (- twr)
         return probability
 

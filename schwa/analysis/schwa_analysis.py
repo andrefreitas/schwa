@@ -30,26 +30,20 @@ class SchwaAnalysis(AbstractAnalysis):
     def __init__(self, repository):
         super().__init__(repository)
 
-    @staticmethod
-    def is_bug_fixing(message):
-        return re.search("fix(e[ds])?|bugs?|defects?|patch|corrigidos?|close([sd])?|resolve([sd])?", message, re.I)
-
-    def update_analytics(self, analytics, is_bug_fixing, author, commit_timestamp):
+    def update_analytics(self, analytics, commit):
         """ Updates analytics.
 
         By giving commit data, updates the component analytics.
 
         Args:
             analytics: An instance of analytics.
-            is_bug_fixing: A boolean that indicates if the commit is a bug fix.
-            author: A string with the author email.
-            commit_timestamp: An integer with the commit timestamp.
+            commit: A commit instance.
         """
-        analytics.update(ts=commit_timestamp, begin_ts=self.repository.begin_ts, current_ts=self.repository.last_ts,
-                         is_bug_fixing=is_bug_fixing, author=author)
+
+        analytics.update(ts=commit.timestamp, begin_ts=self.repository.begin_ts, current_ts=self.repository.last_ts,
+                         is_bug_fixing=commit.is_bug_fixing(), author=commit.author)
     @staticmethod
     def get_analytics_from_tree(parent_analytics_dict, diff, instance):
-        #TODO: Documentation
         analytics = None
 
         if diff.added:
@@ -74,6 +68,7 @@ class SchwaAnalysis(AbstractAnalysis):
         elif diff.removed:
             if diff.component_a() in parent_analytics_dict:
                 del parent_analytics_dict[diff.component_a()]
+            return False
 
         return analytics
 
@@ -89,17 +84,16 @@ class SchwaAnalysis(AbstractAnalysis):
         analytics = RepositoryAnalytics()
 
         for commit in self.repository.commits:
-            is_bug_fixing = SchwaAnalysis.is_bug_fixing(commit.message)
 
             # Repository Granularity
-            self.update_analytics(analytics, is_bug_fixing, commit.author, commit.timestamp)
+            self.update_analytics(analytics, commit)
 
             # File Granularity
             parent_analytics_dict = analytics.files_analytics
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
                 file_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, FileAnalytics())
                 if file_analytics:
-                    self.update_analytics(file_analytics, is_bug_fixing, commit.author, commit.timestamp)
+                    self.update_analytics(file_analytics, commit)
 
             # Class Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
@@ -107,7 +101,7 @@ class SchwaAnalysis(AbstractAnalysis):
                     parent_analytics_dict = analytics.files_analytics[diff.file_name].classes_analytics
                     class_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, ClassAnalytics())
                     if class_analytics:
-                        self.update_analytics(class_analytics, is_bug_fixing, commit.author, commit.timestamp)
+                        self.update_analytics(class_analytics, commit)
                 except KeyError:
                     continue
 
@@ -117,7 +111,7 @@ class SchwaAnalysis(AbstractAnalysis):
                     parent_analytics_dict = analytics.files_analytics[diff.file_name].classes_analytics[diff.class_name].methods_analytics
                     method_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, MethodAnalytics())
                     if method_analytics:
-                        self.update_analytics(method_analytics, is_bug_fixing, commit.author, commit.timestamp)
+                        self.update_analytics(method_analytics, commit)
                 except KeyError:
                     continue
 

@@ -1,15 +1,17 @@
 # _Schwa_ [![Build Status](https://magnum.travis-ci.com/andrefreitas/schwa.svg?token=eMdED9z4qEU8n9mx58dz&branch=andre)](https://magnum.travis-ci.com/andrefreitas/schwa)
 
-A tool that analyzes GIT Repositories of Java Projects and estimates the defect probability of Software components to help developers focusing their resources to fix bugs where they really are.
+A tool that analyzes GIT Repositories and estimates the defect probability of Software components to help developers
+focusing their resources to fix bugs where they really are. We are currently supporting method granularity for Java.
+
+*Schwa is under heavy development as a Master Thesis and is only available as pre-release on the Python Package Index.*
+ 
 
 ## Install
 `pip3.4 install schwa --pre`
 
-or 
-
-1. Install Python 3.4 and pip
-2. Install Git
-3. Run `python3.4 setup.py install`
+ or
+ 
+`python3.4 setup.py install`
 
 ## Usage
 Command line:

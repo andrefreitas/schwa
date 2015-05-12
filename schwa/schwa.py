@@ -25,6 +25,7 @@ import argparse
 from schwa.extraction import GitExtractor
 from schwa.analysis import SchwaAnalysis
 from schwa.web import Server
+from schwa.learning import FeatureWeightLearner
 
 dir = os.path.dirname(os.path.abspath(__file__))
 version = {}
@@ -65,6 +66,12 @@ class Schwa:
         analytics = analysis.analyze()
         return analytics
 
+    def learn(self,  ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True):
+        extractor = GitExtractor(self.repo_path)
+        repo = extractor.extract(ignore_regex, max_commits, method_granularity, parallel)
+        weights = FeatureWeightLearner(repo).learn()
+        return weights
+
 
 def main():
     """ Command Line Interface.
@@ -76,6 +83,7 @@ def main():
     parser.add_argument('--commits', help="maximum number of commits, since the last one, to be analyzed", default=None)
     parser.add_argument('-s', '--single', action='store_true', help="Runs in a single process instead of parallel")
     parser.add_argument('-j', '--json', action='store_true', help="Outputs results as JSON")
+    parser.add_argument('-l', '--learn', action='store_true', help="Learn features weight")
     parser.add_argument('--version', action='version', version='%(prog)s ' + version['__version__'])
 
     args = parser.parse_args()
@@ -84,17 +92,21 @@ def main():
             print("Please wait...")
 
         s = Schwa(args.repository)
-        analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
-
-        if args.json:
-            if not analytics.is_empty():
-                print(analytics.to_dict())
-
-        elif analytics.is_empty():
-            print("Couldn't find enough data to produce results.")
-
+        if args.learn:
+            weights = s.learn(max_commits=args.commits, parallel=not args.single)
+            print(weights)
         else:
-            print("Press ctrl+c to exit")
-            Server.run(analytics)
+            analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
+
+            if args.json:
+                if not analytics.is_empty():
+                    print(analytics.to_dict())
+
+            elif analytics.is_empty():
+                print("Couldn't find enough data to produce results.")
+
+            else:
+                print("Press ctrl+c to exit")
+                Server.run(analytics)
     else:
         print("Invalid repository path!")

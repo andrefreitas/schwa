@@ -24,6 +24,7 @@ Software evolution can be described as a set of commits that have a set off diff
 This differences (diffs) can be at File, Class or Method granularity.
 """
 
+import re
 
 class Repository:
     """ Repository class.
@@ -61,6 +62,9 @@ class Commit:
         self.author = author
         self.timestamp = timestamp
         self.diffs = diffs
+
+    def is_bug_fixing(self):
+        return re.search("fix(e[ds])?|bugs?|defects?|patch|corrigidos?|close([sd])?|resolve([sd])?", self.message, re.I)
 
 
 class Diff:

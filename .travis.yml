@@ -17,6 +17,7 @@ install:
  - pip install bottle
  - pip install ply
  - pip install deap
+ - pip install matplotlib
 
 
 script:
