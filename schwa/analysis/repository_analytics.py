@@ -69,7 +69,7 @@ class Metrics:
         self.fixes = 0
         self.revisions = 0
         self.defect_prob = 0
-        self.last_defect_prob = None
+        self.last_twr = None
 
     @staticmethod
     def twr(begin_ts, ts, current_ts):
@@ -161,20 +161,18 @@ class Metrics:
             revisions_twr = Metrics.list_twr(self.revisions_timestamps, begin_ts, last_revision_timestamp)
             fixes_twr = Metrics.list_twr(self.fixes_timestamps, begin_ts, last_revision_timestamp)
             authors_twr = Metrics.list_twr(self.authors_timestamps, begin_ts, last_revision_timestamp)
-            self.last_defect_prob = self.defect_probability(revisions_twr, fixes_twr, authors_twr)
+            self.last_twr = (revisions_twr, fixes_twr, authors_twr)
             Metrics.fixes_dataset.append((revisions_twr, fixes_twr, authors_twr))
 
-    def defect_probability(self, revisions_twr=None, fixes_twr=None, authors_twr=None):
-        if not revisions_twr:
-            revisions_twr = self.revisions_twr
-        if not fixes_twr:
-            fixes_twr = self.fixes_twr
-        if not authors_twr:
-            authors_twr = self.authors_twr
+    def defect_probability(self):
+        probability = Metrics.compute_defect_probability(self.revisions_twr, self.fixes_twr, self.authors_twr,
+                                                         Metrics.REVISIONS_WEIGHT, Metrics.FIXES_WEIGHT,
+                                                         Metrics.AUTHORS_WEIGHT)
+        return probability
 
-        """ Computes the defect probability. """
-        twr = Metrics.FIXES_WEIGHT * fixes_twr + Metrics.REVISIONS_WEIGHT * revisions_twr \
-            + Metrics.AUTHORS_WEIGHT * authors_twr
+    @staticmethod
+    def compute_defect_probability(r_twr, f_twr, a_twr, r_weight, f_weight, a_weight):
+        twr = r_twr * r_weight + f_twr * f_weight + a_twr * a_weight
         probability = 1 - math.e ** (- twr)
         return probability
 

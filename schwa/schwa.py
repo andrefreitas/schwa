@@ -69,7 +69,7 @@ class Schwa:
     def learn(self,  ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True):
         extractor = GitExtractor(self.repo_path)
         repo = extractor.extract(ignore_regex, max_commits, method_granularity, parallel)
-        weights = FeatureWeightLearner(repo).learn()
+        weights = FeatureWeightLearner(repo).learn_sort()
         return weights
 
 

@@ -39,46 +39,28 @@ class TestFeatureWeightLearner(unittest.TestCase):
         timestamp = current_ts - datetime.timedelta(days=14).total_seconds()
         diffs = []
         diffs.append(DiffFile(file_b="API.java", added=True))
-        diffs.append(DiffClass(file_name="API.java", class_b="API", added=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_b="login", added=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_b="register", added=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_b="getShows", added=True))
         diffs.append(DiffFile(file_b="Core.java", added=True))
-        diffs.append(DiffClass(file_name="Core.java", class_b="Core", added=True))
-        diffs.append(DiffMethod(file_name="Core.java", class_name="Core", method_b="auth", added=True))
         diffs.append(DiffFile(file_b="Database.java", added=True))
-        diffs.append(DiffClass(file_name="Database.java", class_b="Database", added=True))
-        diffs.append(DiffMethod(file_name="Database.java", class_name="Database", method_b="query", added=True))
         diffs.append(DiffFile(file_b="GUI.java", added=True))
-        diffs.append(DiffClass(file_name="GUI.java", class_b="GUI", added=True))
-        diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_b="login", added=True))
         diffs.append(DiffFile(file_b="CLI.java", added=True))
-        diffs.append(DiffClass(file_name="CLI.java", class_b="CLI", added=True))
-        diffs.append(DiffMethod(file_name="CLI.java", class_name="CLI", method_b="login", added=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Second Commit """
         _id = "j398ygfg98h3"
         message = "Fixed register method"
         author = "petergriffin@familyguy.com"
-        timestamp = current_ts - datetime.timedelta(days=12).total_seconds()
+        timestamp = current_ts - datetime.timedelta(days=2).total_seconds()
         diffs = []
         diffs.append(DiffFile(file_a="API.java", file_b="API.java", modified=True))
-        diffs.append(DiffClass(file_name="API.java", class_a="API", class_b="API", modified=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_a="register", method_b="register",
-                                modified=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Third Commit """
         _id = "3433g45g56"
         message = "Fixed register method again"
         author = "petergriffin@familyguy.com"
-        timestamp = current_ts - datetime.timedelta(days=10).total_seconds()
+        timestamp = current_ts - datetime.timedelta(days=1).total_seconds()
         diffs = []
         diffs.append(DiffFile(file_a="API.java", file_b="API.java", modified=True))
-        diffs.append(DiffClass(file_name="API.java", class_a="API", class_b="API", modified=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_a="register", method_b="register",
-                                modified=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         self.repository = Repository(commits, current_ts, timestamp)
@@ -89,6 +71,8 @@ class TestFeatureWeightLearner(unittest.TestCase):
         and non fixed components.
         """
         # TODO: Why in this situation it can't distinguish weights?
-        #weights = self.learner.learn()
+        weights = self.learner.learn_sort()
+
+
         #self.assertGreater(weights["fixes"], weights["revisions"])
         #self.assertGreater(weights["revisions"], weights["authors"])
