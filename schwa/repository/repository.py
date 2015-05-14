@@ -26,6 +26,7 @@ This differences (diffs) can be at File, Class or Method granularity.
 
 import re
 
+
 class Repository:
     """ Repository class.
 

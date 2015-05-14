@@ -19,4 +19,47 @@
 # THE SOFTWARE.
 
 """ Module for Plotting """
-import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+class Plot:
+    """ Plots a scatter.
+
+    Useful for debugging scientific results.
+
+    Attributes:
+        x: A list with ints of x axis.
+        y: A list with ints of y axis.
+        title: A string with the plot title.
+        x_label: A string with the x axis label.
+        y_label: A string with the y axis label.
+    """
+    def __init__(self, x=None, y=None, title=None, x_label=None, y_label=None):
+        if not x:
+            x = []
+        if not y:
+            y = []
+        self.x = x
+        self.y = y
+        self.title = title
+        self.x_label = x_label
+        self.y_label = y_label
+
+    def add_x(self, x):
+        self.x.append(x)
+
+    def add_y(self, y):
+        self.y.append(y)
+
+    def plot(self):
+        x = np.array(self.x)
+        y = np.array(self.y)
+        plt.scatter(x, y)
+        if self.title:
+            plt.title(self.title)
+        if self.x_label:
+            plt.xlabel(self.x_label, fontsize=18)
+        if self.y_label:
+            plt.ylabel(self.y_label, fontsize=18)
+        plt.show()

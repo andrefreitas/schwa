@@ -25,52 +25,52 @@ from deap import base, creator, tools, algorithms
 from schwa.analysis import *
 from schwa.repository import *
 import itertools
-
-# TODO: Write module documentation
+from .plot import Plot
 
 
 class FeatureWeightLearner:
+    """ Learns features weights.
 
+    Schwa uses Revisions, Fixes and Authors as metrics to compute defect probabilities. This class helps finding
+    the weights of each feature, formulating this as an optimization problem where the search strategy is using
+    Genetic Algorithms. A solution can be described as {revisions_weights, fixes_weight, authors_weight}.
+
+    Attributes:
+        BITS_PRECISION: An int with the precision bits of an individual.
+        POPULATION: An int with the initial population number.
+        GENERATIONS: An int with the number of generations.
+        FEATURES: An int with the number of features.
+    """
     BITS_PRECISION = 2
     POPULATION = 100
     GENERATIONS = 100
     FEATURES = 3
 
-    def __init__(self, repository):
-        self.repository = repository
-        self.toolbox = base.Toolbox()
+    def __init__(self, repo):
+        self.repo = repo
+        self.deap_toolbox = base.Toolbox()
         self.setup()
 
     def setup(self):
+        """ Setups configuration for the DEAP library. """
         # Single-objective maximization (1.0)
         creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
         # Individual
         creator.create("Individual", list, fitness=creator.FitnessMax)
-
-        # Types
-        self.toolbox.register("attr_bool", random.randint, 0, 1)
-        self.toolbox.register("individual", tools.initRepeat, creator.Individual, self.toolbox.attr_bool,
+        self.deap_toolbox.register("attr_bool", random.randint, 0, 1)
+        self.deap_toolbox.register("individual", tools.initRepeat, creator.Individual, self.deap_toolbox.attr_bool,
                               n=FeatureWeightLearner.FEATURES * FeatureWeightLearner.BITS_PRECISION)
-        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
+        self.deap_toolbox.register("population", tools.initRepeat, list, self.deap_toolbox.individual)
 
         # Operators
-        self.toolbox.register("evaluate", self.fitness_wrapper)
-        self.toolbox.register("mate", tools.cxTwoPoint)
-        self.toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
-        self.toolbox.register("select", tools.selTournament, tournsize=3)
+        self.deap_toolbox.register("evaluate", self.fitness_wrapper)
+        self.deap_toolbox.register("mate", tools.cxTwoPoint)
+        self.deap_toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
+        self.deap_toolbox.register("select", tools.selTournament, tournsize=3)
 
     def update_analytics(self, analytics, commit):
-        """ Updates analytics.
-
-        By giving commit data, updates the component analytics.
-
-        Args:
-            analytics: An instance of analytics.
-            commit: A commit instance.
-        """
-
-        analytics.update(ts=commit.timestamp, begin_ts=self.repository.begin_ts, current_ts=self.repository.last_ts,
+        analytics.update(ts=commit.timestamp, begin_ts=self.repo.begin_ts, current_ts=self.repo.last_ts,
                          is_bug_fixing=commit.is_bug_fixing(), author=commit.author)
 
     def fitness_wrapper(self, individual):
@@ -78,18 +78,17 @@ class FeatureWeightLearner:
         return self.fitness(revisions_weight, fixes_weight, authors_weight),
 
     def fitness(self, revisions_weight, fixes_weight, authors_weight):
-
         all_components = set()
         distance = 0
         distances = []
         analytics = RepositoryAnalytics()
 
-        for commit in self.repository.commits:
-
+        for commit in self.repo.commits:
             involved_components = set()
 
             # Repository Granularity
             self.update_analytics(analytics, commit)
+
             # File Granularity
             parent_analytics_dict = analytics.files_analytics
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
@@ -101,23 +100,24 @@ class FeatureWeightLearner:
                     all_components.add(diff.file_b)
                     self.update_analytics(file_analytics, commit)
 
-            # Distance
+            # Compute distance
             if commit.is_bug_fixing():
                 not_involved_components = all_components - involved_components
-                distance_commit = FeatureWeightLearner.distance(analytics, involved_components, not_involved_components, revisions_weight, fixes_weight, authors_weight)
+                distance_commit = FeatureWeightLearner.distance(analytics, involved_components, not_involved_components,
+                                                                revisions_weight, fixes_weight, authors_weight)
                 distance += distance_commit
                 distances.append(distance_commit)
 
         return distance
 
     @staticmethod
-    def distance(analytics, involved_components, not_involved_components, revisions_weight, fixes_weight, authors_weight):
+    def distance(analytics, involved_components, not_involved_components, revisions_weight, fixes_weight,
+                 authors_weight):
         schwa_avg_involved = FeatureWeightLearner.average_schwa(involved_components, analytics,
                                                                 revisions_weight, fixes_weight, authors_weight)
         schwa_avg_not_involved = FeatureWeightLearner.average_schwa(not_involved_components, analytics,
                                                                     revisions_weight, fixes_weight, authors_weight)
         return schwa_avg_involved - schwa_avg_not_involved
-
 
     @staticmethod
     def average_schwa(components, analytics, revisions_weight, fixes_weight, authors_weight):
@@ -144,40 +144,63 @@ class FeatureWeightLearner:
         weights = list(map(lambda w: w / max_encoded, ind))
         return weights
 
-    def learn(self):
-        weights = {}
-        population = self.toolbox.population(n=FeatureWeightLearner.POPULATION)
-
-        NGEN = FeatureWeightLearner.GENERATIONS
-        for gen in range(NGEN):
-            offspring = algorithms.varAnd(population, self.toolbox, cxpb=0.5, mutpb=0.1)
-            fits = self.toolbox.map(self.toolbox.evaluate, offspring)
-            for fit, ind in zip(fits, offspring):
-                ind.fitness.values = fit
-            population = self.toolbox.select(offspring, k=len(population))
-
-
-        best = tools.selBest(population, k=1)[0]
-        revisions_weight, fixes_weight, authors_weight = FeatureWeightLearner.decode_individual(best)
-        weights["revisions"] = revisions_weight
-        weights["fixes"] = fixes_weight
-        weights["authors"] = authors_weight
-        return weights
-
     def learn_sort(self):
         weights = {}
-
         population = list(itertools.product([0, 1], repeat=3 * FeatureWeightLearner.BITS_PRECISION))
+
         sorted_population = sorted(population, key=self.fitness_wrapper, reverse=True)
         sorted_population_fitness = list(map(self.fitness_wrapper, sorted_population))
         best = sorted_population[0]
+
         revisions_weight, fixes_weight, authors_weight = FeatureWeightLearner.decode_individual(best)
         weights["revisions"] = revisions_weight
         weights["fixes"] = fixes_weight
         weights["authors"] = authors_weight
-        print(sorted_population)
-        print(sorted_population_fitness)
         return weights
+
+    def learn(self):
+        """ Runs genetic algorithms.
+
+        By using DEAP, generates an initial population and runs for n generations.
+
+        Returns:
+            A dict with the features weight.
+        """
+        weights = {}
+        self.fitness(0, 0, 1)
+        """
+        population = self.deap_toolbox.population(n=FeatureWeightLearner.POPULATION)
+
+
+        for gen in range(FeatureWeightLearner.GENERATIONS):
+            offspring = algorithms.varAnd(population, self.deap_toolbox, cxpb=0.5, mutpb=0.1)
+            fits = self.deap_toolbox.map(self.deap_toolbox.evaluate, offspring)
+            for fit, ind in zip(fits, offspring):
+                ind.fitness.values = fit
+            population = self.deap_toolbox.select(offspring, k=len(population))
+
+        best = tools.selBest(population, k=1)[0]
+        revisions_weight, fixes_weight, authors_weight = FeatureWeightLearner.decode_individual(best)
+        """
+
+        # Plot
+        revisions_fixes_plot = Plot(title="Revisions and Fixes evolution", x_label="Revisions TWR", y_label="Fixes TWR")
+        authors_fixes_plot = Plot(title="Authors and Fixes evolution", x_label="Authors TWR", y_label="Fixes TWR")
+        for r, f, a in Metrics.fixes_dataset:
+            revisions_fixes_plot.add_x(r)
+            revisions_fixes_plot.add_y(f)
+            authors_fixes_plot.add_x(a)
+            authors_fixes_plot.add_y(f)
+        revisions_fixes_plot.plot()
+        authors_fixes_plot.plot()
+
+        """
+        weights["revisions"] = revisions_weight
+        weights["fixes"] = fixes_weight
+        weights["authors"] = authors_weight
+        """
+        return weights
+
 
 
 

@@ -35,7 +35,7 @@ class Metrics:
     In analysis, each component have their analytics represented by a Metric instance.
 
     Attributes:
-        fixes_dataset: A list of (revisions_twr, fixes_twr, authors_twr) that had a bug.
+        fixes_dataset: A set of (revisions_twr, fixes_twr, authors_twr) that had a bug.
         FIXES_WEIGHT: A float having the fixes weight for the defect probability computation.
         AUTHORS_WEIGHT: A float having the authors weight for the defect probability computation.
         REVISIONS_WEIGHT: A float having the revisions weight for the defect probability computation.
@@ -51,7 +51,7 @@ class Metrics:
         defect_prob: A float representing the defect probability that is computed a posteriori.
     """
 
-    fixes_dataset = []
+    fixes_dataset = set()
     FIXES_WEIGHT = 0.5
     AUTHORS_WEIGHT = 0.25
     REVISIONS_WEIGHT = 0.25
@@ -162,7 +162,7 @@ class Metrics:
             fixes_twr = Metrics.list_twr(self.fixes_timestamps, begin_ts, last_revision_timestamp)
             authors_twr = Metrics.list_twr(self.authors_timestamps, begin_ts, last_revision_timestamp)
             self.last_twr = (revisions_twr, fixes_twr, authors_twr)
-            Metrics.fixes_dataset.append((revisions_twr, fixes_twr, authors_twr))
+            Metrics.fixes_dataset.add((revisions_twr, fixes_twr, authors_twr))
 
     def defect_probability(self):
         probability = Metrics.compute_defect_probability(self.revisions_twr, self.fixes_twr, self.authors_twr,
