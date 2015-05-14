@@ -1,4 +1,4 @@
-# _Schwa_ [![Build Status](https://magnum.travis-ci.com/andrefreitas/schwa.svg?token=eMdED9z4qEU8n9mx58dz&branch=andre)](https://magnum.travis-ci.com/andrefreitas/schwa)
+# _Schwa_ [![Build Status](https://travis-ci.org/andrefreitas/schwa.svg)](https://travis-ci.org/andrefreitas/schwa)
 
 A tool that analyzes GIT Repositories and estimates the defect probability of Software components to help developers
 focusing their resources to fix bugs where they really are. We are currently supporting method granularity for Java.
