@@ -71,7 +71,7 @@ class TestFeatureWeightLearner(unittest.TestCase):
         and non fixed components.
         """
         # TODO: Why in this situation it can't distinguish weights?
-        weights = self.learner.learn_sort()
+        weights = self.learner.learn()
 
 
         #self.assertGreater(weights["fixes"], weights["revisions"])

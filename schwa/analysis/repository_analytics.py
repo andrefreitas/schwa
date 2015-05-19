@@ -27,6 +27,7 @@ is computed. Science is being done here!
 
 import math
 import re
+from schwa.plot import Plot
 
 
 class Metrics:
@@ -163,6 +164,18 @@ class Metrics:
             authors_twr = Metrics.list_twr(self.authors_timestamps, begin_ts, last_revision_timestamp)
             self.last_twr = (revisions_twr, fixes_twr, authors_twr)
             Metrics.fixes_dataset.add((revisions_twr, fixes_twr, authors_twr))
+
+    @staticmethod
+    def plot():
+        revisions_fixes_plot = Plot(title="Revisions and Fixes evolution", x_label="Revisions TWR", y_label="Fixes TWR")
+        authors_fixes_plot = Plot(title="Authors and Fixes evolution", x_label="Authors TWR", y_label="Fixes TWR")
+        for r, f, a in Metrics.fixes_dataset:
+            revisions_fixes_plot.add_x(r)
+            revisions_fixes_plot.add_y(f)
+            authors_fixes_plot.add_x(a)
+            authors_fixes_plot.add_y(f)
+        revisions_fixes_plot.plot()
+        authors_fixes_plot.plot()
 
     def defect_probability(self):
         probability = Metrics.compute_defect_probability(self.revisions_twr, self.fixes_twr, self.authors_twr,
