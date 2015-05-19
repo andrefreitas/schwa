@@ -66,11 +66,12 @@ class Schwa:
         analytics = analysis.analyze()
         return analytics
 
-    def learn(self,  ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True):
+    def learn(self,  ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True,
+              bits=None, generations=None):
         extractor = GitExtractor(self.repo_path)
         repo = extractor.extract(ignore_regex, max_commits, method_granularity, parallel)
-        weights = FeatureWeightLearner(repo).learn()
-        return weights
+        solution = FeatureWeightLearner(repo, bits, generations).learn()
+        return solution
 
 
 def main():
@@ -80,10 +81,13 @@ def main():
     """
     parser = argparse.ArgumentParser(description='Predicts defects from GIT repositories.')
     parser.add_argument('repository', help="repository full path on local file system")
-    parser.add_argument('--commits', help="maximum number of commits, since the last one, to be analyzed", default=None)
+    parser.add_argument('--commits', help="maximum number of commits, since the last one, to be analyzed",
+                        default=None, type=int)
     parser.add_argument('-s', '--single', action='store_true', help="Runs in a single process instead of parallel")
     parser.add_argument('-j', '--json', action='store_true', help="Outputs results as JSON")
     parser.add_argument('-l', '--learn', action='store_true', help="Learn features weight")
+    parser.add_argument('--bits', help="Features weight learning bits precision", default=None, type=int)
+    parser.add_argument('--generations', help="Features weight learning bits generations", default=None, type=int)
     parser.add_argument('--version', action='version', version='%(prog)s ' + version['__version__'])
 
     args = parser.parse_args()
@@ -93,17 +97,25 @@ def main():
 
         s = Schwa(args.repository)
         if args.learn:
-            weights = s.learn(max_commits=args.commits, parallel=not args.single)
-            print_weight = lambda k: print(k, " : ", str(round(weights[k], 4)))
+            solution = s.learn(max_commits=args.commits, parallel=not args.single, bits=args.bits,
+                               generations=args.generations)
+            print_param = lambda k: print(k, " : ", str(round(solution[k], 4)))
             print("===================================")
             print("FEATURES WEIGHTS GA LEARNER")
             print("===================================")
-            print_weight("revisions")
-            print_weight("fixes")
-            print_weight("authors")
-            print_weight("fitness")
-            print("===================================")
+            print_param("revisions")
+            print_param("fixes")
+            print_param("authors")
+            print("-----------------------------------")
+            print_param("fitness")
+            print("-----------------------------------")
+            print("repository", ":", args.repository)
+            print("commits", ":", args.commits if args.commits else "all")
+            print_param("bits")
+            print_param("generations")
+            print("-----------------------------------")
         else:
+
             analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
 
             if args.json:

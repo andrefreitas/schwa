@@ -32,26 +32,39 @@ class FeatureWeightLearner:
 
     Schwa uses Revisions, Fixes and Authors as metrics to compute defect probabilities. This class helps finding
     the weights of each feature, formulating this as an optimization problem where the search strategy is using
-    Genetic Algorithms. A solution can be described as {revisions_weights, fixes_weight, authors_weight}.
+    Genetic Algorithms. An individual is encoded like {revisions_weights, fixes_weight, authors_weight}. For example,
+    using 2 bits precisions: [1, 0, 0, 0, 0, 1] = { 2/3, 0, 1/3}. See self.fitness() to understand how fitness is
+    computed.
 
     Attributes:
-        BITS_PRECISION: An int with the precision bits of an individual.
-        POPULATION: An int with the initial population number.
-        GENERATIONS: An int with the number of generations.
+        BITS_PRECISION: An int with the default value for bits precision.
         FEATURES: An int with the number of features.
+        GENERATIONS: An int with the default value for the number of generations.
+        FEATURES: An int with the number of features.
+        repo: An instance of Repository.
+        deap_toolbox: An instance of DEAP toolbox to use GA.
+        constraints: A list of constraints individuals must respect.
+        bits: An int with the bits precision.
+        generations: An int with the number of generations.
+        population: An int with the initial population.
     """
+
     BITS_PRECISION = 2
     FEATURES = 3
-    POPULATION = round(2 * 2 ** (FEATURES * BITS_PRECISION))  # need to have enough diversity
-    GENERATIONS = 30
+    POPULATION = 100
+    GENERATIONS = 20
 
-    def __init__(self, repo):
+    def __init__(self, repo, bits=None, generations=None):
         self.repo = repo
         self.deap_toolbox = base.Toolbox()
         self.constraints = []
-        self.setup()
+        self.bits = bits if bits else FeatureWeightLearner.BITS_PRECISION
+        self.generations = generations if generations else FeatureWeightLearner.GENERATIONS
+        self.population = round(2 * 2 ** (FeatureWeightLearner.FEATURES * self.bits)) if bits else \
+            FeatureWeightLearner.POPULATION
+        self.setup_deap()
 
-    def setup(self):
+    def setup_deap(self):
         """ Setups configuration for the DEAP library. """
         # Single-objective maximization (1.0)
         creator.create("FitnessMax", base.Fitness, weights=(Decimal(1.0),))
@@ -60,7 +73,7 @@ class FeatureWeightLearner:
         creator.create("Individual", list, fitness=creator.FitnessMax)
         self.deap_toolbox.register("attr_bool", random.randint, 0, 1)
         self.deap_toolbox.register("individual", tools.initRepeat, creator.Individual, self.deap_toolbox.attr_bool,
-                              n=FeatureWeightLearner.FEATURES * FeatureWeightLearner.BITS_PRECISION)
+                                   n=FeatureWeightLearner.FEATURES * self.bits)
         self.deap_toolbox.register("population", tools.initRepeat, list, self.deap_toolbox.individual)
 
         # Operators
@@ -70,7 +83,7 @@ class FeatureWeightLearner:
         self.deap_toolbox.register("select", tools.selTournament, tournsize=3)
 
         # Constraints
-        sum_is_one = lambda r, f, a: round(r + f + a) == 1
+        sum_is_one = lambda r, f, a: round(r + f + a, 5) == 1
         non_zero = lambda r, f, a: r * f * a > 0
         self.constraints.extend([sum_is_one, non_zero])
 
@@ -79,10 +92,23 @@ class FeatureWeightLearner:
                          is_bug_fixing=commit.is_bug_fixing(), author=commit.author)
 
     def fitness_wrapper(self, individual):
-        revisions_weight, fixes_weight, authors_weight = FeatureWeightLearner.decode_individual(individual)
+        revisions_weight, fixes_weight, authors_weight = self.decode_individual(individual)
         return self.fitness(revisions_weight, fixes_weight, authors_weight),
 
     def fitness(self, revisions_weight, fixes_weight, authors_weight):
+        """ Computes fitness for a decoded individual.
+
+        The best solution is the one that have the greatest distance between faulty and non faulty components,
+        in terms of defect probability.
+
+        Args:
+            revisions_weight: A Decimal with the revisions weight.
+            fixes_weight: A Decimal with the fixes weight.
+            authors_weight: A Decimal with the authors weight.
+
+        Returns:
+            A Decimal with the sum of the distances.
+        """
 
         for constraint in self.constraints:
             if not constraint(revisions_weight, fixes_weight, authors_weight):
@@ -148,11 +174,10 @@ class FeatureWeightLearner:
         else:
             return 0
 
-    @staticmethod
-    def decode_individual(individual):
-        ind = list(zip(*(iter(map(str, individual)),) * FeatureWeightLearner.BITS_PRECISION))
+    def decode_individual(self, individual):
+        ind = list(zip(*(iter(map(str, individual)),) * self.bits))
         ind = list(map(lambda t: int("".join(t), 2), ind))
-        max_encoded = int("1" * FeatureWeightLearner.BITS_PRECISION, 2)
+        max_encoded = int("1" * self.bits, 2)
         weights = list(map(lambda w: Decimal(w) / Decimal(max_encoded), ind))
         return weights
 
@@ -162,16 +187,15 @@ class FeatureWeightLearner:
         By using DEAP, generates an initial population and runs for n generations.
 
         Returns:
-            A dict with the features weight.
+            A dict with the features weight and others params.
         """
-
-        weights = {}
+        solution = {}
 
         # Generate Population
-        population = self.deap_toolbox.population(n=FeatureWeightLearner.POPULATION)
+        population = self.deap_toolbox.population(n=self.population)
 
         # Evolve
-        for gen in range(FeatureWeightLearner.GENERATIONS):
+        for gen in range(self.generations):
             offspring = algorithms.varAnd(population, self.deap_toolbox, cxpb=0.5, mutpb=0.1)
             fits = self.deap_toolbox.map(self.deap_toolbox.evaluate, offspring)
             for fit, ind in zip(fits, offspring):
@@ -181,16 +205,13 @@ class FeatureWeightLearner:
         # Select best
         best = tools.selBest(population, k=1)[0]
         best_fitness, = self.fitness_wrapper(best)
-        revisions_weight, fixes_weight, authors_weight = FeatureWeightLearner.decode_individual(best)
+        revisions_weight, fixes_weight, authors_weight = self.decode_individual(best)
 
-        weights["revisions"] = revisions_weight
-        weights["fixes"] = fixes_weight
-        weights["authors"] = authors_weight
-        weights["fitness"] = best_fitness
+        solution["revisions"] = revisions_weight
+        solution["fixes"] = fixes_weight
+        solution["authors"] = authors_weight
+        solution["fitness"] = best_fitness
+        solution["bits"] = self.bits
+        solution["generations"] = self.generations
 
-        return weights
-
-
-
-
-
+        return solution
