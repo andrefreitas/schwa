@@ -22,11 +22,12 @@
 
 This module is the most important to understand the Schwa API.
 Here the analytics structure is declared and the defect probability
-is computed. Science is being done here!
+is computed. Science is being done here! We use Decimal from the standard library
+since results were accumulating errors.
 """
 
-import math
 import re
+from decimal import Decimal
 from schwa.plot import Plot
 
 
@@ -37,29 +38,27 @@ class Metrics:
 
     Attributes:
         fixes_dataset: A set of (revisions_twr, fixes_twr, authors_twr) that had a bug.
-        FIXES_WEIGHT: A float having the fixes weight for the defect probability computation.
-        AUTHORS_WEIGHT: A float having the authors weight for the defect probability computation.
-        REVISIONS_WEIGHT: A float having the revisions weight for the defect probability computation.
+        FIXES_WEIGHT: A Decimal having the fixes weight for the defect probability computation.
+        AUTHORS_WEIGHT: A Decimal having the authors weight for the defect probability computation.
+        REVISIONS_WEIGHT: A Decimal having the revisions weight for the defect probability computation.
         revisions_timestamps: A list that stores the timestamps of every revision.
         fixes_timestamps: A list that stores the timestamps of every bug fixing.
         authors_timestamps: A list that stores the timestamps of when a component had a new author.
-        revisions_twr: A float that is an accumulator of revisions TWR (see TWR formula).
-        fixes_twr: A float that is an accumulator of fixes TWR (see TWR formula).
-        authors_twr: A float that is an accumulator of authors TWR (see TWR formula).
+        revisions_twr: A Decimal that is an accumulator of revisions TWR (see TWR formula).
+        fixes_twr: A Decimal that is an accumulator of fixes TWR (see TWR formula).
+        authors_twr: A Decimal that is an accumulator of authors TWR (see TWR formula).
         authors: A set that have all email of authors that contributed (see TWR formula).
         fixes: An int that is a counter of bug fixes.
         revisions: An int that is a counter of revisions.
-        defect_prob: A float representing the defect probability that is computed a posteriori.
+        defect_prob: A Decimal representing the defect probability.
     """
 
     fixes_dataset = set()
-    FIXES_WEIGHT = 0.5
-    AUTHORS_WEIGHT = 0.25
-    REVISIONS_WEIGHT = 0.25
+    FIXES_WEIGHT = Decimal(0.5)
+    AUTHORS_WEIGHT = Decimal(0.25)
+    REVISIONS_WEIGHT = Decimal(0.25)
 
     def __init__(self):
-        """ Inits all metrics. """
-
         self.revisions_timestamps = []
         self.fixes_timestamps = []
         self.authors_timestamps = []
@@ -84,7 +83,7 @@ class Metrics:
             current_ts: An int representing the most recent timestamp.
 
         Returns:
-            A float from 0 to 0.5.
+            A Decimal from 0 to 0.5.
         """
 
         begin_diff = ts - begin_ts
@@ -92,8 +91,8 @@ class Metrics:
         if diff == 0:
             normalized = 1
         else:
-            normalized = begin_diff / diff
-        twr = 1 / (1 + math.e ** (-12 * normalized + 12))
+            normalized = Decimal(begin_diff) / Decimal(diff)
+        twr = 1 / (1 + Decimal.exp(-12 * normalized + 12))
         return twr
 
     @staticmethod
@@ -154,7 +153,7 @@ class Metrics:
         in the last revision, the component had a bug.
 
         Args:
-            begin_ts: The timestamp of the first commit.
+            begin_ts: An int that is timestamp of the first commit.
         """
 
         if self.revisions_timestamps:
@@ -186,13 +185,13 @@ class Metrics:
     @staticmethod
     def compute_defect_probability(r_twr, f_twr, a_twr, r_weight, f_weight, a_weight):
         twr = r_twr * r_weight + f_twr * f_weight + a_twr * a_weight
-        probability = 1 - math.e ** (- twr)
+        probability = 1 - Decimal.exp(- twr)
         return probability
 
     def to_dict(self):
         metrics_dict = {
-            "size": self.defect_prob,
-            "prob": self.defect_prob,
+            "size": str(self.defect_prob),
+            "prob": str(self.defect_prob),
             "revisions": self.revisions,
             "fixes": self.fixes,
             "authors": len(self.authors)

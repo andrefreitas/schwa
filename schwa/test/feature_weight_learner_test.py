@@ -66,13 +66,9 @@ class TestFeatureWeightLearner(unittest.TestCase):
         self.repository = Repository(commits, current_ts, timestamp)
         self.learner = FeatureWeightLearner(self.repository)
 
-    def test_fixes_weight(self):
-        """ Fixes should have more weight, if it is the feature that make the largest distance between fixed
-        and non fixed components.
+    def test_revisions_weight(self):
+        """ API.Java is the file with most revisions in the bug introducing change.
         """
-        # TODO: Why in this situation it can't distinguish weights?
         weights = self.learner.learn()
-
-
-        #self.assertGreater(weights["fixes"], weights["revisions"])
-        #self.assertGreater(weights["revisions"], weights["authors"])
+        self.assertGreater(weights["revisions"], weights["fixes"])
+        self.assertGreater(weights["revisions"], weights["authors"])

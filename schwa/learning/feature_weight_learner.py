@@ -21,6 +21,7 @@
 """ Module for the Feature Weight Learner """
 
 import random
+from decimal import Decimal
 from deap import base, creator, tools, algorithms
 from schwa.analysis import *
 from schwa.repository import *
@@ -39,10 +40,10 @@ class FeatureWeightLearner:
         GENERATIONS: An int with the number of generations.
         FEATURES: An int with the number of features.
     """
-    BITS_PRECISION = 3
-    POPULATION = 100
-    GENERATIONS = 30
+    BITS_PRECISION = 2
     FEATURES = 3
+    POPULATION = round(2 * 2 ** (FEATURES * BITS_PRECISION))  # need to have enough diversity
+    GENERATIONS = 30
 
     def __init__(self, repo):
         self.repo = repo
@@ -53,7 +54,7 @@ class FeatureWeightLearner:
     def setup(self):
         """ Setups configuration for the DEAP library. """
         # Single-objective maximization (1.0)
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("FitnessMax", base.Fitness, weights=(Decimal(1.0),))
 
         # Individual
         creator.create("Individual", list, fitness=creator.FitnessMax)
@@ -69,9 +70,8 @@ class FeatureWeightLearner:
         self.deap_toolbox.register("select", tools.selTournament, tournsize=3)
 
         # Constraints
-        decode = FeatureWeightLearner.decode_individual
-        sum_is_one = lambda ind: sum(decode(ind)) == 1
-        non_zero = lambda ind: 0 not in decode(ind)
+        sum_is_one = lambda r, f, a: round(r + f + a) == 1
+        non_zero = lambda r, f, a: r * f * a > 0
         self.constraints.extend([sum_is_one, non_zero])
 
     def update_analytics(self, analytics, commit):
@@ -79,15 +79,14 @@ class FeatureWeightLearner:
                          is_bug_fixing=commit.is_bug_fixing(), author=commit.author)
 
     def fitness_wrapper(self, individual):
-
-        for constraint in self.constraints:
-            if not constraint(individual):
-                return 0,
-
         revisions_weight, fixes_weight, authors_weight = FeatureWeightLearner.decode_individual(individual)
         return self.fitness(revisions_weight, fixes_weight, authors_weight),
 
     def fitness(self, revisions_weight, fixes_weight, authors_weight):
+
+        for constraint in self.constraints:
+            if not constraint(revisions_weight, fixes_weight, authors_weight):
+                return Decimal('-Infinity')
 
         all_components = set()
         distance = 0
@@ -154,7 +153,7 @@ class FeatureWeightLearner:
         ind = list(zip(*(iter(map(str, individual)),) * FeatureWeightLearner.BITS_PRECISION))
         ind = list(map(lambda t: int("".join(t), 2), ind))
         max_encoded = int("1" * FeatureWeightLearner.BITS_PRECISION, 2)
-        weights = list(map(lambda w: w / max_encoded, ind))
+        weights = list(map(lambda w: Decimal(w) / Decimal(max_encoded), ind))
         return weights
 
     def learn(self):
@@ -165,6 +164,7 @@ class FeatureWeightLearner:
         Returns:
             A dict with the features weight.
         """
+
         weights = {}
 
         # Generate Population
@@ -180,12 +180,13 @@ class FeatureWeightLearner:
 
         # Select best
         best = tools.selBest(population, k=1)[0]
-        best_fitness = self.fitness_wrapper(best)
+        best_fitness, = self.fitness_wrapper(best)
         revisions_weight, fixes_weight, authors_weight = FeatureWeightLearner.decode_individual(best)
 
         weights["revisions"] = revisions_weight
         weights["fixes"] = fixes_weight
         weights["authors"] = authors_weight
+        weights["fitness"] = best_fitness
 
         return weights
 

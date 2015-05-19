@@ -94,7 +94,15 @@ def main():
         s = Schwa(args.repository)
         if args.learn:
             weights = s.learn(max_commits=args.commits, parallel=not args.single)
-            print(weights)
+            print_weight = lambda k: print(k, " : ", str(round(weights[k], 4)))
+            print("===================================")
+            print("FEATURES WEIGHTS GA LEARNER")
+            print("===================================")
+            print_weight("revisions")
+            print_weight("fixes")
+            print_weight("authors")
+            print_weight("fitness")
+            print("===================================")
         else:
             analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
 
