@@ -66,7 +66,7 @@ class TestFeatureWeightLearner(unittest.TestCase):
         self.repository = Repository(commits, current_ts, timestamp)
 
     def test_revisions_weight(self):
-        """ API.Java is the file with most revisions in the bug introducing change.
+        """ API.Java is the file with most revisions and fixes in the bug introducing change.
         """
-        solution = FeatureWeightLearner(self.repository, generations=50).learn()
-        #self.assertGreater(solution["revisions"], solution["fixes"])
+        solution = FeatureWeightLearner(self.repository, generations=70).learn()
+        self.assertGreater(solution["revisions"], solution["fixes"])

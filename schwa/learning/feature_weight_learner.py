@@ -49,10 +49,9 @@ class FeatureWeightLearner:
         population: An int with the initial population.
     """
 
-    BITS_PRECISION = 2
+    BITS_PRECISION = 3
     FEATURES = 3
-    POPULATION = 100
-    GENERATIONS = 20
+    GENERATIONS = 40
 
     def __init__(self, repo, bits=None, generations=None):
         self.repo = repo
@@ -60,8 +59,7 @@ class FeatureWeightLearner:
         self.constraints = []
         self.bits = bits if bits else FeatureWeightLearner.BITS_PRECISION
         self.generations = generations if generations else FeatureWeightLearner.GENERATIONS
-        self.population = round(2 * 2 ** (FeatureWeightLearner.FEATURES * self.bits)) if bits else \
-            FeatureWeightLearner.POPULATION
+        self.population = round(1.5 * 2 ** (FeatureWeightLearner.FEATURES * self.bits))
         self.setup_deap()
 
     def setup_deap(self):
