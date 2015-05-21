@@ -6,8 +6,6 @@ focusing their resources to fix bugs where they really are. We are currently sup
 
 *Schwa is under heavy development as a Master Thesis and is only available as pre-release on the Python Package Index.*
 
-<iframe src="https://docs.google.com/presentation/d/1ABXt0JNhlyac4PMmsukxucRYqVZxZC3GtUE7tPM7HRo/embed?start=false&loop=false&delayms=3000" frameborder="0" width="500" height="315" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
-
 
 
 

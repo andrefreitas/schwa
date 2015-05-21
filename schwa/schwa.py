@@ -20,17 +20,12 @@
 
 """ Main entry point to start using Schwa. """
 
-import os
-import argparse
+
+
 from schwa.extraction import GitExtractor
 from schwa.analysis import SchwaAnalysis
-from schwa.web import Server
 from schwa.learning import FeatureWeightLearner
 
-dir = os.path.dirname(os.path.abspath(__file__))
-version = {}
-with open(os.path.join(dir, "version.py")) as fp:
-    exec(fp.read(), version)
 
 
 class Schwa:
@@ -74,59 +69,8 @@ class Schwa:
         return solution
 
 
-def main():
-    """ Command Line Interface.
 
-    Executes Schwa from CLI and then starts a Web Server to show the results in a Sunburst chart.
-    """
-    parser = argparse.ArgumentParser(description='Predicts defects from GIT repositories.')
-    parser.add_argument('repository', help="repository full path on local file system")
-    parser.add_argument('--commits', help="maximum number of commits, since the last one, to be analyzed",
-                        default=None, type=int)
-    parser.add_argument('-s', '--single', action='store_true', help="Runs in a single process instead of parallel")
-    parser.add_argument('-j', '--json', action='store_true', help="Outputs results as JSON")
-    parser.add_argument('-l', '--learn', action='store_true', help="Learn features weight")
-    parser.add_argument('--bits', help="Features weight learning bits precision", default=None, type=int)
-    parser.add_argument('--generations', help="Features weight learning bits generations", default=None, type=int)
-    parser.add_argument('--version', action='version', version='%(prog)s ' + version['__version__'])
 
-    args = parser.parse_args()
-    if os.path.exists(args.repository):
-        if not args.json:
-            print("Please wait...")
 
-        s = Schwa(args.repository)
-        if args.learn:
-            solution = s.learn(max_commits=args.commits, parallel=not args.single, bits=args.bits,
-                               generations=args.generations)
-            print_param = lambda k: print(k, " : ", str(round(solution[k], 4)))
-            print("===================================")
-            print("FEATURES WEIGHTS GA LEARNER")
-            print("===================================")
-            print_param("revisions")
-            print_param("fixes")
-            print_param("authors")
-            print("-----------------------------------")
-            print_param("fitness")
-            print("-----------------------------------")
-            print("repository", ":", args.repository)
-            print("commits", ":", args.commits if args.commits else "all")
-            print_param("bits")
-            print_param("generations")
-            print("-----------------------------------")
-        else:
 
-            analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
 
-            if args.json:
-                if not analytics.is_empty():
-                    print(analytics.to_dict())
-
-            elif analytics.is_empty():
-                print("Couldn't find enough data to produce results.")
-
-            else:
-                print("Press ctrl+c to exit")
-                Server.run(analytics)
-    else:
-        print("Invalid repository path!")

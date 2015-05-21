@@ -20,6 +20,6 @@
 
 """ Wrapper to main() for when schwa is invoked as module (e.g. python -m schwa). """
 
-from .schwa import main
+from .cli import main
 
 main()

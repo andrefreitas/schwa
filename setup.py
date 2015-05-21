@@ -37,7 +37,7 @@ setup(name='Schwa',
       version=version["__version__"],
       description='A tool that predicts Software defects from GIT repositories.',
       entry_points={
-          "console_scripts": ['schwa = schwa.schwa:main']
+          "console_scripts": ['schwa = schwa.cli:main']
       },
       author='Andre Freitas',
       author_email='p.andrefreitas@gmail.com',
