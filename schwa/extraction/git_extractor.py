@@ -107,7 +107,7 @@ class GitExtractor(AbstractExtractor):
 
         try:
             message = commit.message
-        except UnicodeDecodeError:  # pragma: no cover
+        except (UnicodeDecodeError, TypeError):  # pragma: no cover
             return None  # pragma: no cover
 
         author = commit.author.email
