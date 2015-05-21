@@ -28,7 +28,6 @@ since results were accumulating errors.
 
 import re
 from decimal import Decimal
-from schwa.plot import Plot
 
 
 class Metrics:
