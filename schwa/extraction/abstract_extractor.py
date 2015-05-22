@@ -53,3 +53,6 @@ def is_code_file(path):
 def can_parse_file(path):
     result = re.search(".+\.(java)$", path)
     return result
+
+class RepositoryExtractionException(Exception):
+    pass

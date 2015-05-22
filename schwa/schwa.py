@@ -20,12 +20,9 @@
 
 """ Main entry point to start using Schwa. """
 
-
-
 from schwa.extraction import GitExtractor
 from schwa.analysis import SchwaAnalysis
 from schwa.learning import FeatureWeightLearner
-
 
 
 class Schwa:
@@ -67,10 +64,3 @@ class Schwa:
         repo = extractor.extract(ignore_regex, max_commits, method_granularity, parallel)
         solution = FeatureWeightLearner(repo, bits, generations).learn()
         return solution
-
-
-
-
-
-
-

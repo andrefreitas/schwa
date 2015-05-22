@@ -26,6 +26,7 @@ import signal
 import sys
 from schwa.web import Server
 from schwa import Schwa
+from schwa.extraction import RepositoryExtractionException
 
 
 def main():
@@ -77,6 +78,11 @@ class CLI:
         else:
             Controller.run(self.args)
 
+    def check_updates(self):
+        #TODO: Write an update checker in a Thread
+        url = "https://pypi.python.org/pypi/Schwa/json"
+        pass
+
     def run(self):
         self.routes()
 
@@ -85,9 +91,13 @@ class Controller:
     @staticmethod
     def run(args):
         Views.wait()
-        s = Schwa(args.repository)
-        analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
-        Views.results(analytics)
+        try:
+            s = Schwa(args.repository)
+            analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
+            Views.results(analytics)
+        except RepositoryExtractionException as e:
+            Views.failed(e)
+            sys.exit(1)
 
     @staticmethod
     def run_json(args):
@@ -106,10 +116,15 @@ class Controller:
 
     @staticmethod
     def learn(args):
-        s = Schwa(args.repository)
-        solution = s.learn(max_commits=args.commits, parallel=not args.single, bits=args.bits,
-                           generations=args.generations)
-        Views.learn(solution, args.repository, args.commits)
+        Views.wait()
+        try:
+            s = Schwa(args.repository)
+            solution = s.learn(max_commits=args.commits, parallel=not args.single, bits=args.bits,
+                               generations=args.generations)
+            Views.learn(solution, args.repository, args.commits)
+        except RepositoryExtractionException as e:
+            Views.failed(e)
+            sys.exit(1)
 
 
 class Views:
@@ -129,6 +144,10 @@ class Views:
     def results_json(analytics):
         if not analytics.is_empty():
             print(analytics.to_dict())
+
+    @staticmethod
+    def failed(msg):
+        print("Failed:", msg)
 
     @staticmethod
     def invalid_repo():

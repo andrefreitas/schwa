@@ -84,8 +84,11 @@ class GitExtractor(AbstractExtractor):
         commits = list(reversed([commit for commit in commits if commit]))
 
         # Timestamps
-        begin_ts = list(self.repo.iter_commits())[-1].committed_date
-        last_ts = list(self.repo.iter_commits(max_count=1))[0].committed_date
+        try:
+            begin_ts = list(self.repo.iter_commits())[-1].committed_date
+            last_ts = list(self.repo.iter_commits(max_count=1))[0].committed_date
+        except TypeError:
+            raise RepositoryExtractionException("Error extracting repository: cannot parse begin or last timestamps!")
 
         # Repository
         repo = Repository(commits, begin_ts, last_ts)
