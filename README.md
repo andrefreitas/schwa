@@ -7,10 +7,8 @@ focusing their resources to fix bugs where they really are. We are currently sup
 *Schwa is under heavy development as a Master Thesis and is only available as pre-release on the Python Package Index.*
 
 
-
-
 ## Install
-Schwa runs from Python 3
+Install Python3 and pip first and then:
 
 `pip3.4 install schwa --pre`
 
@@ -61,7 +59,7 @@ Run `nosetests`
 * Contribute to documentation
 
 ### Documentation
-Project documentation is available in [/docs](docs/README.md). Please read it to get familiar with the project.
+Project documentation is available in the [Wiki](https://github.com/andrefreitas/schwa/wiki). Please read it to get familiar with the project.
 
 # License
 Copyright (c) 2015 Faculty of Engineering of the University of Porto
