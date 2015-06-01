@@ -25,7 +25,7 @@ import argparse
 import signal
 import sys
 from schwa.web import Server
-from schwa import Schwa
+from schwa import Schwa, SchwaConfigurationException
 from schwa.extraction import RepositoryExtractionException
 
 
@@ -95,7 +95,7 @@ class Controller:
             s = Schwa(args.repository)
             analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
             Views.results(analytics)
-        except RepositoryExtractionException as e:
+        except (RepositoryExtractionException, SchwaConfigurationException) as e:
             Views.failed(e)
             sys.exit(1)
 
@@ -122,7 +122,7 @@ class Controller:
             solution = s.learn(max_commits=args.commits, parallel=not args.single, bits=args.bits,
                                generations=args.generations)
             Views.learn(solution, args.repository, args.commits)
-        except RepositoryExtractionException as e:
+        except (RepositoryExtractionException, SchwaConfigurationException) as e:
             Views.failed(e)
             sys.exit(1)
 

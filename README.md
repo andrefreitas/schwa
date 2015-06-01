@@ -17,7 +17,7 @@ Install Python3 and pip first and then:
 `python3.4 setup.py install`
 
 ## Usage
-Command line:
+### Command line:
 
 ```shell
 usage: schwa [-h] [--commits COMMITS] repository
@@ -33,11 +33,23 @@ optional arguments:
                      analyzed
 ```
 
-Importing class:
+### Importing class:
 ```python
 from schwa import Schwa
 s = Schwa(repository_path)
 analytics = s.analyze()
+```
+
+### Configuration file
+You can configure Schwa parameters using a YAML file. Just place a .schwa.yml file in the root of the
+repository and use this example:
+
+```yaml
+commits: 20 # maximum commits
+features_weights: # sum must be 1
+  revisions: 0.3
+  fixes: 0.5
+  authors: 0.2
 ```
 
 ## Test
