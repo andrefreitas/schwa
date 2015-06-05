@@ -36,7 +36,7 @@ optional arguments:
 ### Importing class:
 ```python
 from schwa import Schwa
-s = Schwa(repository_path)
+s = Schwa("git/repo/path")
 analytics = s.analyze()
 ```
 
@@ -56,6 +56,7 @@ features_weights: # sum must be 1
 Run `nosetests`
 
 ## Contributing
+Join the mailing list at https://groups.google.com/forum/#!forum/schwa
 
 ### Requirements
 1. Install Python 3.4 and pip
@@ -69,6 +70,7 @@ Run `nosetests`
 * Use [Google Python Style Guide](http://google-styleguide.googlecode.com/svn/trunk/pyguide.html) and [PEP8 Style Guide](https://www.python.org/dev/peps/pep-0008/)
 * Use Pycharm debugger to kill bugs faster
 * Contribute to documentation
+* Use good design patterns
 
 ### Documentation
 Project documentation is available in the [Wiki](https://github.com/andrefreitas/schwa/wiki). Please read it to get familiar with the project.
