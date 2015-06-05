@@ -1,4 +1,5 @@
-# _Schwa_
+![Alt text](res/logo.png)
+
  [![Build Status](https://travis-ci.org/andrefreitas/schwa.svg)](https://travis-ci.org/andrefreitas/schwa) [![Codacy Badge](https://www.codacy.com/project/badge/37a57955ae48429796eafa6ee6af94ef)](https://www.codacy.com/app/pandrefreitas_3191/schwa) [![PyPI version](https://badge.fury.io/py/Schwa.svg)](http://badge.fury.io/py/Schwa) [![Join the chat at https://gitter.im/andrefreitas/schwa](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/andrefreitas/schwa?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) ![License](https://img.shields.io/github/license/mashape/apistatus.svg)
 
 A tool that analyzes GIT Repositories and estimates the defect probability of Software components to help developers
