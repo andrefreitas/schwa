@@ -40,6 +40,7 @@ class Metrics:
         FIXES_WEIGHT: A Decimal having the fixes weight for the defect probability computation.
         AUTHORS_WEIGHT: A Decimal having the authors weight for the defect probability computation.
         REVISIONS_WEIGHT: A Decimal having the revisions weight for the defect probability computation.
+        TIME_RANGE: A Decimal from 0 to 1 that changes the time range of the TWR function.
         revisions_timestamps: A list that stores the timestamps of every revision.
         fixes_timestamps: A list that stores the timestamps of every bug fixing.
         authors_timestamps: A list that stores the timestamps of when a component had a new author.
@@ -56,6 +57,7 @@ class Metrics:
     FIXES_WEIGHT = Decimal(0.5)
     AUTHORS_WEIGHT = Decimal(0.25)
     REVISIONS_WEIGHT = Decimal(0.25)
+    TIME_RANGE = Decimal(0.4)
 
     def __init__(self):
         self.revisions_timestamps = []
@@ -91,7 +93,7 @@ class Metrics:
             normalized = 1
         else:
             normalized = Decimal(begin_diff) / Decimal(diff)
-        twr = 1 / (1 + Decimal.exp(-12 * normalized + 12))
+        twr = 1 / (1 + Decimal.exp(Decimal(-12) * normalized + Decimal(2) + ((1 - Metrics.TIME_RANGE) * 10)))
         return twr
 
     @staticmethod
@@ -162,18 +164,6 @@ class Metrics:
             authors_twr = Metrics.list_twr(self.authors_timestamps, begin_ts, last_revision_timestamp)
             self.last_twr = (revisions_twr, fixes_twr, authors_twr)
             Metrics.fixes_dataset.add((revisions_twr, fixes_twr, authors_twr))
-
-    @staticmethod
-    def plot():
-        revisions_fixes_plot = Plot(title="Revisions and Fixes evolution", x_label="Revisions TWR", y_label="Fixes TWR")
-        authors_fixes_plot = Plot(title="Authors and Fixes evolution", x_label="Authors TWR", y_label="Fixes TWR")
-        for r, f, a in Metrics.fixes_dataset:
-            revisions_fixes_plot.add_x(r)
-            revisions_fixes_plot.add_y(f)
-            authors_fixes_plot.add_x(a)
-            authors_fixes_plot.add_y(f)
-        revisions_fixes_plot.plot()
-        authors_fixes_plot.plot()
 
     def defect_probability(self):
         probability = Metrics.compute_defect_probability(self.revisions_twr, self.fixes_twr, self.authors_twr,

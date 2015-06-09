@@ -71,6 +71,10 @@ class Schwa:
         if not max_commits:
             max_commits = configs.get("commits", max_commits)
 
+        time_range = configs.get("time_range")
+        if time_range:
+            Metrics.TIME_RANGE = Decimal(time_range)
+
         revisions_config = configs.get("features_weights", {}).get("revisions", False)
         fixes_config = configs.get("features_weights", {}).get("fixes", False)
         authors_config = configs.get("features_weights", {}).get("authors", False)
