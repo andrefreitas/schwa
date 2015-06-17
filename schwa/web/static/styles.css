@@ -18,7 +18,7 @@ body {
 #chart {
   position: relative; }
   #chart path {
-    stroke: white; }
+    stroke: #fff; }
 
 #explanation {
   position: absolute;
@@ -26,7 +26,7 @@ body {
   left: 305px;
   width: 140px;
   text-align: center;
-  color: #666666;
+  color: #666;
   z-index: -1; }
   #explanation #percentage {
     font-size: 2.5em; }
@@ -45,3 +45,5 @@ body {
   font-weight: bold;
   color: white;
   padding: 10px; }
+
+/*# sourceMappingURL=styles.css.map */
