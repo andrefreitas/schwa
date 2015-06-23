@@ -282,10 +282,3 @@ d3.json("analytics", function(error, root) {
     console.log(root);
     createVisualization(root);
 });
-
-function strip_path(path){
-    var pat = /[^/]*\.java/;
-    var re = new RegExp(pat);
-    var res = re.exec(path);
-    return res[0];
-}
