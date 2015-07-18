@@ -62,5 +62,7 @@ dist/*
 
 venv/*
 README.rst
+htmlcov/*
+.coverage
 
 res/Rplots.pdf
