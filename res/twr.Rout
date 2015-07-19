@@ -1,0 +1,35 @@
+
+R version 3.2.1 (2015-06-18) -- "World-Famous Astronaut"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin13.4.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> TIME_RANGE = 0.5
+> 
+> twr_modified = function(ti){
++   1 / (1 + exp(-(12) * ti + 2 + ((1-TIME_RANGE) * 10)))
++ }
+> twr = function(ti){
++   1 / (1 + exp(-12 * ti + 12))
++ }
+> plot(twr_modified, 0, 1,  xlab="ti")
+> #plot (twr, 0, 1, add=TRUE)
+> 
+> title(main = "TR=0.5")
+> 
+> proc.time()
+   user  system elapsed 
+  0.246   0.025   0.261 

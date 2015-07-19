@@ -1,0 +1,108 @@
+%-----------------------------------------------
+% Template para criação de resumos de projectos/dissertação
+% jlopes AT fe.up.pt,   Fri Jul  3 11:08:59 2009
+%-----------------------------------------------
+
+\documentclass[9pt,a4paper]{extarticle}
+
+%% English version: comment first, uncomment second
+\usepackage[portuguese]{babel}  % Portuguese
+%\usepackage[english]{babel}     % English
+\usepackage{graphicx}           % images .png or .pdf w/ pdflatex OR .eps w/ latex
+\usepackage{times}              % use Times type-1 fonts
+\usepackage[utf8]{inputenc}     % 8 bits using UTF-8
+\usepackage{url}                % URLs
+\usepackage{multicol}           % twocolumn, etc
+\usepackage{float}              % improve figures & tables floating
+\usepackage[tableposition=top]{caption} % captions
+%% English version: comment first (maybe)
+\usepackage{indentfirst}        % portuguese standard for paragraphs
+%\usepackage{parskip}
+
+%% page layout
+\usepackage[a4paper,margin=30mm,noheadfoot]{geometry}
+
+%% space between columns
+\columnsep 12mm
+
+%% headers & footers
+\pagestyle{empty}
+
+%% figure & table caption
+\captionsetup{figurename=Fig.,tablename=Tab.,labelsep=endash,font=bf,skip=.5\baselineskip}
+
+%% heading
+\makeatletter
+\renewcommand*{\@seccntformat}[1]{%
+  \csname the#1\endcsname.\quad
+}
+\makeatother
+
+%% avoid widows and orphans
+\clubpenalty=300
+\widowpenalty=300
+
+\begin{document}
+
+\title{\vspace*{-8mm}\textbf{\textsc{Software Repository Mining Analytics to Estimate Software Component Reliability}}}
+\author{\emph{André Freitas - freitas.andre@fe.up.pt}\\[2mm]
+\small{Dissertação realizada sob a orientação do \emph{Prof.\ Rui Maranhão e Alexandre Perez}}}
+\date{}
+\maketitle
+%no page number
+\thispagestyle{empty}
+
+\vspace*{-4mm}\noindent\rule{\textwidth}{0.4pt}\vspace*{4mm}
+
+\begin{multicols}{2}
+
+\section{Motivação}\label{sec:motiva}
+O Software desempenha um papel fundamental na nossa sociedade e na nossa rotina
+diária, pois dependemos de aplicações para comunicar, gerir informação, etc.
+O desenvolvimento de Software é relativamente complexo e o custo de
+corrigir bugs representa até 90\% do custo do projeto \cite{Servant1}.
+
+Os programadores utilizam ferramentas de controlo de versões para gerir o
+histórico de alterações no código. Os repositórios de Software têm portanto
+informação valiosa que pode ser explorada com técnicas de \emph{Machine Learning}
+e de \emph{Analytics} para suportar modelos de previsão de defeitos de Software.
+
+O Crowbar é uma ferramenta de localização automática de falhas, que após a
+execução de uma bateria de testes, estima os componentes faltosos. O algoritmo
+Barinel usado nesta ferramenta \footnote{http://crowbar.io} usa estimativas
+estáticas. Estas podem ser substituídas por estimativas dinâmicas provenientes
+do resultado da análise de repositórios de, de maneira a melhorar a qualidade do
+diagnóstico de falhas no Crowbar.
+
+
+\section{Objectivos}\label{sec:goals}
+
+Os principais objetivos são:
+
+\begin{itemize}
+\item Prever defeitos a partir de repositórios de Software e aprender quais
+são as variáveis mais importantes a analisar e criar um modelo de previsão
+baseado nas técnicas existentes;
+\item Melhorar o diagnóstico de falhas no Crowbar com base nos resultados da
+previsão de defeitos.
+\end{itemize}
+
+\section{Descrição do Trabalho}\label{sec:work}
+Foi implementada uma ferramenta com o nome Schwa, que está disponível livremente
+no Github e que pode ser instalada a partir do gestor de pacotes de Python pelo
+comando
+```
+pip install schwa --pre
+```
+
+
+\section{Conclusões}\label{sec:conclui}
+
+%%English version: comment first, uncomment second
+\bibliographystyle{unsrt-pt}  % numeric, unsorted refs
+%\bibliographystyle{unsrt}  % numeric, unsorted refs
+\bibliography{refs}
+
+\end{multicols}
+
+\end{document}
