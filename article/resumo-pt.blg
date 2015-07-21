@@ -4,9 +4,13 @@ The top-level auxiliary file: resumo-pt.aux
 The style file: unsrt-pt.bst
 Database file #1: refs.bib
 Warning--I didn't find a database entry for "Servant1"
+Warning--I didn't find a database entry for "859533"
+Warning--I didn't find a database entry for "Zimmermann:2007:PDE:1268984.1269057"
+Warning--I didn't find a database entry for "Moser:2008:CAE:1368088.1368114"
+Warning--I didn't find a database entry for "D'Ambros:2012:EDP:2318097.2318149"
 You've used 0 entries,
             1791 wiz_defined-function locations,
-            451 strings with 3612 characters,
+            458 strings with 3814 characters,
 and the built_in function-call counts, 18 in all, are:
 = -- 0
 > -- 0
@@ -45,4 +49,4 @@ warning$ -- 0
 while$ -- 0
 width$ -- 0
 write$ -- 2
-(There was 1 warning)
+(There were 5 warnings)
