@@ -15,6 +15,7 @@
 \usepackage{multicol}           % twocolumn, etc
 \usepackage{float}              % improve figures & tables floating
 \usepackage[tableposition=top]{caption} % captions
+\usepackage{mathtools}
 %% English version: comment first (maybe)
 \usepackage{indentfirst}        % portuguese standard for paragraphs
 %\usepackage{parskip}
@@ -42,6 +43,7 @@
 \clubpenalty=300
 \widowpenalty=300
 
+
 \begin{document}
 
 \title{\vspace*{-8mm}\textbf{\textsc{Software Repository Mining Analytics to Estimate Software Component Reliability}}}
@@ -62,18 +64,16 @@ diária, pois dependemos de aplicações para comunicar, gerir informação, etc
 O desenvolvimento de Software é relativamente complexo e o custo de
 corrigir bugs representa até 90\% do custo do projeto \cite{Servant1}.
 
-Os programadores utilizam ferramentas de controlo de versões para gerir o
-histórico de alterações no código. Os repositórios de Software têm informação
-valiosa que pode ser explorada com técnicas de \emph{Ma
-chine Learning}
-e de \emph{Analytics} para suportar modelos de previsão de defeitos de Software.
+Os repositórios de Software têm informação valiosa que pode ser explorada com
+técnicas de \emph{Machine Learning} e de \emph{Analytics} para suportar modelos
+de previsão de defeitos de \emph{Software}.
 
-O Crowbar é uma ferramenta de localização automática de falhas, que após a
-execução de uma bateria de testes, estima os componentes faltosos. O algoritmo
-Barinel usado nesta ferramenta \footnote{http://crowbar.io} usa estimativas
-estáticas. Estas podem ser substituídas por estimativas dinâmicas provenientes
-do resultado da previsão de defeitos, de maneira a melhorar a qualidade do
-diagnóstico das falhas.
+O \emph{Crowbar} \footnote{\url{http://crowbar.io/}} é uma ferramenta de localização
+automática de falhas, que após a execução de uma bateria de testes, estima os
+componentes faltosos. O algoritmo \emph{Barinel} usado nesta ferramenta usa estimativas
+estáticas \cite{Abreu:2009:SMF:1747491.1747511}. Estas podem ser substituídas
+por estimativas dinâmicas provenientes do resultado da previsão de defeitos, de
+maneira a melhorar a qualidade do diagnóstico das falhas.
 
 
 \section{Objectivos}\label{sec:goals}
@@ -81,40 +81,39 @@ diagnóstico das falhas.
 Os principais objetivos são:
 
 \begin{itemize}
-\item Prever defeitos a partir de repositórios de Software ao aprender quais
+\item Prever defeitos a partir de repositórios de \emph{Software} ao aprender quais
 são as variáveis mais importantes a analisar e criar um modelo de previsão
 baseado nas técnicas existentes;
-\item Melhorar o diagnóstico de falhas no Crowbar com base nos resultados da
-previsão de defeitos.
+\item Melhorar o diagnóstico de falhas no \emph{Crowbar} com base nos resultados
+da previsão de defeitos.
 \end{itemize}
 
 \section{Descrição do Trabalho}\label{sec:work}
-Foi implementada uma ferramenta em Python denominada Schwa, que é capaz de
-analisar repositórios Git e estimar a probabilidade de um determinado componente
-possuir defeitos. Por exemplo, o Schwa consegue estimar que um determinado
+Foi implementada uma ferramenta em \emph{Python} denominada \emph{Schwa}, que é capaz de
+analisar repositórios \emph{Git} e estimar a probabilidade de um determinado componente
+possuir defeitos. Por exemplo, o \emph{Schwa} consegue estimar que um determinado
 ficheiro tem uma certa de probabilidade de ter um defeito. Caso o ficheiro for
-de código Java, a granularidade é até ao método, ou seja, é possível estimar
-a probabilidade de classes e métodos serem defeituosas.
+de código \emph{Java}, a granularidade é até ao método, ou seja, é possível estimar
+a probabilidade de classes e métodos serem defeituosos.
 
 \subsection{Instalação}
-O Schwa está disponível livremente no Github e pode ser facilmente instalado em
-qualquer computador a partir do comando:
+O \emph{Schwa} está disponível livremente no \emph{Github}
+\footnote{\url{https://github.com/andrefreitas/schwa}} e pode ser facilmente
+instalado por:
 \begin{verbatim}
     pip install schwa --pre
 \end{verbatim}
 
 \subsection{Utilização da ferramenta}
-O Schwa pode ser invocado como um utilitário de linha de comandos com a seguinte
-sintaxe:
+O \emph{Schwa} pode ser invocado como um utilitário de linha de comandos com a
+seguinte sintaxe:
 
 \begin{verbatim}
   schwa git/repo/path [--commits COMMITS]
 \end{verbatim}
 
-O número de \emph{commits} é opcional para o caso de se pretender análisar
-apenas as últimas alterações. Após analisar o histórico de alterações, o Schwa
-irá disponibilizar um relatório dos resultados sob o formato de um gráfico
-Sunburst, apresentado na fig. \ref{fig:sunburst}.
+O número de \emph{commits} é opcional para o caso de se pretender analisar
+apenas as últimas alterações. É apresentado o relatório na fig. \ref{fig:sunburst}.
 
 \begin{figure}[H]
 \centerline{\includegraphics[scale=.25]{sunburst.png}}
@@ -128,33 +127,22 @@ estimativa da probabilidade de defeito juntamente com o os valores das métricas
 recolhidas, que são o número de revisões, correções e de autores do componente.
 
 \subsection{Extração}
-A primeira fase do processo do Schwa é a extração de dados do repositório que
+A primeira fase do processo do \emph{Schwa} é a extração de dados do repositório que
 sejam relevantes para a análise. Com recurso à biblioteca \emph{GitPython},
 \footnote{\url{https://github.com/gitpython-developers/GitPython}}
-em cada commit os seguintes dados são extraídos:
+em cada \emph{commit} extraimos a mensagem, o autor, o \emph{timestamp} e a lista dos
+componentes alterados.
 
-\begin{itemize}
-\item  \textbf{Messagem} A mensagem do \emph{commit}, usada para avaliar se está
- a corrigir um bug;
-\item  \textbf{Autor} O email do autor para determinar o número de autores de um
-componente;
-\item  \textbf{\emph{Timestamp}} A data do \emph{commit} para determinar que
-componentes foram alterados mais recente;
-\item  \textbf{\emph{Diffs}} A lista dos componentes alterados neste commit.
-\end{itemize}
-
-De maneira a interpretar as alterações de código Java, foi usada a biblioteca
+De maneira a interpretar as alterações de código \emph{Java}, foi usada a biblioteca
 \emph{Plyj}\footnote{\url{https://github.com/musiKk/plyj}}, que foi modificada
-para incluir a informação do número das linhas nas classes e métodos. Assim,
-a partir de um \emph{patch} de um \emph{commit} é possível perceber que classes e
-métodos foram alterados.
+para incluir a informação do número das linhas nas classes e métodos.
 
 \subsection{Análise}
 A análise é feita tendo em conta os seguintes princípios:
 
 \begin{itemize}
 \item \textbf{Princípio das revisões} Quantas mais revisões tem um componente,
-maior a sua probabilidade de defeito\cite{859533};
+maior é a sua probabilidade de defeito\cite{859533};
 
 \item \textbf{Princípio das correções} Existe uma correlação entre defeitos do
 passado e defeitos no futuro \cite{Zimmermann:2007:PDE:1268984.1269057}.
@@ -180,42 +168,42 @@ For each commit in the repository
 
 Em vez de se usar contadores, é usada a função \emph{Time-Weighted-Risk} (TWR) que
 tem um valor máximo quando a alteração do componente é recente. Esta função
-recebe um \emph{timestamp} normalizado.
+recebe um \emph{timestamp} normalizado \cite{Chris2013}.
 
 \begin{equation}
 twr(t_i) = \frac{1}{1 + e^{-12t_i + 12 }}
 \end{equation}
 
 \subsection{Modelo de previsão de defeitos}
-Quando o processo de análise é finalizado, são calculadas as estimativas da
-probabilidade de defeito de cada componente. Primeiro é calculado um score:
-
+É calculado primeiro um \emph{score} para cada componente:
 \begin{equation}
-  \begin{split}
-score =
-revisions * revisions_{weight} + \\
-fixes * fixes_{weight} + \\
-authors * authors_{weight}
-\end{split}
+\begin{multlined}score = revisions * revisions_{weight} \\
++ fixes * fixes_{weight} \\
++ authors * authors_{weight} \\
+\end{multlined}
 \end{equation}
 
-Os pesos são de 0.25 para revisões e autores e de 0.5 para correções. Estes foram
-escolhidos com base na investigação atual
-\cite{859533, Zimmermann:2007:PDE:1268984.1269057, Moser:2008:CAE:1368088.1368114,D'Ambros:2012:EDP:2318097.2318149}
-O score é então normalizado para uma probabilidade:
+O \emph{score} é então normalizado:
 
 \begin{equation}
 defect_{probability} = 1 - e^{-score}
 \end{equation}
 
-\subsection{Estimação das variáveis mais importantes}
+\subsection{Experiências}
+Desenvolvemos um modelo de aprendizagem dos pesos das variáveis (revisões,
+correções e autores) com algoritmos genéticos. Após o \emph{Schwa} aprender com
+projetos académicos, \emph{Open Source} e empresariais, concluímos que os pesos
+variam de projeto para projeto.
 
-
-\subsection{Integração com o Crowbar}
-
-
+Ao usarmos o \emph{Schwa} no \emph{Crowbar}, conseguimos reduzir o tempo de
+diagnóstico. No projecto \emph{Joda Time} reduzimos de 1 hora para menos de 1 minuto.
 
 \section{Conclusões}\label{sec:conclui}
+Conseguimos criar uma técnica capaz de prever defeitos de componentes de
+\emph{Software} com base na análise de repositórios \emph{Git} com um relatório visual.
+
+As técnicas atuais de revisão de código podem beneficiar da utilização do \emph{Schwa},
+pois permite aos programadores focarem os seus recursos onde os defeitos estão.
 
 %%English version: comment first, uncomment second
 \bibliographystyle{unsrt-pt}  % numeric, unsorted refs

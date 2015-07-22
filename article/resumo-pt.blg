@@ -3,50 +3,44 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: resumo-pt.aux
 The style file: unsrt-pt.bst
 Database file #1: refs.bib
-Warning--I didn't find a database entry for "Servant1"
-Warning--I didn't find a database entry for "859533"
-Warning--I didn't find a database entry for "Zimmermann:2007:PDE:1268984.1269057"
-Warning--I didn't find a database entry for "Moser:2008:CAE:1368088.1368114"
-Warning--I didn't find a database entry for "D'Ambros:2012:EDP:2318097.2318149"
-You've used 0 entries,
+You've used 7 entries,
             1791 wiz_defined-function locations,
-            458 strings with 3814 characters,
-and the built_in function-call counts, 18 in all, are:
-= -- 0
-> -- 0
-< -- 0
-+ -- 0
-- -- 0
-* -- 2
-:= -- 7
-add.period$ -- 0
-call.type$ -- 0
-change.case$ -- 0
+            514 strings with 5463 characters,
+and the built_in function-call counts, 2333 in all, are:
+= -- 233
+> -- 82
+< -- 5
++ -- 30
+- -- 23
+* -- 158
+:= -- 333
+add.period$ -- 25
+call.type$ -- 7
+change.case$ -- 7
 chr.to.int$ -- 0
-cite$ -- 0
-duplicate$ -- 0
-empty$ -- 1
-format.name$ -- 0
-if$ -- 1
+cite$ -- 7
+duplicate$ -- 117
+empty$ -- 221
+format.name$ -- 23
+if$ -- 559
 int.to.chr$ -- 0
-int.to.str$ -- 0
-missing$ -- 0
-newline$ -- 3
-num.names$ -- 0
-pop$ -- 0
+int.to.str$ -- 7
+missing$ -- 7
+newline$ -- 38
+num.names$ -- 7
+pop$ -- 20
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 0
-skip$ -- 1
+skip$ -- 73
 stack$ -- 0
-substring$ -- 0
-swap$ -- 0
-text.length$ -- 0
+substring$ -- 175
+swap$ -- 47
+text.length$ -- 5
 text.prefix$ -- 0
 top$ -- 0
 type$ -- 0
 warning$ -- 0
-while$ -- 0
-width$ -- 0
-write$ -- 2
-(There were 5 warnings)
+while$ -- 24
+width$ -- 8
+write$ -- 91
