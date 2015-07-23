@@ -6,8 +6,8 @@
 \documentclass[9pt,a4paper]{extarticle}
 
 %% English version: comment first, uncomment second
-\usepackage[portuguese]{babel}  % Portuguese
-%\usepackage[english]{babel}     % English
+%\usepackage[portuguese]{babel}  % Portuguese
+\usepackage[english]{babel}     % English
 \usepackage{graphicx}           % images .png or .pdf w/ pdflatex OR .eps w/ latex
 \usepackage{times}              % use Times type-1 fonts
 \usepackage[utf8]{inputenc}     % 8 bits using UTF-8
@@ -15,6 +15,7 @@
 \usepackage{multicol}           % twocolumn, etc
 \usepackage{float}              % improve figures & tables floating
 \usepackage[tableposition=top]{caption} % captions
+\usepackage{mathtools}
 %% English version: comment first (maybe)
 \usepackage{indentfirst}        % portuguese standard for paragraphs
 %\usepackage{parskip}
@@ -42,146 +43,165 @@
 \clubpenalty=300
 \widowpenalty=300
 
+
 \begin{document}
 
-\title{\vspace*{-8mm}\textbf{\textsc{Modelo de Escrita de Resumos de\\Projecto/Dissertação: um Exemplo}}}
-\author{\emph{António Manuel Silva}\\[2mm]
-\small{Projecto/Dissertação realizado sob a orientação do \emph{Prof.\ José Marco Soares}}\\
-\small{na \emph{FazSoft Lda}}}
+\title{\vspace*{-8mm}\textbf{\textsc{Software Repository Mining Analytics to Estimate Software Component Reliability}}}
+\author{\emph{André Freitas - freitas.andre@fe.up.pt}\\[2mm]
+\small{Thesis supervised by \emph{Prof.\ Rui Maranhão and Alexandre Perez}}}
 \date{}
 \maketitle
-%no page number 
+%no page number
 \thispagestyle{empty}
 
 \vspace*{-4mm}\noindent\rule{\textwidth}{0.4pt}\vspace*{4mm}
 
 \begin{multicols}{2}
 
-\section{Motivação}\label{sec:motiva}
+\section{Motivation}\label{sec:motiva}
+Software plays an important role in society and in our daily routines, since we
+rely on Software to communicate, manage information, etc. Software development
+is relatively complex and the cost of fixing bugs can be up to 90\% of project's
+cost \cite{Servant1}.
 
-Neste documento apresentam-se alguns conselhos e instruções para a preparação dos resumos de projecto/dissertação. 
-Pede-se aos autores o favor de, dentro do possível, cumprirem com as instruções que são dadas, assim como com a estrutura apresentada, de forma a manter-se o mesmo aspecto em todos os resumos. 
-Nas sub-secções~\ref{sec:lingua} a ~\ref{sec:number} podem encontrar-se alguns detalhes sobre a formatação do documento. 
+Software repositories have hidden valuable information that can be explored with
+Machine Learning and Analytics techniques, to support Software defect prediction
+models.
 
-Na secção ``Motivação'' deve ser apresentado o enquadramento do trabalho, dando ideia das necessidades que o mesmo cobre.
+Crowbar \footnote{\url{http://crowbar.io/}} is an automatic fault localization
+tool, that after an execution of tests, estimates faulty components. The
+Barinel algorithm, used in this tool, uses static estimations
+\cite{Abreu:2009:SMF:1747491.1747511}. They can be replaced with dynamic estimations
+from defect prediction, to improve the quality of diagnosis.
 
-\section{Objectivos}\label{sec:goals}
+\section{Goals}\label{sec:goals}
 
-A secção ``Objectivos'' deve enunciar claramente os objectivos a atingir com o trabalho de projecto/dissertação, enquadrando-os na respectiva área de actividade a que o trabalho se destina. 
-Por exemplo, este documento tem como objectivos:
+The main goals are:
+
 \begin{itemize}
-\item Servir de modelo/exemplo do ponto de vista da dos resumos;
-\item Apresentar o aspecto gráfico que se pretende para os resumos;
-\item Disponibilizar \emph{templates} a quem pretenda utilizar \LaTeX.
+\item Predict defects from the analysis of Software repositories, learning what
+are the most important variables to analyze and create a defect prediction model
+based from existing techniques;
+\item Improve the quality of diagnosis of Crowbar with the results from defect
+prediction.
 \end{itemize}
 
-\section{Descrição do Trabalho}\label{sec:work}
+\section{Work}\label{sec:work}
+It was developed a tool in Python named Schwa, that is capable
+of analysing Git repositories and estimate the probability of a certain component
+be defective. For example, Schwa is able to estimate that a certain file have
+a certain probability of having a defect. If the file is Java code, the granularity
+is until the method, so this means that we can estimate the probability of classes
+and methods being defective.
 
-Na secção ``Descrição do Trabalho'' (com este ou com outro nome que se julgue mais adequado) devem ser apresentadas as principais partes do trabalho, começando pela sua estruturação. Devem ser mencionadas as tecnologias utilizadas, com referências à sua interdependência e interligação dando especial ênfase aos componentes desenvolvidos pelo estudante no âmbito do trabalho em causa.
+\subsection{Installation}
+Schwa is available for free at Github and
+\footnote{\url{https://github.com/andrefreitas/schwa}} and can be installed by:
+\begin{verbatim}
+    pip install schwa --pre
+\end{verbatim}
 
-No presente documento, seguem-se 9 subsecções com instruções acerca da extensão da comunicação, margens, estilos e outras recomendações gerais acerca da elaboração da versão final dos resumos.
+\subsection{Usage of the tool}
+Schwa can be invoked as a command line utility with the following syntax:
 
-\subsection{Línguas Obrigatórias}\label{sec:lingua}
+\begin{verbatim}
+  schwa git/repo/path [--commits COMMITS]
+\end{verbatim}
 
-Os resumos deverão ser apresentados, em ficheiros separados, em versões portuguesa e inglesa. 
-No resumo em Português e em caso de necessidade de utilização de termos em língua Inglesa, estes deverão ser devidamente salientados pela adopção da fonte em itálico, como, por exemplo, \emph{Ray-Tracing}.
-
-\subsection{Cabeçalho de Identificação}
-
-O cabeçalho de identificação deve ser centrado e inicia-se com o título da comunicação, em letras maiúsculas de tamanho 12 e em negrito. 
-Seguem-se, em linhas separadas e em tamanho 9, a identificação do estudante, da empresa e dos orientadores (estes dois numa única linha). 
-Todos os quatro nomes devem ser em itálico.
-
-\subsection{Extensão do Artigo e Tipo de Letra}
-
-Cada resumo deve ser formatado com texto a duas colunas, não devendo exceder duas páginas de formato A4. 
-\textbf{As duas colunas devem terminar sensivelmente à mesma altura}, em cada uma das páginas. 
-
-O tipo de letra para o texto genérico deverá ser \emph{Times New Roman} com tamanho 9 e espaçamento simples entre linhas. 
-O espaçamento entre parágrafos deverá ser estendido a 1.5 linhas (0.5 linha de espaçamento extra).
-
-\subsection{Dimensões das Margens}
-
-As margens a manter à volta do texto deverão ser as constantes na Tab.~\ref{tab:medidas}.
-
-\begin{table}[H]
-  \centering
-  \caption{Margens expressas em centímetros}
-\begin{tabular}{c | c}
-	\hline
-\textbf{Espaçamento} & \textbf{Medida}\\
-	\hline
-	\hline
-        Margem Superior & 3 cm\\
-        Margem Inferior & 3 cm\\
-        Margem Esquerda & 3 cm\\
-        Margem Direita  & 3 cm\\
-        Entre Colunas   & 1.2 cm\\
-	\hline
-\end{tabular}
-  \label{tab:medidas}
-\end{table}
-
-\subsection{Corpo do Texto}
-
-Todos os títulos de secções e subsecções devem ser escritos em negrito e com um espaçamento para cima ligeiramente superior ao de um parágrafo normal. 
-Os títulos de níveis um e dois devem ter tamanhos, respectivamente, 11 e 9. 
-As ``subsubsecções'' devem ser evitadas.
-
-\subsection{Numeração das Secções}
-
-As secções deverão ser numeradas com início em "1", de acordo com os níveis e subníveis respectivos, usando-se o ponto como separador.
-
-\subsection{Figuras, Equações e Quadros}
-
-As figuras e as tabelas deverão ser centradas, sempre que possível, à largura da coluna de texto em que se
-inserem (Tab.~\ref{tab:medidas} e Fig.~\ref{fig:figura}). 
-As figuras e tabelas cujas dimensões não o permitam, podem ser centradas à largura da página.
+The number of commits is optional, so you can analyze only the last changes. The
+graphical report is available in fig. \ref{fig:sunburst}.
 
 \begin{figure}[H]
-\centerline{\includegraphics[scale=.6]{figura.png}}
-\caption{Esta é a legenda da figura}  
-\label{fig:figura}
+\centerline{\includegraphics[scale=.25]{sunburst.png}}
+\caption{Schwa report}
+\label{fig:sunburst}
 \end{figure}
 
-As legendas das figuras, a negrito, devem ser colocadas na sua parte inferior, contendo a respectiva numeração antecedida do termo \textbf{Fig.} 
-O mesmo é aplicável às tabelas, excepto que a legenda deve ser iniciada pelo termo \textbf{Tab.}\ e deve ser colocada acima da tabela respectiva. 
-Devem ser evitadas figuras ou outros elementos com cores.
+In the graphic of fig. \ref{fig:sunburst} it is possible to inspect a hierarchy
+of components(files, classes or methods). The center displays the estimation of
+the defect probability along with the values of other collected metrics such as
+revisions, fixes and authors of the component.
+
+\subsection{Extraction}
+The first phase of Schwa's process is the extraction of relevant data from the
+repository for the analysis. By using GitPython
+\footnote{\url{https://github.com/gitpython-developers/GitPython}} in each
+commit we extract the message, author, timestamp and the list of changed components.
+
+Parsing of Java code changes is possible by using the Plyj
+\footnote{\url{https://github.com/musiKk/plyj}} library that was been
+modified to include information from lines in classes and methods.
+
+\subsection{Analysis}
+The analysis phase uses the following principles:
+
+\begin{itemize}
+\item \textbf{Principle of revisions} Components with more revisions have higher
+probability of being defective\cite{859533};
+
+\item \textbf{Principle of fixes} Past defects are correlated with future
+defects\cite{Zimmermann:2007:PDE:1268984.1269057};
+
+\item \textbf{Principle of authors} Authors is a predective variable of future
+defects\cite{Moser:2008:CAE:1368088.1368114,D'Ambros:2012:EDP:2318097.2318149}.
+\end{itemize}
+
+The variables used in the analysis are revisions, fixes and authors. They are
+collected with the following algorithm:
+
+\begin{verbatim}
+For each commit in the repository
+  twr = compute twr
+  For each component in the commit
+    component.revisions += twr
+    IF commit is bug fix
+        component.fixes += twr
+    If is new author
+        component.authors += twr
+\end{verbatim}
+
+Instead of using counters, we use the \emph{Time-Weighted-Risk} (TWR) function that
+have its maximum value when a component was changed recently. This function
+receives a normalized timestamp\cite{Chris2013}.
 
 \begin{equation}
-  S_{L,i} = S_{L,i-1} . (1-S_{P,i-1}) = \prod_{k=0}^{i-1} (1-S_{p,k}) \label{eq:cif}
+twr(t_i) = \frac{1}{1 + e^{-12t_i + 12 }}
 \end{equation}
-% \begin{eqnarray}
-% S_{L,i} &=& S_{L,i-1} . (1-S_{P,i-1}) \nonumber\\
-%        &=& \prod_{k=0}^{i-1} (1-S_{p,k}) \label{eq:cif}
-% \end{eqnarray}
 
-As equações deverão conter a respectiva numeração na mesma linha de texto e à sua direita, entre parêntesis, como se mostra no exemplo da Equação~\ref{eq:cif}.
+\subsection{Defect prediction model}
+For each component the score is computed:
+\begin{equation}
+\begin{multlined}score = revisions * revisions_{weight} \\
++ fixes * fixes_{weight} \\
++ authors * authors_{weight} \\
+\end{multlined}
+\end{equation}
 
-As figuras deverão ser numeradas a partir do número 1 e com uma única sequência, i.e., sem reinício em cada secção. 
-O mesmo deve suceder com as equações e com as tabelas.
+Then is normalized to an estimation of probability:
 
-\subsection{Numeração de Páginas}\label{sec:number}
+\begin{equation}
+defect_{probability} = 1 - e^{-score}
+\end{equation}
 
-As páginas \textbf{NÃO} devem ser numeradas.
+\subsection{Experiments}
+We have developed a technique that learns the importante of variables (revisions,
+fixes and authors) with genetic algorithms. After Schwa learned with academic,
+Open Source and enterprise projects, we concluded that the importance of variables
+is not the same for all the projects.
 
-\subsection{Codificação dos Caracteres}\label{sec:encomding}
+By using Schwa in Crowbar, we reduced the diagnostic time. In the Joda Time project
+the time was reduced from 1 hour to less than a minute.
 
-Este exemplo está escrito em UTF-8; para outras codificações deverá
-ser alterado \texttt{\\usepackage[utf8]\{inputenc\}}.
+\section{Conclusions}\label{sec:conclui}
+We created a technique capable of predicting defects of Software components, by
+analyzing Git repositories and displaying results in a visual report.
 
-
-\section{Conclusões}\label{sec:conclui}
-
-Espera-se que este documento possa contribuir para uma melhor qualidade dos resumos dos projectos/dissertações do MIEIC/FEUP.
-
-Documentos que não respeitem este aspecto gráfico serão liminarmente recusados, ficando os respectivos autores em falta em relação à sua entrega.
-
-Para as dissertações existem regras definidas noutro lado~\cite{kn:Mat93}.
+Current code review technique can benefit from the usage of Schwa, allowing
+developer to focus their resources where defects are.
 
 %%English version: comment first, uncomment second
-\bibliographystyle{unsrt-pt}  % numeric, unsorted refs
-%\bibliographystyle{unsrt}  % numeric, unsorted refs
+%\bibliographystyle{unsrt-pt}  % numeric, unsorted refs
+\bibliographystyle{unsrt}  % numeric, unsorted refs
 \bibliography{refs}
 
 \end{multicols}
