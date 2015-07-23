@@ -6,10 +6,10 @@
 #
 
 ## Basename for result in PT
-#TARGET=resumo-pt
+TARGET=resumo-pt
 
 ## Basename for result in EN
-TARGET=resumo-en
+#TARGET=resumo-en
 
 ## programs
 LATEX=latex
