@@ -1,0 +1,51 @@
+\begin{thebibliography}{1}
+
+\bibitem{Servant1}
+F.~Servant.
+\newblock Supporting bug investigation using history analysis.
+\newblock Em {\em Automated Software Engineering (ASE), 2013 IEEE/ACM 28th
+  International Conference on}, p\'{a}ginas 754--757, Nov 2013.
+
+\bibitem{Abreu:2009:SMF:1747491.1747511}
+Rui Abreu, Peter Zoeteweij, e Arjan J. C.~van Gemund.
+\newblock Spectrum-based multiple fault localization.
+\newblock Em {\em Proceedings of the 2009 IEEE/ACM International Conference on
+  Automated Software Engineering}, ASE '09, p\'{a}ginas 88--99, Washington, DC,
+  USA, 2009. IEEE Computer Society.
+
+\bibitem{859533}
+T.L. Graves, A.F. Karr, J.S. Marron, e H.~Siy.
+\newblock Predicting fault incidence using software change history.
+\newblock {\em Software Engineering, IEEE Transactions on}, 26(7):653--661, Jul
+  2000.
+
+\bibitem{Zimmermann:2007:PDE:1268984.1269057}
+Thomas Zimmermann, Rahul Premraj, e Andreas Zeller.
+\newblock Predicting defects for eclipse.
+\newblock Em {\em Proceedings of the Third International Workshop on Predictor
+  Models in Software Engineering}, PROMISE '07, p\'{a}ginas 9--, Washington,
+  DC, USA, 2007. IEEE Computer Society.
+
+\bibitem{Moser:2008:CAE:1368088.1368114}
+Raimund Moser, Witold Pedrycz, e Giancarlo Succi.
+\newblock A comparative analysis of the efficiency of change metrics and static
+  code attributes for defect prediction.
+\newblock Em {\em Proceedings of the 30th International Conference on Software
+  Engineering}, ICSE '08, p\'{a}ginas 181--190, New York, NY, USA, 2008. ACM.
+
+\bibitem{D'Ambros:2012:EDP:2318097.2318149}
+Marco D'Ambros, Michele Lanza, e Romain Robbes.
+\newblock Evaluating defect prediction approaches: A benchmark and an extensive
+  comparison.
+\newblock {\em Empirical Softw. Engg.}, 17(4-5):531--577, Agosto 2012.
+
+\bibitem{Chris2013}
+Chris Lewis, Zhongpeng Lin, Caitlin Sadowski, Xiaoyan Zhu, Rong Ou, e E.~James
+  Whitehead~Jr.
+\newblock Does bug prediction support human developers? findings from a google
+  case study.
+\newblock Em {\em Proceedings of the 2013 International Conference on Software
+  Engineering}, ICSE '13, p\'{a}ginas 372--381, Piscataway, NJ, USA, 2013. IEEE
+  Press.
+
+\end{thebibliography}

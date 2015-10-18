@@ -1,0 +1,47 @@
+\chapter{Conclusions and Further Work} \label{chap:concl}
+
+\section*{}
+We have developed a framework capable of predicting software defects from
+repositories, with a web-based graphical report. The creation of a learning mode
+for Schwa with genetic algorithms, gives researchers the ability of evaluating
+new features to extract from repositories, making Schwa a convenient framework
+to study Mining Software Repositories.
+
+Schwa should be combined with other techniques, since it is not completely
+accurate. Code review is an example of an activity that can benefit from this
+tool, allowing developers to focus in the most important components.
+
+The usage of Python allowed a fast prototyping of ideas due its simplicity and
+the existing of useful libraries. Mining Software Repositories is a
+time-consuming activity so research in this subject can benefit from the usage
+of clusters.
+
+\section{Goals satisfaction}
+We successfully created a defect prediction technique based on MSR approaches
+capable of learning features, until the method granularity for Java projects.
+Our initial goal of generalizing features weights was refuted by the
+experimental results, that shown that for each projects they are different.
+
+Although we did not improve the accuracy of Barinel, we have come with an
+alternative technique of computing defect probabilities in less time. For
+example, since Barinel for Joda Time can take 2 hours to run MLE, now with
+Schwa, this phase takes less that 1 minute, so it is a substantial achievement.
+
+\section{Further work}
+The technique used in Schwa for learning features can be improved with
+optimizations in the binary representation and code parallelization. There are
+plenty of improvements that can be done in Schwa:
+\begin{itemize}
+\item Support of more programming languages;
+\item Improve performance on extraction by developing a Python module in C;
+\item Add charts for revisions, fixes and authors evolution in the visualization,
+to support the results with more reasoning;
+\item Develop a SaaS platform for Schwa, similar to Codeclimate and Codacy.
+\end{itemize}
+
+MSR research could benefit of new techniques that reduce noise in the
+classification of bug-fixing commits, that can exploit issue trackers. Schwa
+could benefit from reducing this noise.
+
+With more computational power, we could evaluate with more examples, the gain of
+using Schwa in Crowbar, by finding an example where the diagnostic cost decreased.

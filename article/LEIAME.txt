@@ -1,0 +1,15 @@
+Este arquivo contém exemplos para escrita dos resumos requeridos pelo 
+MIEIC: 
+- resumo-pt.tex - junto com a Makefile produz resumo-pt.pdf
+- Makefile - para ser usada com o pdflatex
+- resumo-pt.pdf - resultado final em PDF
+- para a versão em Inglês é necessário alterar a Makefile, o .tex
+nos sítios assinalados e, obviamente, o texto
+- os ficheiros usam a codificação UTF-8; para outras codificações
+é necessário alterar \usepackage[utf8]{inputenc} para a codificação
+usada. 
+- é necessário usar uma versão recente do pacote caption (por exemplo,
+procurar no CTAN uma com "\ProvidesPackage{caption}[2008/08/24 v3.1j",
+ou mais recente
+
+JCL,  Mon Jul  6 23:39:47 2009

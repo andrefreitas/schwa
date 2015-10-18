@@ -1,0 +1,71 @@
+\chapter{Discussion} \label{chap:discussion}
+
+\section*{}
+In this chapter it is discussed findings and conclusions relative to the initial
+research questions.
+
+\section{Features weight estimation}
+The initial goal was finding a way of generalizing the weights of each features.
+Although, since every software project is different, we found that it depends on
+the project:
+
+\begin{description}
+\item[Features weights are different for each project] \hfill \\
+In Schwa that is a project with only contributor, the weights for 50 and 100
+commits were consistent: revisions is the most important feature. But, for Joda
+Time with 100 commits, the most important was fixes.
+
+\item[Noise on tracking fixes] \hfill \\
+Authors and revisions are the only features that are measured with accuracy.
+Fixes are tracked based on bug-fixing commits that have noise and have an impact
+on defect predictions results, a problem that is discussed in MSR
+research\cite{herzig-tr-2012}.
+
+\item[Precision of Genetic Algorithms] \hfill \\
+We represented individuals with 3 bits of precisions at the cost of performance.
+With more computational power (e.g. cluster) we could increase precision to see
+if we would find different results.
+
+\item[Configurable features weights] \hfill \\
+Since features could not be generalized, we introduced a new feature to Schwa:
+a configuration file .schwa.yml, to allow developers to change the weights of
+revisions, fixes and authors. With this, developers can run Schwa in learning
+mode first and configure it with the weights learned.
+\end{description}
+
+\section{Diagnostic cost}
+The results from diagnostic cost experiments indicate that we could not improve
+the results of Crowbar but found an alternative way of estimating defect
+probabilities in the Barinel technique:
+
+\begin{description}
+\item[Improvement of diagnostic results] \hfill \\
+We could not find an example of Schwa improving the diagnostic results of
+Crowbar. But, we must note that even with optimal defect predictions results
+from Schwa, in some cases the diagnostic cost cannot be improved, as seen in
+Joda Time.
+
+\item[Importance of recently changed components] \hfill \\
+In the first results from Joda Time we were getting worse results because faulty
+components that had been recently changed, had low defect probability. By
+modifying the TWR function with the Time Range parameter, when Schwa was used
+in priors, it did not got worse results.
+
+\item[Faster defect prediction results with Schwa] \hfill \\
+Since the Barinel algorithm uses the MLE to estimate goodnesses and priors, this
+process can take for example 2 hours in some cases. By using Schwa, we reduced
+this phase to less than 1 minute.
+
+\item[Computational power] \hfill \\
+A cluster is better suited than a laptop to get results in a more convenient
+time. Schwa is I/O intensive because it is parsing and extracting code from
+commits. Crowbar have a substantial time complexity by running the MLE algorithm
+and can benefit of faster CPUs.
+
+\end{description}
+
+\section{Threats to validity}
+Regarding the experiments for estimating features weight, the usage of 3 bits
+for representing the weights of individuals can limit the possibility of
+searching better solutions. For the diagnostic cost, the results are just
+from two projects that are open source.

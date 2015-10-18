@@ -1,0 +1,27 @@
+%some macro definitions
+
+\newboolean{showcomments}
+\setboolean{showcomments}{true}
+%
+\ifthenelse{\boolean{showcomments}}{
+    \newcommand{\nb}[2]{
+        {\color{red}\small\fbox{\bfseries\sffamily\scriptsize#1}}
+        {\color{red}\sffamily\small$\triangleright~$\textit{\small #2}$~\triangleleft$}
+    }
+}
+{\newcommand{\nb}[2]{}}
+%
+%commands to add comments in the text
+\newcommand\af[1]{\nb{Andr\'e}{#1}} % André
+\newcommand\ap[1]{\nb{Alexandre}{#1}} % Alex
+\newcommand\ra[1]{\nb{Rui}{#1}} % Rui
+
+% format
+\newcommand{\class}[1]{{\normalfont\slshape #1\/}}
+
+% entities
+\newcommand{\Feup}{Faculdade de Engenharia da Universidade do Porto}
+
+\newcommand{\svg}{\class{SVG}}
+\newcommand{\scada}{\class{SCADA}}
+\newcommand{\scadadms}{\class{SCADA/DMS}}

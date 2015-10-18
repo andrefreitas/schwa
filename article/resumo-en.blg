@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2014)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: resumo-en.aux
+The style file: unsrt-pt.bst
+Database file #1: refs.bib
+You've used 7 entries,
+            1791 wiz_defined-function locations,
+            514 strings with 5463 characters,
+and the built_in function-call counts, 2333 in all, are:
+= -- 233
+> -- 82
+< -- 5
++ -- 30
+- -- 23
+* -- 158
+:= -- 333
+add.period$ -- 25
+call.type$ -- 7
+change.case$ -- 7
+chr.to.int$ -- 0
+cite$ -- 7
+duplicate$ -- 117
+empty$ -- 221
+format.name$ -- 23
+if$ -- 559
+int.to.chr$ -- 0
+int.to.str$ -- 7
+missing$ -- 7
+newline$ -- 38
+num.names$ -- 7
+pop$ -- 20
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 73
+stack$ -- 0
+substring$ -- 175
+swap$ -- 47
+text.length$ -- 5
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 0
+while$ -- 24
+width$ -- 8
+write$ -- 91

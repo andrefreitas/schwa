@@ -1,0 +1,155 @@
+\chapter{Introduction} \label{chap:intro}
+
+\section*{}
+We review the state of the art in Mining Software Repositories (MSR),
+existing tools and propose a new method to predict defects based on data
+extracted from repositories. Also we use this information from defect
+prediction to improve the diagnostic accuracy from Crowbar, namely,
+the Barinel algorithm.
+
+\section{Context} \label{sec:context}
+Software plays an important role for society and in our daily routine, since
+we use applications to communicate, manage information, etc. We expect that
+these applications behave correctly and we are easily frustrated when they
+are defective. Development of software is not a simple task since developers
+need to maintain complex code, test and manage expectations of stakeholders
+by correctly interpreting requirements. It is estimated that fixing bugs
+represent 90\% of development costs \cite{Servant1}.
+
+There are tools that can help developers delivering high quality software,
+by automatically reviewing code and analyzing their behaviour. Some of
+these tools are Codacy\footnote{\url{https://codacy.com/}},
+Crowbar\footnote{\url{http://crowbar.io/}} and
+Codeclimate\footnote{\url{https://codeclimate.com/}}. The usage of revision
+control systems such as Git, SVN and Mercurial, helps developers tracking
+changes on Software and understanding the evolution of components. Tools are
+important to developers since they automate and avoid repetitive tasks in
+Software development.
+
+With the growing usage of revision control systems, research in MSR evolved
+in the last decade and involves the analysis of systems used to support
+the development of software such as repositories, issue trackers and
+mailing lists \cite{Hemmati2013}.
+
+\section{Motivation and goals} \label{sec:goals}
+
+Software repositories have hidden information that can be explored with
+analytics and machine learning techniques to support defect prediction
+models. The Barinel algorithm in Crowbar uses static estimations for
+defect prediction and goodness of components
+\cite{Abreu:2009:SMF:1747491.1747511}. Insights from software history could
+substitute these estimations and improve the diagnostic accuracy with more
+dynamic estimations.
+
+Our goals are:
+
+\begin{itemize}
+\item Predict defects from Software repositories by learning what are the most
+important features to analyze and create a prediction model based from existing
+techniques;
+\item Improve diagnostic accuracy of Barinel with defect prediction
+ probabilities.
+\end{itemize}
+
+\section{Concepts and definitions} \label{sec:concepts}
+Software quality is the degree to which the system meets requirements and
+expectations of users. The main characteristics of product quality,
+by ISO/IEC 25010, are portability, maintainability, security, reliability,
+functional stability, performance efficiency, compatibility and
+usability \cite{isoiec25010:2011}.
+
+\subsection{Software testing glossary}
+According to ISTQB \footnote{\url{http://istqb.org}}, the standard glossary
+ used in software testing is:
+\begin{description}
+  \item[Error] \hfill \\
+   A human action that produces an incorrect result;
+  \item[Fault, defect, bug] \hfill \\
+  Flaw in a component that causes the system to fail performing its required
+   functions;
+  \item[Failure] \hfill \\
+  Deviation of the component from its expected result.
+\end{description}
+
+\subsection{Types of tests}
+
+Testing is the process, consisting of static and dynamic activities, that
+involves the planing, preparation and evaluation of software to check if
+it meets the requirements and to detect defects.
+
+\begin{description}
+\item[Static testing] \hfill \\
+Is the analysis of the system static representation such as source code and
+documents, improving the internal quality.
+
+\item[Dynamic testing] \hfill \\
+It involves the execution of the system, observing its behavior under test
+cases, improving external quality.
+\end{description}
+
+\subsection{Defect prediction}
+Defect prediction consists in reliably predicting software defects using
+information from code metrics, process metrics or previous
+defects \cite{D'Ambros:2012:EDP:2318097.2318149}. Some approaches use
+binary classification, asserting if a component is defective or not,
+while others rank them by giving a score.
+
+\subsection{Fault localization}
+Fault localization consists in finding the component that caused the Software
+to fail. Is one of the most time consuming activities in debugging. Considering
+this, there is a high demand for making this process automatic, leading to the
+development of techniques that makes this activity more effective
+\cite{Wong09asurvey}.
+
+\section{Problem statement}
+Considering our goals, we want to answer the following research questions:
+
+\begin{description}
+\item[RQ1] \hfill \\
+What features should we extract and analyze from Software Repositories to
+predict defects?
+
+\item[RQ2] \hfill \\
+Can we improve Barinel fault localization technique from Crowbar with the
+ results from defect prediction?
+\end{description}
+
+\section{Contributions}
+This thesis makes the following contributions:
+
+\begin{itemize}
+\item A technique to parse and represent diffs from patches achieving method
+granularity in Java;
+\item A model to compute defect probabilities;
+\item A framework for mining Software repositories and reporting analytics
+in a graphical visualization;
+\item A technique to learn the importance of tracked metrics;
+\item A method to evaluate the gain of using defect probabilities in fault
+ localization, namely the Barinel algorithm in Crowbar.
+\end{itemize}
+
+\section{Document overview}
+\begin{description}
+  \item[1. Introduction] \hfill \\
+  An introduction to the context, goals and concepts of this thesis.
+
+  \item[2. State of the art] \hfill \\
+  Current state of the art techniques on Mining Software Repositories and
+  Software Debugging are reviewed, along with example of existing tools.
+
+  \item[3. A Technique to Estimate Defect Probabilities] \hfill \\
+  It is presented the tool created to conduct this research and the
+  methodologies used.
+
+  \item[4. Experimental results] \hfill \\
+  The experimental setup and results are presented in this chapter.
+
+  \item[5. Discussion] \hfill \\
+  A chapter dedicated to the discussion of findings about the results.
+  Initial research questions are answered.
+
+  \item[6. Conclusions and Further Work] \hfill \\
+  The conclusions and satisfaction of goals are discussed, along with an
+  overview of further work.
+
+\end{description}

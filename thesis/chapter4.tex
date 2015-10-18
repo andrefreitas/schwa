@@ -1,0 +1,561 @@
+\chapter{Experimental results} \label{chap:results}
+
+\section*{}
+This chapter provides the results of the experiments conducted. The setup and
+configurations are also described. There is a public page with the experimental
+results of Schwa on Github \footnote{\url{https://github.com/andrefreitas/schwa/wiki/Experiments}}.
+
+\section{Features weight estimation}
+In this section we present the results of learning the features weights, that is
+the importance of each of them, when computing the defect probability.
+
+\subsection{Experimental setup}
+To run this experiment, Schwa was invoked in the learning mode with 5, 50 and
+100 commits with the script in listing 4.1. The version of Schwa used was
+0.1.dev24(tagged on Git).
+
+Running genetic algorithms takes a substantial time of computation, so we have
+used Crowdsourcing to run the experiment in a variety of projects. We collected
+data from academic, enterprise and Open Source projects to have results from
+different contexts.
+
+\begin{lstlisting}[language=bash, caption=Shell script used to learn features weights]
+if [ -z "$1" ]
+then
+  echo "usage: $0 <git repository path>"
+else
+  touch report_$USER.txt
+  echo "This will take a while..."
+  echo "Learning with 5 commits"
+  schwa $1 --commits 5 -l >> report_$USER.txt
+  echo "Learning with 50 commits"
+  schwa $1 --commits 50 -l >> report_$USER.txt
+  echo "Learning with 100 commits"
+  schwa $1 --commits 100 -l >> report_$USER.txt
+  echo "Thank you! You are the best! Send report_$USER.txt to Andre :)"
+fi
+\end{lstlisting}
+
+\subsection{Results}
+Here we show the results for each repository. In the following tables, in each
+row we have the maximum number of commits, the weights of revisions, fixes and
+authors and the fitness value. The main objective of these tables is providing
+the importance of each feature for a certain project.
+
+\subsubsection{Schwa}
+The experiment was run in
+Schwa\footnote{\url{https://github.com/andrefreitas/schwa}} itself, that have
+only one contributor. It is developed mostly with Python along with HTML, CSS
+and Javascript.
+
+\begin{table}[H]
+    \centering
+    \caption{Schwa results}
+    \label{table:learning_schwa}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5 & 0.2857 & 0.2857 & 0.4286 & 0 \\ \hline
+        50 & 0.7143 & 0.1429 & 0.1429 & 1.0699 \\ \hline
+        100 & 0.7143 & 0.1429 & 0.1429 & 1.1875 \\ \hline
+    \end{tabular}
+\end{table}
+
+For 5 commits, the fitness function is 0, so it is not possible to estimate
+correctly the weights. For 50 and 100 commits, revisions is the most important
+feature.
+
+\subsubsection{Libcrowbar}
+Libcrowbar is the main repository of Crowbar and have multiple academic
+contributors. The technologies used are Java, C++, HTML, CSS and Javascript.
+
+\begin{table}[H]
+    \centering
+    \caption{Libcrowbar results}
+    \label{table:learning_libcrowbar}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5 & 0.1429 & 0.1429 & 0.7143 & 0.3486 \\ \hline
+        50 & 0.7143 & 0.1429 & 0.1429 & 1.3639 \\ \hline
+        100 & 0.7143 & 0.1429 & 0.1429 & 0.3387 \\ \hline
+    \end{tabular}
+\end{table}
+For the last 5 commits, authors is the most important feature and for 50 and 100
+commits, is revisions.
+
+\subsubsection{Joda Time}
+Joda Time\footnote{\url{https://github.com/JodaOrg/joda-time}} is an Open Source
+time library for Java with multiple contributors.
+
+\begin{table}[H]
+    \centering
+    \caption{Joda Time results}
+    \label{table:learning_jodatime}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5 & 0.1429 & 0.2857 & 0.5714 & 0 \\ \hline
+        50 & 0.1429 & 0.7143 & 0.1429 & -2.1874 \\ \hline
+        100 & 0.1429 & 0.7143 & 0.1429 & 0.3893 \\ \hline
+    \end{tabular}
+\end{table}
+For this project only for 100 commits the fitness function is > 0, showing that
+fixes is the most important feature.
+
+\subsubsection{Meo Arena}
+Meo Arena\footnote{\url{https://bitbucket.org/andrefreitas/feup-cmov-meoarena/}}
+is a mobile application developed for Android in an academic context with two
+contributors. It relies on Java and Python.
+
+\begin{table}[H]
+    \centering
+    \caption{Meo Arena results}
+    \label{table:learning_meoarena}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5 & 0.2857 & 0.4286 & 0.2857 & 0 \\ \hline
+        50 & 0.7143 & 0.1429 & 0.1429 & 1.6712 \\ \hline
+        100 & 0.7143 & 0.1429 & 0.1429 & 0.7368 \\ \hline
+    \end{tabular}
+\end{table}
+
+For 5 commits, fitness is equal to zero. For 50 and 100 commits the most
+important feature is revisions.
+
+\subsubsection{Mongo Java Driver}
+Mongo Java driver\footnote{\url{https://github.com/mongodb/mongo-java-driver}}
+is an Open Source projects and enables Java applications to communicate with a
+MongoDB server. It is developed with Java and Groovy and has multiple
+contributors.
+
+\begin{table}[H]
+    \centering
+    \caption{Mongo Java driver results}
+    \label{table:learning_mongojavadriver}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5 & 0.7143 & 0.1429 & 0.1429 & 0.3486 \\ \hline
+        50 & 0.7143 & 0.1429 & 0.1429 & 0.1685 \\ \hline
+        100 & 0.1429 & 0.7143  & 0.1429 & 1.4666 \\ \hline
+    \end{tabular}
+\end{table}
+
+For 5 and 50 commits the most important feature is revisions but for 100, is
+fixes.
+
+\subsubsection{Scraim}
+Scraim\footnote{\url{https://scraim.com/}} is a web-based project management
+tool developed by the company Strongstep. It is build on top of Redmine and
+uses Ruby on Rails.
+
+\begin{table}[H]
+    \centering
+    \caption{Scraim results}
+    \label{table:learning_scraim}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5         & 0.4286     & 0.1429 & 0.4286   & 0.3486 \\ \hline
+        50        & 0.1429 & 0.1429 & 0.7143   & 0.3146 \\ \hline
+        100       & 0.1429     & 0.7143  & 0.1429    & 0.9399 \\ \hline
+    \end{tabular}
+\end{table}
+For 5 commits, revisions and authors are both important. For 50, authors is the
+most important and for 100 is fixes.
+
+\subsubsection{Trainsim}
+Trainsim is an academic project developed with Java and Swing with one
+contributor.
+
+\begin{table}[H]
+    \centering
+    \caption{Trainsim results}
+    \label{table:learning_trainsim}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5         & 0.1429     & 0.7143 & 0.1429   & 0 \\ \hline
+        50        & 0.7143 & 0.1429 & 0.1429   & 1.5945 \\ \hline
+        100       & 0.5714     & 0.2857  & 0.1429    & 2.0425 \\ \hline
+    \end{tabular}
+\end{table}
+
+For 5 commits fitness is zero, for 50 and 100 the most important is revisions.
+Fixes importance increased from 50 to 100 commits.
+
+\subsubsection{ShiftForward}
+ShifForward\footnote{\url{http://shiftforward.eu}} is a company that develops
+advertising technology with Scala. They have contributed with results of three
+projects.
+
+\begin{table}[H]
+    \centering
+    \caption{Adstax results}
+    \label{table:learning_adstax}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5         & 0.4286     & 0.1429 & 0.4286   & 0 \\ \hline
+        50        & 0.4286 & 0.4286 & 0.1429   & 1.9044 \\ \hline
+        100       & 0.2857     & 0.4286  & 0.2857   & 3.3134 \\ \hline
+    \end{tabular}
+\end{table}
+
+In the Adstax project, for 5 commits the fitness is zero. For 50 commits,
+revisions and fixes are both important and for 100, fixes is the most important.
+
+\begin{table}[H]
+    \centering
+    \caption{Boxer results}
+    \label{table:learning_boxer}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5         & 0.2857     & 0.1429 & 0.5714   & 0.4408 \\ \hline
+        50        & 0.1429 & 0.1429 & 0.7143   & 0.4457  \\ \hline
+        100       & 0.1429     & 0.7143  & 0.1429   & -1.4159 \\ \hline
+    \end{tabular}
+\end{table}
+
+In the Boxer project, for 5 and 50 commits, authors is the most important
+feature. For 100 commits, the fitness is negative.
+
+\begin{table}[H]
+    \centering
+    \caption{Apso results}
+    \label{table:learning_apso}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5         & 0.7143     & 0.1429 & 0.1429   & 0.9439 \\ \hline
+        50        & 0.1429 & 0.7143 & 0.1429   & 1.9547 \\ \hline
+        100       & 0.1429     & 0.4286  & 0.4286   & 1.3927 \\ \hline
+    \end{tabular}
+\end{table}
+
+In the project Apso, revisions is the most important feature for 5 commits. For
+50 commits is fixes and for 100 commits is fixes and authors.
+
+\subsubsection{Hivedb}
+Hivedb\footnote{\url{http://hivedb.org}} is an Open Source framework for
+horizontally partitioning MySQL systems. It is developed mostly in Java with
+multiple contributors.
+
+\begin{table}[H]
+    \centering
+    \caption{Hivedb results}
+    \label{table:learning_hivedb}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5         & 0.7143     & 0.1429 & 0.1429   & 0  \\ \hline
+        50        & 0.1429 & 0.7143 & 0.1429   & 0.1739 \\ \hline
+        100       & 0.7143     & 0.1429  & 0.1429   & 0.9095 \\ \hline
+    \end{tabular}
+\end{table}
+
+For 5 commits the fitness function is zero. For 50 commits the most important
+feature is fixes and for 100, is revisions.
+
+\subsubsection{Teamengine}
+Teamengine\footnote{\url{https://github.com/opengeospatial/teamengine}} is an
+Open Source engine to test web services and other resources in Java.
+
+\begin{table}[H]
+    \centering
+    \caption{Teamengine results}
+    \label{table:learning_teamengine}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5         & 0.7143     & 0.1429 & 0.1429   & 0  \\ \hline
+        50        & 0.1429 & 0.7143 & 0.1429   & 1.1356 \\ \hline
+        100       & 0.7143     & 0.1429  & 0.1429   & 3.1080 \\ \hline
+    \end{tabular}
+\end{table}
+
+For 5 commits the fitness function is 0. Fixes is the most important feature for
+50 commits and for 100 is revisions.
+
+\subsubsection{Automatalib}
+Automatalib\footnote{\url{https://github.com/misberner/automatalib}} is an Open
+Source Java Library for representing automata, graphs and transition systems.
+
+\begin{table}[H]
+    \centering
+    \caption{Automatalib results}
+    \label{table:learning_automatalib}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5         & 0.1429     & 0.1429 & 0.7143   & 0.3486 \\ \hline
+        50        & 0.1429 & 0.7143 & 0.1429   & -0.1952 \\ \hline
+        100       & 0.4286     & 0.4286  & 0.1429   & 0.5261 \\ \hline
+    \end{tabular}
+\end{table}
+
+For 5 commits, authors is the most important feature. For 50 commits the fitness
+is negative. Revisions and fixes have the same weight for 100 commits.
+
+\subsubsection{CDI TCK}
+CDI TCK\footnote{\url{https://github.com/cdi-spec/cdi-tck}} is an Open Source
+Context and Dependency Injection for Java EE developed with Java.
+
+\begin{table}[H]
+    \centering
+    \caption{CDI TCK results}
+    \label{table:learning_cditck}
+    \begin{tabular}{|l|l|l|l|l|}
+        \hline
+        Commits & Revisions & Fixes & Authors & Fitness \\ \hline
+        5         & 0.1429     & 0.5714 & 0.2857   & 0 \\ \hline
+        50        & 0.2857 & 0.2857 & 0.4286   & 0 \\ \hline
+        100       & 0.1429     & 0.7143  & 0.1429   & -0.3247 \\ \hline
+    \end{tabular}
+\end{table}
+
+For 5 and 50 commits fitness is zero and for 100 is negative.
+
+\section{Diagnostic cost}
+In this section, the results of computing the diagnostic cost for each
+configuration of Schwa in Crowbar are presented. In this experiment, the
+computational cost is also substantial and crowdsourcing could not be used
+since we need to inspect the behaviour of Crowbar with Schwa. Considering that
+these experiments were run in a laptop (can last hours) with the constraints of
+finding Java projects that use Git, have tests and support Maven, this phase
+took weeks to find conclusive results.
+
+Joda Time and CDI TCK projects were selected to run these experiment since they
+have a Git repository and are Java projects with tests, so they both can be used
+with Crowbar.
+
+\subsection{Experimental setup}
+For each project we had setup the experimental environment with the following
+steps:
+
+\begin{itemize}
+\item Compute the weights for revisions, fixes and authors with Schwa learning
+mode;
+\item Create a .schwa.yml in the root of the repository with the weights and
+maximum commits;
+\item Insert bugs (e.g. wrong comparison) in methods and commit the changes;
+\item Evaluate the diagnostic cost for using Schwa with priors, goodnesses or
+both.
+\end{itemize}
+
+
+\subsection{Results}
+The results are presented with the history of commits and configurations of
+Schwa.
+
+\subsubsection{Joda Time}
+The sequence of commits applied in Joda Time is available on table
+\ref{table:commits_jodatime} along with the commits that inserted bugs.
+
+\begin{table}[H]
+    \centering
+    \caption{Commits applied to Joda Time}
+    \label{table:commits_jodatime}
+    \begin{tabular}{|c|l|l|}
+        \hline
+        Order & Commit & Description \\ \hline
+        1 & 8207a55	& Added a defect in DateTime.java in withZoneRetainfields() \\ \hline
+        2 & 74149c0 & Added a defect in Duration.java in minus() \\ \hline
+        3 & 22a5f71 & Fixed withZoneRetainfields() bug \\ \hline
+        4 & 0945c34 & Fixed minus() bug and added another bug \\ \hline
+        5 & 92adf94 & Fixed previous bug and added one in getMaximumValue() \\ \hline
+
+    \end{tabular}
+\end{table}
+
+\begin{lstlisting}[language=java, caption=Commit 8207a55 patch]
+  public DateTime withZoneRetainFields(DateTimeZone newZone) {
+         newZone = DateTimeUtils.getZone(newZone);
+         DateTimeZone originalZone = DateTimeUtils.getZone(getZone());
+-        if (newZone == originalZone) {
++        if (newZone != originalZone) {
+             return this;
+         }
+\end{lstlisting}
+
+\begin{lstlisting}[language=java, caption=Commit 74149c0 patch]
+ public Duration minus(long amount) {
+-        return withDurationAdded(amount, -1);
++        return withDurationAdded(amount, -2);
+     }
+
+   public Duration minus(ReadableDuration amount) {
+-        if (amount == null) {
++        if (amount != null) {
+             return this;
+         }
+         return withDurationAdded(amount.getMillis(), -1);
+     }
+\end{lstlisting}
+
+\begin{lstlisting}[language=java, caption=Commit 92adf94 patch]
+final class BasicDayOfMonthDateTimeField extends PreciseDurationDateTimeField {
+                 int month = values[i];
+                 for (int j = 0; j < size; j++) {
+                     if (partial.getFieldType(j) == DateTimeFieldType.year()) {
+-                        int year = values[j];
++                        int year = values[i];
+                         return iChronology.getDaysInYearMonth(year, month);
+                     }
+                 }
+\end{lstlisting}
+
+The configurations used are in table \ref{table:configs_jodatime}. Schwa was
+used with the default configuration values in configuration \#1. In the
+configuration \#2 the weights learned from the genetic algorithms are used along
+with the time range(tr=0.6), to increase the defect probabilities of the last
+changed components.
+
+\begin{table}[H]
+    \centering
+    \caption{Schwa configurations for Joda Time}
+    \label{table:configs_jodatime}
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        Configuration & Commits & Revisions & Fixes & Authors & Time Range \\ \hline
+        \#1 & 20 & 0.25 & 0.5 & 0.25 & 0\\ \hline
+        \#2 & 5 & 0.15 & 0.7 & 0.15 & 0.6\\ \hline
+    \end{tabular}
+\end{table}
+
+
+The results for the diagnostic cost are presented in table
+\ref{table:cd_jodatime} and they are grouped in scenarios. A scenario is a unique
+configuration and revision (commit).
+
+
+\begin{table}[H]
+    \centering
+    \caption{Diagnostic cost for Joda Time}
+    \label{table:cd_jodatime}
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        Schwa & Commit & Configuration & Diagnostic Cost \\ \hline
+        \multicolumn{4}{|c|}{First scenario} \\ \hline
+        None & 74149c0 & \#1 & 0 \\ \hline
+        Both & 74149c0 & \#1 & 1 \\ \hline
+        Priors & 74149c0 & \#1 & 1 \\ \hline
+        Goodnesses & 74149c0 & \#1 & 1 \\ \hline
+        \multicolumn{4}{|c|}{Second scenario} \\ \hline
+        None & 22a5f71 & \#1 & 0 \\ \hline
+        Both & 22a5f71 & \#1 & 0 \\ \hline
+        Priors & 22a5f71 & \#1 & 1 \\ \hline
+        Goodnesses & 22a5f71 & \#1 & 0 \\ \hline
+        \multicolumn{4}{|c|}{Third scenario} \\ \hline
+        None & 92adf94 & \#2 & 20 \\ \hline
+        Both & 92adf94 & \#2 & 21 \\ \hline
+        Priors & 92adf94 & \#2 & 20 \\ \hline
+        Goodnesses & 92adf94 & \#2 & 21 \\ \hline
+
+    \end{tabular}
+\end{table}
+
+As presented in table \ref{table:cd_jodatime}, using configuration \#1 in the
+first scenario, when Schwa is used the diagnostic cost increases to 1. In the
+second scenario, by fixing one of the bugs, the diagnostic cost only increases
+when Schwa is used for priors. In the third scenario, by fixing the previous
+bugs, add another one and using the time range parameter (new configuration),
+the diagnostic cost increases for Both and Goodnesses, but is the same for Priors.
+
+For the third scenario, we also evaluated what would be the maximum diagnostic
+cost if Schwa would give optimal results. The defect probability of the faulty
+component was set to 0.9, and for the healthy components was set to 0.1 (note
+that this probabilities are only for components involved in the last commits
+analyzed by Schwa). By evaluating the rank again, the diagnostic cost was 20
+for priors and 21 for goodnesses and both.
+
+\subsubsection{CDI TCK}
+The commit applied in CDI TCK is on Table \ref{table:commits_cditck}.
+\begin{table}[H]
+    \centering
+    \caption{Commits applied to CDI TCK}
+    \label{table:commits_cditck}
+    \begin{tabular}{|l|l|}
+        \hline
+        Commit & Description \\ \hline
+        1bc2e2d	& Added a defect in ActionSequence.java toString() method \\ \hline
+
+    \end{tabular}
+\end{table}
+
+\begin{lstlisting}[language=java, caption=Commit 1bc2e2d patch]
+   @Override
+     public String toString() {
+-        return String.format("ActionSequence [name=%s, data=%s]", name, getData());
++        return String.format("ActionSequenc [name=%s, data=%s]", name, getData());
+     }
+\end{lstlisting}
+
+\begin{table}[H]
+    \centering
+    \caption{Schwa configurations for CDI TCK}
+    \label{table:configs_cdi_tck}
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        Configuration & Commits & Revisions & Fixes & Authors & Time Range \\ \hline
+        \#1 & 20 & 0.15 & 0.7 & 0.15 & 0\\ \hline
+        \#2 & 20 & 0.7 & 0.15 & 0.15 & 0\\ \hline
+        \#3 & 20 & 1 & 0 & 0 & 0\\ \hline
+        \#4 & 5 & 1 & 0 & 0 & 0.6\\ \hline
+        \#5 & 5 & 0.15 & 0.7 & 0.15 & 0.6\\ \hline
+    \end{tabular}
+\end{table}
+
+The results for the diagnostic cost are the following:
+\begin{table}[H]
+    \centering
+    \caption{Diagnostic cost for CDI TCK}
+    \label{table:cd_cditck}
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        Schwa & Commit & Configuration & Diagnostic Cost \\ \hline
+        \multicolumn{4}{|c|}{First scenario} \\ \hline
+        None & 1bc2e2d & \#1 & 0 \\ \hline
+        Both & 1bc2e2d & \#1 & 6 \\ \hline
+        Priors & 1bc2e2d & \#1 & 8 \\ \hline
+        Goodnesses & 1bc2e2d & \#1 & 0 \\ \hline
+
+        \multicolumn{4}{|c|}{Second scenario} \\ \hline
+        Both & 1bc2e2d & \#2 & 6 \\ \hline
+        Priors & 1bc2e2d & \#2 & 7 \\ \hline
+        Goodnesses & 1bc2e2d & \#2 & 0 \\ \hline
+
+        \multicolumn{4}{|c|}{Third scenario} \\ \hline
+        Both & 1bc2e2d & \#3 & 0 \\ \hline
+        Priors & 1bc2e2d & \#3 & 7 \\ \hline
+        Goodnesses & 1bc2e2d & \#3 & 0 \\ \hline
+
+        \multicolumn{4}{|c|}{Fourth scenario} \\ \hline
+        Both & 1bc2e2d & \#4 & 0 \\ \hline
+        Priors & 1bc2e2d & \#4 & 9 \\ \hline
+        Goodnesses & 1bc2e2d & \#4 & 0 \\ \hline
+
+        \multicolumn{4}{|c|}{Fifth scenario} \\ \hline
+        Both & 1bc2e2d & \#5 & 9 \\ \hline
+        Priors & 1bc2e2d & \#5 & 1 \\ \hline
+        Goodnesses & 1bc2e2d & \#5 & 1 \\ \hline
+    \end{tabular}
+\end{table}
+
+The experiment in CDI TCK was conducted by trying a variety of configurations,
+to evaluate their impact. For the applied patch, the diagnostic cost is zero
+without the usage of Schwa. In the first scenario by giving more importance to
+fixes, the diagnostic cost is worse for all options, except for goodnesses. In
+the second scenario, by giving more importance to revisions, the results are
+practically the same: worse for all options except goodnesses.
+
+In the third and fourth scenarios, by giving only importance to revisions the
+diagnostic cost is zero for goodnesses and both. The time range parameter was
+changed in the fourth scenario.
+
+In the fifth scenario, by combining the usage of time range and giving 0.15 for
+revisions and authors and 0.7 for fixes, the diagnostic cost increased in all
+options.
