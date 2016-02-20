@@ -61,6 +61,7 @@ dist/*
 *.egg-info
 
 venv/*
+.env/*
 README.rst
 htmlcov/*
 .coverage
