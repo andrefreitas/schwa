@@ -1,6 +1,6 @@
 # Schwa
 
- [![Build Status](https://travis-ci.org/andrefreitas/schwa.svg)](https://travis-ci.org/andrefreitas/schwa) [![PyPI version](https://badge.fury.io/py/Schwa.svg)](http://badge.fury.io/py/Schwa)
+[![Build Status](https://travis-ci.org/andrefreitas/schwa.svg)](https://travis-ci.org/andrefreitas/schwa) 
 
 Schwa helps finding code defects by analysing the commits of a repository. You
 can use it to help you find the cause of bugs in large projects.
