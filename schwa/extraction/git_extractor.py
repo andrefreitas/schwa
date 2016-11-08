@@ -186,7 +186,7 @@ class GitExtractor(AbstractExtractor):
     def get_source(blob):
         try:
             stream = blob.data_stream.read()
-            source = stream.decode("UTF-8")
+            source = stream.decode("UTF-8", "ignore")
         except AttributeError:
             raise ParsingError
         return source
