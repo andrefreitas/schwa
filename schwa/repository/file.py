@@ -204,3 +204,11 @@ class Function(Component):
     It is a subclass of Component.
 
     """
+
+class Parameter(object):
+
+    def __init__(self, name, signature_type, complete_type):
+        self.name = name
+        self.signature_type = signature_type
+        self.complete_type = complete_type
+

@@ -88,13 +88,67 @@ class JavaParser(AbstractParser):
             for declaration in tree.body:
                 if isinstance(declaration, (MethodDeclaration, ConstructorDeclaration)):
                     method = declaration
-                    method_component = Method(name=method.name, start_line=method.start_line, end_line=method.end_line)
+
+                    # get method's signature
+                    method_name = method.name
+                    parameters = JavaParser.parse_arguments(method)
+                    signature = '{}({})'.format(
+                        method_name, ', '.join(
+                            [parameter.signature_type for parameter in parameters]))
+                    regex = '{}\(\s*{}\)'.format(re.escape(method_name),
+                        ',\s+'.join(['(final\s+)?{}\s+{}'.format(
+                            re.escape(parameter.complete_type), re.escape(parameter.name))
+                        for parameter in parameters]))
+
+                    method_component = Method(name=signature, start_line=method.start_line, end_line=method.end_line)
                     class_component.methods.append(method_component)
             class_component.classes.extend(child_classes)
             return class_component
         else:
             return child_classes
 
+    @classmethod
+    def parse_type(csl, ast_type, is_vararg):
+        parameter_type = ''
+        parameter_complete_type = ''
+        if isinstance(ast_type, Wildcard):
+             parameter_type = '?'
+             parameter_complete_type = '?'
+        elif isinstance(ast_type, Type):
+            if isinstance(ast_type.name, Name):
+                parameter_type = ast_type.name.value
+                parameter_complete_type = ast_type.name.value
+            else:
+                parameter_type = ast_type.name
+                parameter_complete_type = ast_type.name
+            if hasattr(ast_type, 'type_arguments') and ast_type.type_arguments:
+                parameter_complete_type += '<{}>'.format(
+                    ', '.join(JavaParser.parse_type(astSubType, False)[1]
+                        for astSubType in ast_type.type_arguments))
+            dimensions = ''.join('[]' * ast_type.dimensions)
+            parameter_type += dimensions
+            parameter_complete_type += dimensions
+        else:
+            parameter_type = ast_type
+            parameter_complete_type = ast_type
+        if is_vararg:
+            parameter_type += '...'
+            parameter_complete_type += '...'
+        return (parameter_type, parameter_complete_type)
+
+    @classmethod
+    def parse_arguments(csl, ast_method_declaration):
+        parameters = []
+        for ast_parameter in ast_method_declaration.parameters:
+            (parameter_signature_type, parameter_complete_type) = JavaParser.parse_type(
+                ast_parameter.type,
+                hasattr(ast_parameter, 'vararg') and ast_parameter.vararg)
+            parameter = Parameter(
+                ast_parameter.variable.name,
+                parameter_signature_type,
+                parameter_complete_type)
+            parameters.append(parameter)
+        return parameters
 
     @staticmethod
     def extract_changed_sequences(source_a, source_b):
