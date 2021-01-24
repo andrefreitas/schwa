@@ -201,7 +201,6 @@ class RepositoryAnalytics(Metrics):
 
     Attributes:
         files_analytics: A dict that maps files paths to FileAnalytics instances.
-
     """
 
     def __init__(self):
@@ -252,6 +251,7 @@ class FileAnalytics(Metrics):
         self.defect_prob = self.defect_probability()
         for class_analytics in self.classes_analytics.values():
             class_analytics.compute_defect_probability()
+        # TODO should we also compute_defect_probability of lines?
 
     def to_dict(self, path):
         metrics_dict = super().to_dict()
@@ -281,6 +281,7 @@ class ClassAnalytics(Metrics):
         self.defect_prob = self.defect_probability()
         for method_analytics in self.methods_analytics.values():
             method_analytics.compute_defect_probability()
+        # TODO should we also compute_defect_probability of lines?
 
     def to_dict(self, name):
         metrics_dict = super().to_dict()
@@ -306,5 +307,23 @@ class MethodAnalytics(Metrics):
     def to_dict(self, name):
         metrics_dict = super().to_dict()
         metrics_dict["type"] = "method"
+        metrics_dict["name"] = name
+        return metrics_dict
+
+
+class LineAnalytics(Metrics):
+    """ A class to represent Line Analytics
+
+    It the leaf of analytics.
+    """
+    def __init__(self):
+        super().__init__()
+
+    def compute_defect_probability(self):
+        self.defect_prob = self.defect_probability()
+
+    def to_dict(self, name):
+        metrics_dict = super().to_dict()
+        metrics_dict["type"] = "line"
         metrics_dict["name"] = name
         return metrics_dict

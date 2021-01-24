@@ -192,7 +192,6 @@ class JavaParser(AbstractParser):
             if operation == "+":
                 changed_b = changed_b | parsed_file_b.get_components_hit(start_line, end_line)
 
-
         # Method granularity differences
         methods_changed_a = set(c for c in changed_a if isinstance(c, tuple))
         methods_changed_b = set(c for c in changed_b if isinstance(c, tuple))
@@ -222,5 +221,19 @@ class JavaParser(AbstractParser):
             diffs.append(DiffClass(file_name=path_b, class_a=c, removed=True))
         for c in classes_modified:
             diffs.append(DiffClass(file_name=path_b, class_a=c, class_b=c, modified=True))
+
+        lines_changed_a = set(c for c in changed_a if isinstance(c, str)) # FIXME might need to change the if condition
+        lines_changed_b = set(c for c in changed_b if isinstance(c, str))
+        lines_a = parsed_file_a.get_lines_set()
+        lines_b = parsed_file_b.get_lines_set()
+        lines_added = lines_b - lines_a
+        lines_removed = lines_a - lines_b
+        lines_modified = (lines_changed_a | lines_changed_b) - (lines_added | lines_removed)
+        for l in lines_added:
+            diffs.append(DiffLine(file_name=path_b, class_b=l, added=True))
+        for l in lines_removed:
+            diffs.append(DiffLine(file_name=path_b, line_a=l, removed=True))
+        for l in lines_modified:
+            diffs.append(DiffLine(file_name=path_b, line_a=l, line_b=l, modified=True))
 
         return diffs

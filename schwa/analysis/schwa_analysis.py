@@ -115,6 +115,16 @@ class SchwaAnalysis(AbstractAnalysis):
                 except KeyError:
                     continue
 
+            # Line Granularity
+            for diff in [diff for diff in commit.diffs if isinstance(diff, DiffLine)]:
+                try:  # Parent component can be already removed
+                    parent_analytics_dict = analytics.files_analytics[diff.file_name].lines_analytics
+                    line_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, LineAnalytics())
+                    if line_analytics:
+                        self.update_analytics(line_analytics, commit)
+                except KeyError:
+                    continue
+
         analytics.compute_defect_probability()
 
         return analytics

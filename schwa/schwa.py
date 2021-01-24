@@ -46,7 +46,7 @@ class Schwa:
         """ Inits Schwa with the repository local path. """
         self.repo_path = repo_path
 
-    def analyze(self,  ignore_regex="^$", max_commits=None, method_granularity=True, parallel=True):
+    def analyze(self,  ignore_regex="^$", max_commits=None, method_granularity=True, line_granularity=False, parallel=True):
         """ Analyze commits.
 
         Extracts commits and call an analyzer to output analytics.
@@ -55,6 +55,7 @@ class Schwa:
             ignore_regex: An optional string that is a regex pattern to ignore unnecessary files.
             max_commits: An optional int that is the maximum number of commits to extract since the last one.
             method_granularity: An optional boolean that enables extraction until the method granularity.
+            line_granularity: An optional boolean that enables extraction until the line granularity.
 
         Returns:
             A RepositoryAnalytics instance.
@@ -62,7 +63,7 @@ class Schwa:
         configs = self.get_yaml_configs()
         max_commits = self.configure_yaml(configs, max_commits)
         extractor = GitExtractor(self.repo_path)
-        repo = extractor.extract(ignore_regex, max_commits, method_granularity, parallel)
+        repo = extractor.extract(ignore_regex, max_commits, method_granularity, line_granularity, parallel)
         analysis = SchwaAnalysis(repo)
         analytics = analysis.analyze()
         return analytics
@@ -97,12 +98,12 @@ class Schwa:
 
         return configs
 
-    def learn(self,  ignore_regex="^$", max_commits=None, method_granularity=False, parallel=True,
+    def learn(self,  ignore_regex="^$", max_commits=None, method_granularity=False, line_granularity=False, parallel=True,
               bits=None, generations=None):
         configs = self.get_yaml_configs()
         max_commits = self.configure_yaml(configs, max_commits)
         extractor = GitExtractor(self.repo_path)
-        repo = extractor.extract(ignore_regex, max_commits, method_granularity, parallel)
+        repo = extractor.extract(ignore_regex, max_commits, method_granularity, line_granularity, parallel)
         solution = FeatureWeightLearner(repo, bits, generations).learn()
         return solution
 

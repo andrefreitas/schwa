@@ -55,6 +55,9 @@ class File:
         for function in self.functions:
             if function.range_hit(start_line, end_line):
                 components.add(("", function.name))
+        for line in self.lines:
+            if line.range_hit(start_line, end_line):
+                components.add(("", line.name))
         return components
 
     def get_classes_set(self):
@@ -86,11 +89,24 @@ class File:
             functions = functions | _class.get_methods_set()
         return functions
 
+    def get_lines_set(self):
+        """ Get the set of lines of code.
+
+        Returns:
+            A set of lines of code names. E.g. {(, main), (API, login)}
+        """
+        lines = set()
+        for _line in self.lines:
+            lines.add(('', line.name))
+        for _class in self.classes:
+            lines = lines | _class.get_lines_set()
+        return lines
+
 
 class Component:
     """A class for representing a generic Software component.
 
-    A component can be a Class, Method or Function.
+    A component can be a Class, Method, Function, or a Line
 
     Attributes:
         name: A string with the name of the component.
@@ -188,6 +204,27 @@ class Class(Component):
             methods = methods | _class.get_methods_set(parent_classes + [self.name])
         return methods
 
+    def get_lines_set(self, parent_classes=None):
+        """ Get the set of lines of code names.
+
+        It uses dot notation for nested classes.
+
+        Args:
+            parent_classes: An optional list of parent classes names for dot notation.
+
+        Returns:
+            A set of lines of code names. E.g. {(API, main), (API.Core,login)}
+        """
+        if parent_classes is None:
+            parent_classes = []
+        lines = set()
+        class_id = ".".join(parent_classes + [self.name])
+        for line in self.lines:
+            lines.add((class_id, line.name))
+        for _class in self.classes:
+            lines = lines | _class.get_lines_set(parent_classes + [self.name])
+        return lines
+
 
 class Method(Component):
     """A Method is a member of a class.
@@ -202,5 +239,13 @@ class Function(Component):
 
     It isn't a member of a class but a top level function of a file.
     It is a subclass of Component.
+
+    """
+
+
+class Line(Component):
+    """A Line component representation.
+
+    It is a subclass of Component and represents a line of code.
 
     """
