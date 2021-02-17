@@ -22,7 +22,10 @@
 
 
 from setuptools import setup, find_packages
-from pip.req import parse_requirements
+try: # for pip >= 10
+    from pip._internal.req import parse_requirements
+except ImportError: # for pip <= 9.0.3
+    from pip.req import parse_requirements
 import os
 
 dir = os.path.dirname(os.path.abspath(__file__))
@@ -30,7 +33,11 @@ version = {}
 with open(os.path.join(dir, "schwa", "version.py")) as fp:
     exec(fp.read(), version)
 
-requirements = [str(ir.req) for ir in parse_requirements("requirements.txt", session=True)]
+install_reqs = parse_requirements("requirements.txt", session=False)
+try:
+    requirements = [str(ir.req) for ir in install_reqs]
+except:
+    requirements = [str(ir.requirement) for ir in install_reqs]
 packages = find_packages('.')
 
 setup(name='Schwa',
