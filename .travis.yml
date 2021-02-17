@@ -8,7 +8,7 @@ install:
  - python setup.py install
 
 script:
- - nosetests
+ - nosetests -v --verbosity=3 --failure-detail
 
 notifications:
 webhooks:
