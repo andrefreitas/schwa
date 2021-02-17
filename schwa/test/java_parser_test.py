@@ -230,6 +230,34 @@ class TestJavaParser(unittest.TestCase):
         self.assertTrue('login<2,5>' in methods_repr)
         self.assertTrue('login2<6,8>' in methods_repr)
 
+    def test_methods_with_same_name_but_different_signature(self):
+        code = """public class Foo {
+            public void bar() {
+                // NO-OP
+            }
+            public void bar(int i) {
+                // NO-OP
+            }
+            public void bar(java.util.List<?> l) {
+                // NO-OP
+            }
+            public void bar(java.util.ArrayList<Integer> a) {
+                // NO-OP
+            }
+        }
+        """
+
+        classes = JavaParser.parse(code).classes
+        self.assertEqual(len(classes), 1)
+        classFoo = classes[0]
+        methods = classFoo.methods
+        self.assertEqual(len(methods), 4)
+        methods_repr = [repr(m) for m in methods]
+        self.assertTrue('bar()<2,4>' in methods_repr)
+        self.assertTrue('bar(int)<5,7>' in methods_repr)
+        self.assertTrue('bar(java.util.List)<8,10>' in methods_repr)
+        self.assertTrue('bar(java.util.ArrayList)<11,13>' in methods_repr)
+
     def test_diff_case_a(self):
         code_b = """
             package org.feup.meoarenacustomer.app;
