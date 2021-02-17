@@ -95,15 +95,15 @@ class TestJavaParser(unittest.TestCase):
         self.assertTrue('SOAPAPI<55,59>' in classes_repr)
 
         methods_repr = [repr(m) for m in components[0].methods]
-        self.assertTrue('getUrl<9,11>' in methods_repr)
-        self.assertTrue('API<21,23>' in methods_repr)
-        self.assertTrue('API<25,27>' in methods_repr)
-        self.assertTrue('login<30,35>' in methods_repr)
-        self.assertTrue('register<37,47>' in methods_repr)
-        self.assertTrue('getShows<49,51>' in methods_repr)
+        self.assertTrue('getUrl()<9,11>' in methods_repr)
+        self.assertTrue('API(String)<21,23>' in methods_repr)
+        self.assertTrue('API()<25,27>' in methods_repr)
+        self.assertTrue('login(String, String, AsyncHttpResponseHandler)<30,35>' in methods_repr)
+        self.assertTrue('register(String, String, String, String, String, String, String, AsyncHttpResponseHandler)<37,47>' in methods_repr)
+        self.assertTrue('getShows(AsyncHttpResponseHandler)<49,51>' in methods_repr)
 
         methods_repr = [repr(m) for m in components[1].methods]
-        self.assertTrue('login<56,58>' in methods_repr)
+        self.assertTrue('login(String)<56,58>' in methods_repr)
 
     def test_parse_with_anonymous_classes(self):
         code = """import javafx.event.ActionEvent;
@@ -141,8 +141,8 @@ class TestJavaParser(unittest.TestCase):
         classes_repr = [repr(c) for c in components]
         self.assertTrue('HelloWorld<8,31>' in classes_repr)
         methods_repr = [repr(m) for m in components[0].methods]
-        self.assertTrue('main<9,11>' in methods_repr)
-        self.assertTrue('start<14,30>' in methods_repr)
+        self.assertTrue('main(String[])<9,11>' in methods_repr)
+        self.assertTrue('start(Stage)<14,30>' in methods_repr)
 
     def test_parse_nested_classes(self):
         code = """public class ShadowTest {
@@ -173,14 +173,14 @@ class TestJavaParser(unittest.TestCase):
         self.assertTrue('ShadowTest<1,21>' in classes_repr)
         self.assertEqual(len(classes_repr), 1)
         methods_repr = [repr(m) for m in components[0].methods]
-        self.assertTrue('main<16,20>' in methods_repr)
+        self.assertTrue('main(String...)<16,20>' in methods_repr)
         self.assertEqual(len(methods_repr), 1)
 
         classes_repr = [repr(c) for c in components[0].classes]
         self.assertTrue('FirstLevel<5,14>' in classes_repr)
         self.assertEqual(len(classes_repr), 1)
         methods_repr = [repr(m) for m in components[0].classes[0].methods]
-        self.assertTrue('methodInFirstLevel<9,13>' in methods_repr)
+        self.assertTrue('methodInFirstLevel(int)<9,13>' in methods_repr)
         self.assertEqual(len(methods_repr), 1)
 
     def test_compressed_code(self):
@@ -194,12 +194,12 @@ class TestJavaParser(unittest.TestCase):
         classes_repr = [repr(c) for c in components]
         self.assertTrue('ShadowTest<1,1>' in classes_repr)
         methods_repr = [repr(m) for m in components[0].methods]
-        self.assertTrue('main<1,1>' in methods_repr)
+        self.assertTrue('main(String...)<1,1>' in methods_repr)
 
         classes_repr = [repr(c) for c in components[0].classes]
         self.assertTrue('FirstLevel<1,1>' in classes_repr)
         methods_repr = [repr(m) for m in components[0].classes[0].methods]
-        self.assertTrue('methodInFirstLevel<1,1>' in methods_repr)
+        self.assertTrue('methodInFirstLevel(int)<1,1>' in methods_repr)
 
     def test_abstract_class(self):
         code = """public abstract class GraphicObject {
@@ -211,7 +211,7 @@ class TestJavaParser(unittest.TestCase):
         classes_repr = [repr(c) for c in components]
         self.assertTrue('GraphicObject<1,5>' in classes_repr)
         methods_repr = [repr(m) for m in components[0].methods]
-        self.assertTrue('draw<4,4>' in methods_repr)
+        self.assertTrue('draw()<4,4>' in methods_repr)
 
     def test_empty_methods(self):
         code = """private class SOAPAPI{
@@ -227,8 +227,8 @@ class TestJavaParser(unittest.TestCase):
         classes_repr = [repr(c) for c in components]
         self.assertTrue('SOAPAPI<1,8>' in classes_repr)
         methods_repr = [repr(m) for m in components[0].methods]
-        self.assertTrue('login<2,5>' in methods_repr)
-        self.assertTrue('login2<6,8>' in methods_repr)
+        self.assertTrue('login(String)<2,5>' in methods_repr)
+        self.assertTrue('login2(String)<6,8>' in methods_repr)
 
     def test_methods_with_same_name_but_different_signature(self):
         code = """public class Foo {
@@ -329,21 +329,21 @@ class TestJavaParser(unittest.TestCase):
 
         self.assertTrue(DiffClass("API.java", class_a="API", class_b="API", modified=True) in diffs,
                         msg="It should recognize modified classes")
-        self.assertTrue(DiffMethod("API.java", class_name="API", method_a="login", method_b="login", modified=True)
+        self.assertTrue(DiffMethod("API.java", class_name="API", method_a="login(String, String, AsyncHttpResponseHandler)", method_b="login(String, String, AsyncHttpResponseHandler)", modified=True)
                         in diffs, msg="It should recognize modified methods")
-        self.assertTrue(DiffMethod("API.java", class_name="API", method_a="register", removed=True) in diffs,
+        self.assertTrue(DiffMethod("API.java", class_name="API", method_a="register(String, String, String, String, String, String, String, AsyncHttpResponseHandler)", removed=True) in diffs,
                         msg="It should recognize removed methods")
-        self.assertTrue(DiffMethod("API.java", class_name="API", method_b="recover", added=True) in diffs,
+        self.assertTrue(DiffMethod("API.java", class_name="API", method_b="recover(String)", added=True) in diffs,
                         msg="It should recognize added methods")
-        self.assertTrue(DiffMethod("API.java", class_name="API", method_b="outputShows", added=True) in diffs,
+        self.assertTrue(DiffMethod("API.java", class_name="API", method_b="outputShows(AsyncHttpResponseHandler)", added=True) in diffs,
                         msg="It should recognize added methods")
         self.assertTrue(DiffClass("API.java", class_a="SOAPAPI", removed=True) in diffs,
                         msg="It should recognize removed classes")
         self.assertTrue(DiffClass("API.java", class_b="JSONAPI", added=True) in diffs,
                         msg="It should recognize added classes")
-        self.assertTrue(DiffMethod("API.java", class_name="SOAPAPI", method_a="login", removed=True) in diffs,
+        self.assertTrue(DiffMethod("API.java", class_name="SOAPAPI", method_a="login(String)", removed=True) in diffs,
                         msg="It should recognize removed methods")
-        self.assertTrue(DiffMethod("API.java", class_name="JSONAPI", method_b="recover", added=True) in diffs,
+        self.assertTrue(DiffMethod("API.java", class_name="JSONAPI", method_b="recover(String)", added=True) in diffs,
                         msg="It should recognize added methods")
 
         self.assertEqual(len(diffs), 9)
