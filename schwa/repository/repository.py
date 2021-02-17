@@ -211,24 +211,30 @@ class DiffLine(Diff):
 
     Attributes:
         file_name: String representing the path of the file that the line belongs.
+        class_name: String representing the name of the class that the line belongs (if any).
+        method_name: String representing the name of the method that the line belongs (if any).
         line_a: String with the name of version A of the Line.
         line_b: String with the name of version B of the Line.
     """
-    def __init__(self, file_name, line_a=None, line_b=None, renamed=False, modified=False, added=False, removed=False):
+    def __init__(self, file_name, class_name=None, method_name=None, line_a=None, line_b=None, renamed=False, modified=False, added=False, removed=False):
         self.file_name = file_name
+        self.class_name = class_name
+        self.method_name = method_name
         self.line_a = line_a
         self.line_b = line_b
         super().__init__(renamed, modified, added, removed)
 
     def __eq__(self, other):
         if isinstance(other, DiffLine):
-            return self.file_name == other.file_name and self.line_a == other.line_a and self.line_b == other.line_b and \
+            return self.file_name == other.file_name and self.class_name == other.class_name and \
+                self.method_name == other.method_name and self.line_a == other.line_a and self.line_b == other.line_b and \
                 super().__eq__(other)
         else:
             return False
 
     def __repr__(self):
-        return "%s method %s,%s in file %s" % (super().__repr__(), self.line_a, self.line_b, self.file_name)
+        return "%s line %s,%s in method %s in class %s and file %s" % (super().__repr__(),
+            self.line_a, self.line_b, self.method_name, self.class_name, self.file_name)
 
     def component_a(self):
         return self.line_a

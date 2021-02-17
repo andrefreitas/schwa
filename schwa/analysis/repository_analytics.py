@@ -237,77 +237,93 @@ class RepositoryAnalytics(Metrics):
 class FileAnalytics(Metrics):
     """ A class to represent File Analytics.
 
-    It stores child classes with a dict.
+    It stores child lines and classes with a dict.
 
     Attributes:
+        lines_analytics: A dict that maps lines names to LineAnalytics instances.
         classes_analytics: A dict that maps classes names to ClassAnalytics instances.
     """
 
     def __init__(self):
         super().__init__()
+        self.lines_analytics = {}
         self.classes_analytics = {}
 
     def compute_defect_probability(self):
         self.defect_prob = self.defect_probability()
+        for line_analytics in self.lines_analytics.values():
+            line_analytics.compute_defect_probability()
         for class_analytics in self.classes_analytics.values():
             class_analytics.compute_defect_probability()
-        # TODO should we also compute_defect_probability of lines?
 
     def to_dict(self, path):
         metrics_dict = super().to_dict()
         metrics_dict["type"] = "file"
         metrics_dict["path"] = path
         metrics_dict["name"] = strip_path(path)
-        metrics_dict["children"] = [c_metrics.to_dict(c_name) for c_name, c_metrics in self.classes_analytics.items()]
+        metrics_dict["children"] = [l_metrics.to_dict(l_name) for l_name, l_metrics in self.lines_analytics.items()]
+        metrics_dict["children"].extend([c_metrics.to_dict(c_name) for c_name, c_metrics in self.classes_analytics.items()])
         return metrics_dict
 
 
 class ClassAnalytics(Metrics):
     """ A class to represent Class Analytics.
 
-    It stores child methods and classes with a dict.
+    It stores child lines, methods, and classes with a dict.
 
     Attributes:
+        lines_analytics: A dict that maps lines names to LineAnalytics instances.
         methods_analytics: A dict that maps methods names to MethodAnalytics instances.
         classes_analytics: A dict that maps classes names to ClassAnalytics instances.
     """
 
     def __init__(self):
         super().__init__()
+        self.lines_analytics = {}
         self.methods_analytics = {}
         self.classes_analytics = {}
 
     def compute_defect_probability(self):
         self.defect_prob = self.defect_probability()
+        for line_analytics in self.lines_analytics.values():
+            line_analytics.compute_defect_probability()
         for method_analytics in self.methods_analytics.values():
             method_analytics.compute_defect_probability()
-        # TODO should we also compute_defect_probability of lines?
 
     def to_dict(self, name):
         metrics_dict = super().to_dict()
         metrics_dict["type"] = "class"
         metrics_dict["name"] = name
-        metrics_dict["children"] = [m_metrics.to_dict(m_name) for m_name, m_metrics in self.methods_analytics.items()]
+        metrics_dict["children"] = [l_metrics.to_dict(l_name) for l_name, l_metrics in self.lines_analytics.items()]
+        metrics_dict["children"].extend([m_metrics.to_dict(m_name) for m_name,
+                                                                       m_metrics in self.methods_analytics.items()])
         metrics_dict["children"].extend([c_metrics.to_dict(c_name) for c_name,
                                                                        c_metrics in self.classes_analytics.items()])
         return metrics_dict
 
 
 class MethodAnalytics(Metrics):
-    """ A class to represent Method Analytics
+    """ A class to represent Method Analytics.
 
-    It the leaf of analytics.
+    It stores child lines with a dict.
+
+    Attributes:
+        lines_analytics: A dict that maps lines names to LineAnalytics instances.
     """
     def __init__(self):
         super().__init__()
+        self.lines_analytics = {}
 
     def compute_defect_probability(self):
         self.defect_prob = self.defect_probability()
+        for line_analytics in self.lines_analytics.values():
+            line_analytics.compute_defect_probability()
 
     def to_dict(self, name):
         metrics_dict = super().to_dict()
         metrics_dict["type"] = "method"
         metrics_dict["name"] = name
+        metrics_dict["children"] = [l_metrics.to_dict(l_name) for l_name, l_metrics in self.lines_analytics.items()]
         return metrics_dict
 
 

@@ -230,7 +230,7 @@ class JavaParser(AbstractParser):
         lines_removed = lines_a - lines_b
         lines_modified = (lines_changed_a | lines_changed_b) - (lines_added | lines_removed)
         for l in lines_added:
-            diffs.append(DiffLine(file_name=path_b, class_b=l, added=True))
+            diffs.append(DiffLine(file_name=path_b, added=True))
         for l in lines_removed:
             diffs.append(DiffLine(file_name=path_b, line_a=l, removed=True))
         for l in lines_modified:
