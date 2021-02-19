@@ -35,6 +35,7 @@ class File:
         self.path = path
         self.classes = []
         self.functions = []
+        self.lines = []
 
     def get_components_hit(self, start_line, end_line):
         """Returns a set of components that got hit by the range.
@@ -136,6 +137,7 @@ class Class(Component):
     """
     def __init__(self, name, start_line, end_line):
         super().__init__(name, start_line, end_line)
+        self.lines = []
         self.methods = []
         self.classes = []
 
