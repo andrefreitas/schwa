@@ -279,7 +279,7 @@ class TestGitExtractor(unittest.TestCase):
 
         """ Extract """
         extractor = GitExtractor(self.temp_dir)
-        repository = extractor.extract(method_granularity=True, parallel=False)
+        repository = extractor.extract(granularity=Granularity.METHOD, parallel=False)
 
         """ Tests """
         self.assertEqual(len(repository.commits), 5, msg="It should only extract commits related to code")

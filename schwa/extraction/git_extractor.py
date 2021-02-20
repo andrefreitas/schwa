@@ -26,6 +26,7 @@ import git
 from .abstract_extractor import *
 from schwa.repository import *
 from schwa.parsing import JavaParser, ParsingError
+from schwa.repository import Granularity
 
 
 current_repo = None  # Curent repository wrapper
@@ -46,7 +47,7 @@ class GitExtractor(AbstractExtractor):
         super().__init__(path)
         self.repo = git.Repo(path, odbt=git.GitCmdObjectDB)
 
-    def extract(self, ignore_regex="^$", max_commits=None, method_granularity=False, line_granularity=False, parallel=True):
+    def extract(self, ignore_regex="^$", max_commits=None, granularity=Granularity.FILE, parallel=True):
         """ Extract a repository.
 
         It extracts commits from a repository that are important to the analysis. Therefore, only commits
@@ -56,8 +57,7 @@ class GitExtractor(AbstractExtractor):
         Args:
             ignore_regex: An optional string that is a regex pattern to ignore unnecessary files.
             max_commits: An optional int that is the maximum number of commits to extract since the last one.
-            method_granularity: An optional boolean that enables extraction until the method granularity.
-            line_granularity: An optional boolean that enables extraction until the line granularity.
+            granularity: An optional granularity level that enables extraction at certain levels.
             parallel: An optional boolean that enables multiprocessing extraction.
 
         Returns:
@@ -72,8 +72,7 @@ class GitExtractor(AbstractExtractor):
         except NotImplementedError:  # pragma: no cover
             cpus = 2   # pragma: no cover
         self.ignore_regex = ignore_regex
-        self.method_granularity = method_granularity
-        self.line_granularity = line_granularity
+        self.granularity = granularity
 
         # Extract commits
         iter_commits = self.repo.iter_commits(max_count=max_commits) if max_commits else self.repo.iter_commits()
@@ -147,7 +146,7 @@ class GitExtractor(AbstractExtractor):
 
     def get_new_file_diffs(self, blob):
         diffs_list = [DiffFile(file_b=blob.path, added=True)]
-        if can_parse_file(blob.path) and (self.method_granularity or self.line_granularity):
+        if can_parse_file(blob.path) and (self.granularity == Granularity.METHOD or self.granularity == Granularity.LINE):
             source = GitExtractor.get_source(blob)
             file_parsed = GitExtractor.parse(blob.path, source)
             if file_parsed:
@@ -155,7 +154,7 @@ class GitExtractor(AbstractExtractor):
                 classes_set = file_parsed.get_classes_set()
                 for c in classes_set:
                     diffs_list.append(DiffClass(file_name=blob.path, class_b=c, added=True))
-                    if self.line_granularity:
+                    if self.granularity == Granularity.LINE:
                         # Lines of a class
                         lines_set = c.get_lines_set()
                         for l in lines_set:
@@ -164,12 +163,12 @@ class GitExtractor(AbstractExtractor):
                 methods_set = file_parsed.get_functions_set()
                 for c, m in methods_set:
                     diffs_list.append(DiffMethod(file_name=blob.path, class_name=c, method_b=m, added=True))
-                    if self.line_granularity:
+                    if self.granularity == Granularity.LINE:
                         # Lines of a method
                         lines_set = m.get_lines_set()
                         for l in lines_set:
                             diffs_list.append(DiffLine(file_name=blob.path, class_name=c, method_name=m, line_b=l, added=True))
-        if self.line_granularity:
+        if self.granularity == Granularity.LINE:
             # Lines of a file (independent of whether Schwa is able to parse the file or not)
             lines_set = file_parsed.get_lines_set()
             for l in lines_set:
@@ -179,7 +178,7 @@ class GitExtractor(AbstractExtractor):
     def get_modified_file_diffs(self, blob_a, blob_b):
         diffs_list = [DiffFile(file_a=blob_a.path, file_b=blob_b.path, modified=True)]
         try:
-            if (can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.method_granularity) or self.line_granularity:
+            if (can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.granularity == Granularity.METHOD) or self.granularity == Granularity.LINE:
                 source_a = GitExtractor.get_source(blob_a)
                 source_b = GitExtractor.get_source(blob_b)
                 diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
@@ -190,7 +189,7 @@ class GitExtractor(AbstractExtractor):
     def get_renamed_file_diffs(self, blob_a, blob_b):
         diffs_list = [DiffFile(file_a=blob_a.path, file_b=blob_b.path, renamed=True)]
         try:
-            if (can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.method_granularity) or self.line_granularity:
+            if (can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.granularity == Granularity.METHOD) or self.granularity == Granularity.LINE:
                 source_a = GitExtractor.get_source(blob_a)
                 source_b = GitExtractor.get_source(blob_b)
                 diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))

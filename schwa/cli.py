@@ -27,6 +27,7 @@ import sys
 from schwa.web import Server
 from schwa import Schwa, SchwaConfigurationException
 from schwa.extraction import RepositoryExtractionException
+from schwa.repository import Granularity
 
 
 def main():
@@ -56,6 +57,7 @@ class CLI:
         parser.add_argument('repository', help="repository full path on local file system")
         parser.add_argument('--commits', help="maximum number of commits, since the last one, to be analyzed",
                             default=None, type=int)
+        parser.add_argument('--granularity', help="granularity level", default=Granularity.FILE, type=Granularity, choices=list(Granularity))
         parser.add_argument('-s', '--single', action='store_true', help="Runs in a single process instead of parallel")
         parser.add_argument('-j', '--json', action='store_true', help="Outputs results as JSON")
         parser.add_argument('-l', '--learn', action='store_true', help="Learn features weight")
@@ -93,7 +95,7 @@ class Controller:
         Views.wait()
         try:
             s = Schwa(args.repository)
-            analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
+            analytics = s.analyze(max_commits=args.commits, granularity=args.granularity, parallel=not args.single)
             Views.results(analytics)
         except (RepositoryExtractionException, SchwaConfigurationException) as e:
             Views.failed(e)
@@ -102,7 +104,7 @@ class Controller:
     @staticmethod
     def run_json(args):
         s = Schwa(args.repository)
-        analytics = s.analyze(max_commits=args.commits, parallel=not args.single)
+        analytics = s.analyze(max_commits=args.commits, granularity=args.granularity, parallel=not args.single)
         Views.results_json(analytics)
 
     @staticmethod
@@ -119,7 +121,7 @@ class Controller:
         Views.wait()
         try:
             s = Schwa(args.repository)
-            solution = s.learn(max_commits=args.commits, parallel=not args.single, bits=args.bits,
+            solution = s.learn(max_commits=args.commits, granularity=args.granularity, parallel=not args.single, bits=args.bits,
                                generations=args.generations)
             Views.learn(solution, args.repository, args.commits)
         except (RepositoryExtractionException, SchwaConfigurationException) as e:
