@@ -42,32 +42,33 @@ class SchwaAnalysis(AbstractAnalysis):
 
         analytics.update(ts=commit.timestamp, begin_ts=self.repository.begin_ts, current_ts=self.repository.last_ts,
                          is_bug_fixing=commit.is_bug_fixing(), author=commit.author)
+
     @staticmethod
     def get_analytics_from_tree(parent_analytics_dict, diff, instance):
         analytics = None
 
         if diff.added:
             analytics = instance
-            parent_analytics_dict[diff.component_b()] = analytics
+            parent_analytics_dict[str(diff.component_b())] = analytics
 
         elif diff.modified:
-            if diff.component_b() not in parent_analytics_dict:
+            if str(diff.component_b()) not in parent_analytics_dict:
                 analytics = instance
-                parent_analytics_dict[diff.component_b()] = analytics
+                parent_analytics_dict[str(diff.component_b())] = analytics
             else:
-                analytics = parent_analytics_dict[diff.component_b()]
+                analytics = parent_analytics_dict[str(diff.component_b())]
 
         elif diff.renamed:
-            if diff.component_a() not in parent_analytics_dict:
+            if str(diff.component_a()) not in parent_analytics_dict:
                 analytics = instance
-                parent_analytics_dict[diff.component_b()] = analytics
+                parent_analytics_dict[str(diff.component_b())] = analytics
             else:
-                analytics = parent_analytics_dict.pop(diff.component_a())
-                parent_analytics_dict[diff.component_b()] = analytics
+                analytics = parent_analytics_dict.pop(str(diff.component_a()))
+                parent_analytics_dict[str(diff.component_b())] = analytics
 
         elif diff.removed:
-            if diff.component_a() in parent_analytics_dict:
-                del parent_analytics_dict[diff.component_a()]
+            if str(diff.component_a()) in parent_analytics_dict:
+                del parent_analytics_dict[str(diff.component_a())]
             return False
 
         return analytics
@@ -98,7 +99,7 @@ class SchwaAnalysis(AbstractAnalysis):
             # Class Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
                 try:  # Parent component can be already removed
-                    parent_analytics_dict = analytics.files_analytics[diff.file_name].classes_analytics
+                    parent_analytics_dict = analytics.files_analytics[str(diff.parent)].classes_analytics
                     class_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, ClassAnalytics())
                     if class_analytics:
                         self.update_analytics(class_analytics, commit)
@@ -108,7 +109,7 @@ class SchwaAnalysis(AbstractAnalysis):
             # Method Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
                 try:  # Parent component can be already removed
-                    parent_analytics_dict = analytics.files_analytics[diff.file_name].classes_analytics[diff.class_name].methods_analytics
+                    parent_analytics_dict = analytics.files_analytics[str(diff.parent.parent)].classes_analytics[str(diff.parent)].methods_analytics
                     method_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, MethodAnalytics())
                     if method_analytics:
                         self.update_analytics(method_analytics, commit)
@@ -118,7 +119,7 @@ class SchwaAnalysis(AbstractAnalysis):
             # Line Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffLine)]:
                 try:  # Parent component can be already removed
-                    parent_analytics_dict = analytics.files_analytics[diff.file_name].lines_analytics
+                    parent_analytics_dict = analytics.files_analytics[str(diff.parent.parent)].lines_analytics
                     line_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, LineAnalytics())
                     if line_analytics:
                         self.update_analytics(line_analytics, commit)

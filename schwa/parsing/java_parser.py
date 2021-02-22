@@ -38,12 +38,13 @@ class JavaParser(AbstractParser):
     """
 
     @staticmethod
-    def parse(code):
+    def parse(path, code):
         """ Parses Java code.
 
         Uses a modified version of Plyj (line annotations) to parse Java.
 
         Args:
+            path: Path to the Java code.
             code: A string of Java code.
 
         Returns:
@@ -57,43 +58,34 @@ class JavaParser(AbstractParser):
             parser = plyj.Parser()
         tree = parser.parse_string(code)
         tree.body = tree.type_declarations
-        classes = JavaParser.parse_tree(tree)
-        _file = File()
-        _file.classes = classes
-        return _file
+        file = File(path)
+        JavaParser.parse_tree(file, tree)
+        return file
 
     @staticmethod
-    def parse_tree(tree):
+    def parse_tree(parent, tree):
         """ Parses a tree recursively.
 
         It iterates trough methods and parses nested classes and methods.
 
         Args:
             tree: A tree parsed from plyj.
-
-        Returns:
-            A list of Components, that can be nested Classes and Methods.
         """
 
         # Child classes
-        child_classes = []
         for declaration in tree.body:
             if isinstance(declaration, ClassDeclaration):
-                components = JavaParser.parse_tree(declaration)
-                child_classes.append(components)
+                JavaParser.parse_tree(parent, declaration)
 
-        # Is a class
+        # Is it a class?
         if isinstance(tree, ClassDeclaration):
-            class_component = Class(name=tree.name, start_line=tree.start_line, end_line=tree.end_line)
+            class_component = Class(name=tree.name, start_line=tree.start_line, end_line=tree.end_line, parent=parent)
             for declaration in tree.body:
                 if isinstance(declaration, (MethodDeclaration, ConstructorDeclaration)):
                     method = declaration
-                    method_component = Method(name=method.name, start_line=method.start_line, end_line=method.end_line)
-                    class_component.methods.append(method_component)
-            class_component.classes.extend(child_classes)
-            return class_component
-        else:
-            return child_classes
+                    method_component = Method(name=method.name, start_line=method.start_line, end_line=method.end_line, parent=class_component)
+
+        # TODO parse lines of code
 
 
     @staticmethod
@@ -177,8 +169,8 @@ class JavaParser(AbstractParser):
         path_a, source_a = file_a
         path_b, source_b = file_b
         try:
-            parsed_file_a = JavaParser.parse(source_a)
-            parsed_file_b = JavaParser.parse(source_b)
+            parsed_file_a = JavaParser.parse(path_a, source_a)
+            parsed_file_b = JavaParser.parse(path_b, source_b)
         except ParsingError:
             return diffs
         changed_a = set()
@@ -193,47 +185,47 @@ class JavaParser(AbstractParser):
                 changed_b = changed_b | parsed_file_b.get_components_hit(start_line, end_line)
 
         # Method granularity differences
-        methods_changed_a = set(c for c in changed_a if isinstance(c, tuple))
-        methods_changed_b = set(c for c in changed_b if isinstance(c, tuple))
-        methods_a = parsed_file_a.get_functions_set()
-        methods_b = parsed_file_b.get_functions_set()
+        methods_changed_a = set(c for c in changed_a if isinstance(c, Method))
+        methods_changed_b = set(c for c in changed_b if isinstance(c, Method))
+        methods_a = parsed_file_a.get_functions()
+        methods_b = parsed_file_b.get_functions()
         methods_added = methods_b - methods_a
         methods_removed = methods_a - methods_b
         methods_modified = (methods_changed_a | methods_changed_b) - (methods_added | methods_removed)
-        for c, m in methods_added:
-            diffs.append(DiffMethod(file_name=path_b, class_name=c, method_b=m, added=True))
-        for c, m in methods_removed:
-            diffs.append(DiffMethod(file_name=path_b, class_name=c, method_a=m, removed=True))
-        for c, m in methods_modified:
-            diffs.append(DiffMethod(file_name=path_b, class_name=c, method_a=m, method_b=m, modified=True))
+        for m in methods_added:
+            diffs.append(DiffMethod(parent=m.parent, method_b=m, added=True))
+        for m in methods_removed:
+            diffs.append(DiffMethod(parent=m.parent, method_a=m, removed=True))
+        for m in methods_modified:
+            diffs.append(DiffMethod(parent=m.parent, method_a=m, method_b=m, modified=True))
 
         # Class granularity differences
-        classes_changed_a = set(c for c in changed_a if isinstance(c, str))
-        classes_changed_b = set(c for c in changed_b if isinstance(c, str))
-        classes_a = parsed_file_a.get_classes_set()
-        classes_b = parsed_file_b.get_classes_set()
+        classes_changed_a = set(c for c in changed_a if isinstance(c, Class))
+        classes_changed_b = set(c for c in changed_b if isinstance(c, Class))
+        classes_a = parsed_file_a.get_classes()
+        classes_b = parsed_file_b.get_classes()
         classes_added = classes_b - classes_a
         classes_removed = classes_a - classes_b
         classes_modified = (classes_changed_a | classes_changed_b) - (classes_added | classes_removed)
         for c in classes_added:
-            diffs.append(DiffClass(file_name=path_b, class_b=c, added=True))
+            diffs.append(DiffClass(parent=c.parent, class_b=c, added=True))
         for c in classes_removed:
-            diffs.append(DiffClass(file_name=path_b, class_a=c, removed=True))
+            diffs.append(DiffClass(parent=c.parent, class_a=c, removed=True))
         for c in classes_modified:
-            diffs.append(DiffClass(file_name=path_b, class_a=c, class_b=c, modified=True))
+            diffs.append(DiffClass(parent=c.parent, class_a=c, class_b=c, modified=True))
 
-        lines_changed_a = set(c for c in changed_a if isinstance(c, str)) # FIXME might need to change the if condition
-        lines_changed_b = set(c for c in changed_b if isinstance(c, str))
-        lines_a = parsed_file_a.get_lines_set()
-        lines_b = parsed_file_b.get_lines_set()
+        lines_changed_a = set(c for c in changed_a if isinstance(c, Line))
+        lines_changed_b = set(c for c in changed_b if isinstance(c, Line))
+        lines_a = parsed_file_a.get_lines()
+        lines_b = parsed_file_b.get_lines()
         lines_added = lines_b - lines_a
         lines_removed = lines_a - lines_b
         lines_modified = (lines_changed_a | lines_changed_b) - (lines_added | lines_removed)
         for l in lines_added:
-            diffs.append(DiffLine(file_name=path_b, added=True))
+            diffs.append(DiffLine(parent=l.parent, line_b=l.start_line, added=True))
         for l in lines_removed:
-            diffs.append(DiffLine(file_name=path_b, line_a=l, removed=True))
+            diffs.append(DiffLine(parent=l.parent, line_a=l.start_line, removed=True))
         for l in lines_modified:
-            diffs.append(DiffLine(file_name=path_b, line_a=l, line_b=l, modified=True))
+            diffs.append(DiffLine(parent=l.parent, line_a=l.start_line, line_b=l.start_line, modified=True))
 
         return diffs

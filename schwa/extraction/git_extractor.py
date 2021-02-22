@@ -146,33 +146,35 @@ class GitExtractor(AbstractExtractor):
 
     def get_new_file_diffs(self, blob):
         diffs_list = [DiffFile(file_b=blob.path, added=True)]
-        if can_parse_file(blob.path) and (self.granularity == Granularity.METHOD or self.granularity == Granularity.LINE):
+        if can_parse_file(blob.path) and self.granularity != Granularity.FILE:
             source = GitExtractor.get_source(blob)
             file_parsed = GitExtractor.parse(blob.path, source)
             if file_parsed:
                 # Classes
-                classes_set = file_parsed.get_classes_set()
-                for c in classes_set:
-                    diffs_list.append(DiffClass(file_name=blob.path, class_b=c, added=True))
+                classes = file_parsed.get_classes()
+                for c in classes:
+                    diffs_list.append(DiffClass(parent=file_parsed, class_b=c, added=True))
                     if self.granularity == Granularity.LINE:
                         # Lines of a class
-                        lines_set = c.get_lines_set()
-                        for l in lines_set:
-                            diffs_list.append(DiffLine(file_name=blob.path, class_name=c, line_b=l, added=True))
+                        lines = c.get_lines()
+                        for l in lines:
+                            diffs_list.append(DiffLine(parent=c, line_b=l, added=True))
                 # Methods
-                methods_set = file_parsed.get_functions_set()
-                for c, m in methods_set:
-                    diffs_list.append(DiffMethod(file_name=blob.path, class_name=c, method_b=m, added=True))
-                    if self.granularity == Granularity.LINE:
-                        # Lines of a method
-                        lines_set = m.get_lines_set()
-                        for l in lines_set:
-                            diffs_list.append(DiffLine(file_name=blob.path, class_name=c, method_name=m, line_b=l, added=True))
+                if self.granularity == Granularity.METHOD or self.granularity == Granularity.LINE:
+                    methods = file_parsed.get_functions()
+                    for m in methods:
+                        diffs_list.append(DiffMethod(parent=file_parsed, method_b=m, added=True))
+                        if self.granularity == Granularity.LINE:
+                            # Lines of a method
+                            lines = m.get_lines()
+                            for l in lines:
+                                diffs_list.append(DiffLine(parent=m, line_b=l, added=True))
         if self.granularity == Granularity.LINE:
+            file = File(path=blob.path)
             # Lines of a file (independent of whether Schwa is able to parse the file or not)
-            lines_set = file_parsed.get_lines_set()
+            lines_set = file_parsed.get_lines()
             for l in lines_set:
-                diffs_list.append(DiffLine(file_name=blob.path, line_b=l, added=True))
+                diffs_list.append(DiffLine(parent=file, line_b=l, added=True))
         return diffs_list
 
     def get_modified_file_diffs(self, blob_a, blob_b):
@@ -213,7 +215,7 @@ class GitExtractor(AbstractExtractor):
     def parse(path, source):
         try:
             if "java" in path:
-                components = JavaParser.parse(source)
+                components = JavaParser.parse(path, source)
                 return components
         except ParsingError:
             pass

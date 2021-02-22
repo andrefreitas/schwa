@@ -74,20 +74,25 @@ class Diff:
     Represents a change in a certain component.
 
     Attributes:
+        version_a: Object representing the version A of the change.
+        version_b: Object representing the version B of the change.
         renamed: Optional boolean that indicates that the changes was a renaming.
         modified: Optional boolean that indicates that the change was a modification.
         added: Optional boolean that indicates that the change was an addition.
         removed: Optional boolean that indicates that the change was a removal.
     """
 
-    def __init__(self, renamed=False, modified=False, added=False, removed=False):
+    def __init__(self, version_a, version_b, renamed=False, modified=False, added=False, removed=False):
+        self.version_a = version_a
+        self.version_b = version_b
         self.renamed = renamed
         self.modified = modified
         self.added = added
         self.removed = removed
 
     def __eq__(self, other):
-        return self.renamed == other.renamed and self.modified == other.modified and self.added == other.added \
+        return self.version_a == other.version_a and self.version_b == other.version_b and \
+            self.renamed == other.renamed and self.modified == other.modified and self.added == other.added \
             and self.removed == other.removed
 
     def __repr__(self):
@@ -100,6 +105,12 @@ class Diff:
         elif self.removed:
             return "removed"
 
+    def component_a(self):
+        return self.version_a
+
+    def component_b(self):
+        return self.version_b
+
 
 class DiffFile(Diff):
     """ Diff of a File component.
@@ -107,29 +118,21 @@ class DiffFile(Diff):
     Represents a changed made to a File and it is a subclass of Diff.
 
     Attributes:
-        file_a: String representing the path of version A of the file.
-        file_b: String representing the path of version B of the file.
+        file_a: A File object representing the version A of the file.
+        file_b: A File object representing the version B of the file.
     """
 
     def __init__(self, file_a=None, file_b=None, renamed=False, modified=False, added=False, removed=False):
-        self.file_a = file_a
-        self.file_b = file_b
-        super().__init__(renamed, modified, added, removed)
+        super().__init__(file_a, file_b, renamed, modified, added, removed)
 
     def __eq__(self, other):
         if isinstance(other, DiffFile):
-            return self.file_a == other.file_a and self.file_b == other.file_b and super().__eq__(other)
+            return super().__eq__(other)
         else:
             return False
 
     def __repr__(self):
-        return "%s file %s,%s" % (super().__repr__(), self.file_a, self.file_b)
-
-    def component_a(self):
-        return self.file_a
-
-    def component_b(self):
-        return self.file_b
+        return "%s file %s,%s" % (super().__repr__(), self.version_a, self.version_b)
 
 
 class DiffClass(Diff):
@@ -138,33 +141,24 @@ class DiffClass(Diff):
     Represents a changed made to a Class and it is a subclass of Diff.
 
     Attributes:
-        file_name: String representing the path of the file that the class belongs.
-        class_a: String with the name of version A of the Class.
-        class_b: String with the name of version B of the Class.
+        parent: An object representing the parent that the class belongs, e.g., Class or File.
+        class_a: A Class object with version A of the class.
+        class_b: A Class object with version B of the class.
     """
 
-    def __init__(self, file_name, class_a=None, class_b=None, renamed=False, modified=False, added=False,
+    def __init__(self, parent, class_a=None, class_b=None, renamed=False, modified=False, added=False,
                  removed=False):
-        self.file_name = file_name
-        self.class_a = class_a
-        self.class_b = class_b
-        super().__init__(renamed, modified, added, removed)
+        super().__init__(class_a, class_b, renamed, modified, added, removed)
+        self.parent = parent
 
     def __eq__(self, other):
         if isinstance(other, DiffClass):
-            return self.file_name == other.file_name and self.class_a == other.class_a and self.class_b == other.class_b \
-                and super().__eq__(other)
+            return self.parent == other.parent and super().__eq__(other)
         else:
             return False
 
     def __repr__(self):
-        return "%s class %s,%s in file %s" % (super().__repr__(), self.class_a, self.class_b, self.file_name)
-
-    def component_a(self):
-        return self.class_a
-
-    def component_b(self):
-        return self.class_b
+        return "%s class %s,%s in %s" % (super().__repr__(), self.version_a, self.version_b, self.parent)
 
 
 class DiffMethod(Diff):
@@ -173,35 +167,22 @@ class DiffMethod(Diff):
     Represents a change made to a Method and it is a subclass of Diff.
 
     Attributes:
-        file_name: String representing the path of the file that the method belongs.
-        class_name: String representing the name of the class that the method belongs.
-        method_a: String with the name of version A of the Method.
-        method_b: String with the name of version B of the Method.
+        parent: An object representing the parent that the method belongs, e.g., Class or File.
+        method_a: A Method object with version A of the method.
+        methods_b: A Method object with version B of the method.
     """
-    def __init__(self, file_name, class_name, method_a=None, method_b=None, renamed=False, modified=False, added=False,
-                 removed=False):
-        self.file_name = file_name
-        self.class_name = class_name
-        self.method_a = method_a
-        self.method_b = method_b
-        super().__init__(renamed, modified, added, removed)
+    def __init__(self, parent, method_a=None, method_b=None, renamed=False, modified=False, added=False, removed=False):
+        super().__init__(method_a, method_b, renamed, modified, added, removed)
+        self.parent = parent
 
     def __eq__(self, other):
         if isinstance(other, DiffMethod):
-            return self.file_name == other.file_name and self.class_name == other.class_name and \
-                self.method_a == other.method_a and self.method_b == other.method_b and super().__eq__(other)
+            return self.parent == other.parent and super().__eq__(other)
         else:
             return False
 
     def __repr__(self):
-        return "%s method %s,%s in class %s and file %s" % (super().__repr__(), self.method_a, self.method_b,
-                                                            self.class_name, self.file_name)
-
-    def component_a(self):
-        return self.method_a
-
-    def component_b(self):
-        return self.method_b
+        return "%s method %s,%s in %s" % (super().__repr__(), self.version_a, self.version_b, self.parent)
 
 
 class DiffLine(Diff):
@@ -210,34 +191,19 @@ class DiffLine(Diff):
     Represents a change made to a Line and it is a subclass of Diff.
 
     Attributes:
-        file_name: String representing the path of the file that the line belongs.
-        class_name: String representing the name of the class that the line belongs (if any).
-        method_name: String representing the name of the method that the line belongs (if any).
-        line_a: String with the name of version A of the Line.
-        line_b: String with the name of version B of the Line.
+        parent: An object representing the parent that the line belongs, e.g., Method, Class, or File.
+        line_a: A Line object with version A of the line.
+        line_a: A Line object with version B of the line.
     """
-    def __init__(self, file_name, class_name=None, method_name=None, line_a=None, line_b=None, renamed=False, modified=False, added=False, removed=False):
-        self.file_name = file_name
-        self.class_name = class_name
-        self.method_name = method_name
-        self.line_a = line_a
-        self.line_b = line_b
-        super().__init__(renamed, modified, added, removed)
+    def __init__(self, parent=None, line_a=None, line_b=None, renamed=False, modified=False, added=False, removed=False):
+        super().__init__(line_a, line_b, renamed, modified, added, removed)
+        self.parent = parent
 
     def __eq__(self, other):
         if isinstance(other, DiffLine):
-            return self.file_name == other.file_name and self.class_name == other.class_name and \
-                self.method_name == other.method_name and self.line_a == other.line_a and self.line_b == other.line_b and \
-                super().__eq__(other)
+            return self.parent == other.parent and super().__eq__(other)
         else:
             return False
 
     def __repr__(self):
-        return "%s line %s,%s in method %s in class %s and file %s" % (super().__repr__(),
-            self.line_a, self.line_b, self.method_name, self.class_name, self.file_name)
-
-    def component_a(self):
-        return self.line_a
-
-    def component_b(self):
-        return self.line_b
+        return "%s line %s,%s in %s" % (super().__repr__(), self.version_a, self.version_b, self.parent)

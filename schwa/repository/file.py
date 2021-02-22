@@ -21,21 +21,44 @@
 """ A module for representing software components. """
 
 
-class File:
-    """A class for representing a file structure.
-
-    A file can contain classes or functions.
+class Component:
+    """A class for representing a generic Software component. A component can be
+    a Class, Method, Function, or a Line.
 
     Attributes:
-        path: An optional string that is the file path.
-        classes: An optional list of Class instances.
-        functions: An optional list of Function instances.
+        name: A string with the name of the component.
+        start_line: A number with the line number of the beginning of the component.
+        end_line: A number with the line number of the end of the component.
+        components: An optional list of Component instances.
     """
-    def __init__(self, path=None):
-        self.path = path
-        self.classes = []
-        self.functions = []
-        self.lines = []
+
+    def __init__(self, name, start_line, end_line, parent=None):
+        self.name = name
+        self.start_line = start_line
+        self.end_line = end_line
+        self.parent = parent
+        self.components = set()
+
+        if self.parent != None:
+            parent.components.add(self)
+
+    def __key(self):
+        # Same class, method/function, and line in different versions may have
+        # different line numbers and different children, thus, 'name' is the
+        # only property that could used
+        return (self.name)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.__key() == other.__key()
+
+    def __hash__(self):
+        return hash(self.__key())
+
+    def __repr__(self):
+        return "%s" % (self.name)
+
+    def range_hit(self, start_line, end_line):
+        return self.start_line <= start_line <= self.end_line or self.start_line <= end_line <= self.end_line
 
     def get_components_hit(self, start_line, end_line):
         """Returns a set of components that got hit by the range.
@@ -47,201 +70,146 @@ class File:
             end_line: A number with the end line.
 
         Returns:
-            A set of tuples that are classes, methods or functions. E.g. {(API), (API, main), (API.Core), (,login)}.
+            A set of classes, methods, functions, and/or lines in the given range.
         """
+        components_hit = set()
+        for component in self.components:
+            if component.range_hit(start_line, end_line):
+                components_hit.add(component)
+                # and all components within start_line and end_line
+                components_hit.update(component.get_components_hit(start_line, end_line))
+        return components_hit
 
-        components = set()
-        for _class in self.classes:
-            components = components | _class.get_components_hit(start_line, end_line)
-        for function in self.functions:
-            if function.range_hit(start_line, end_line):
-                components.add(("", function.name))
-        for line in self.lines:
-            if line.range_hit(start_line, end_line):
-                components.add(("", line.name))
-        return components
+    def get_classes(self):
+        raise Exception("get_classes function not implemented in the Component class")
 
-    def get_classes_set(self):
-        """ Get the set of classes names.
+    def get_methods(self):
+        raise Exception("get_methods function not implemented in the Component class")
+
+    def get_lines(self):
+        raise Exception("get_lines function not implemented in the Component class")
+
+
+class File(Component):
+    """A class for representing a file structure.
+
+    A file can contain different components, i.e., classes, functions, and lines.
+    It is a subclass of Component.
+
+    Attributes:
+        path: An optional string that is the file path.
+    """
+
+    def __init__(self, path=None):
+        super().__init__(path, 0, 0) # TODO get proper/real start_line and end_line
+        self.path = path
+
+    def get_classes(self):
+        """ Get the set of classes.
 
         It uses dot notation for nested classes.
 
         Returns:
-            A set of classes names. E.g. {(API), (API.Core)}
+            A set of classes.
         """
         classes = set()
-        for _class in self.classes:
-            classes = classes | _class.get_classes_set()
+        for component in self.components:
+            if isinstance(component, Class):
+                classes.update(component.get_classes())
         return classes
 
-    def get_functions_set(self):
-        """ Get the set of functions names.
+    def get_functions(self):
+        """ Get the set of functions.
 
         Remember that a class function is called method. Functions have an empty string
         for the parent class.
 
         Returns:
-            A set of functions names. E.g. {(, main), (API, login)}
+            A set of functions.
         """
         functions = set()
-        for function in self.functions:
-            functions.add(('', function.name))
-        for _class in self.classes:
-            functions = functions | _class.get_methods_set()
+        for component in self.components:
+            if isinstance(component, Function):
+                functions.add(component) # TODO what about functions in functions?
+            elif isinstance(component, Class):
+                functions.update(component.get_methods())
         return functions
 
-    def get_lines_set(self):
+    def get_lines(self):
         """ Get the set of lines of code.
 
         Returns:
-            A set of lines of code names. E.g. {(, main), (API, login)}
+            A set of lines of code.
         """
         lines = set()
-        for _line in self.lines:
-            lines.add(('', line.name))
-        for _class in self.classes:
-            lines = lines | _class.get_lines_set()
+        for component in self.components:
+            if isinstance(component, Line):
+                # lines in a file but not in a function, class, or class' method
+                lines.add(line)
+            else:
+                # lines in a function, class, or class' method
+                lines.update(component.get_lines())
         return lines
-
-
-class Component:
-    """A class for representing a generic Software component.
-
-    A component can be a Class, Method, Function, or a Line
-
-    Attributes:
-        name: A string with the name of the component.
-        start_line: A number with the line number of the beginning of the component.
-        end_line: A number with the line number of the end of the component.
-    """
-    def __init__(self, name, start_line, end_line):
-        self.name = name
-        self.start_line = start_line
-        self.end_line = end_line
-
-    def __repr__(self):
-        return "%s<%i,%i>" % (self.name, self.start_line, self.end_line)
-
-    def range_hit(self, start_line, end_line):
-        return self.start_line <= start_line <= self.end_line or self.start_line <= end_line <= self.end_line
 
 
 class Class(Component):
     """A class for representing a Class structure.
 
-    It can have nested classes and methods and it is a subclass of Component.
-
-    Attributes:
-        methods: A list of Methods instances.
-        classes: A list of Classes instances.
+    It can have nested classes and methods.
+    It is a subclass of Component.
     """
-    def __init__(self, name, start_line, end_line):
-        super().__init__(name, start_line, end_line)
-        self.lines = []
-        self.methods = []
-        self.classes = []
 
-    def get_components_hit(self, start_line, end_line, parent_classes=None):
-        """Returns a set of components that got hit by the range.
+    def __init__(self, name, start_line, end_line, parent):
+        super().__init__(name, start_line, end_line, parent)
 
-        By comparing the line numbers, obtains the affected components of start and end line.
-
-        Args:
-            start_line: A number with the start line.
-            end_line: A number with the end line.
-            parent_classes: A list of parent classes to use dot notation for nested classes.
-
-        Returns:
-            A set of tuples that are classes or methods. E.g. {(API), (API, main), (API.Core), (API.Core,login)}
-        """
-        if parent_classes is None:
-            parent_classes = []
-        components = set()
-        class_id = ".".join(parent_classes + [self.name])
-        if self.range_hit(start_line, end_line):
-            components.add(class_id)
-        components = components.union([(class_id, m.name) for m in self.methods if m.range_hit(start_line, end_line)])
-        for _class in self.classes:
-            components = components.union(_class.get_components_hit(start_line, end_line, parent_classes + [self.name]))
-        return components
-
-    def get_classes_set(self, parent_classes=None):
-        """ Get the set of classes names.
-
-        It uses dot notation for nested classes.
-
-        Args:
-            parent_classes: An optional list of parent classes names for dot notation.
-
-        Returns:
-            A set of classes names. E.g. {(API), (API.Core)}
-        """
-        if parent_classes is None:
-            parent_classes = []
+    def get_classes(self):
         classes = set()
-        class_id = ".".join(parent_classes + [self.name])
-        classes.add(class_id)
-        for _class in self.classes:
-            classes = classes | _class.get_classes_set(parent_classes + [self.name])
+        classes.add(self)
+        for component in self.components:
+            if isinstance(component, Class):
+                classes.update(component.get_classes())
         return classes
 
-    def get_methods_set(self, parent_classes=None):
-        """ Get the set of methods names.
-
-        It uses dot notation for nested classes.
-
-        Args:
-            parent_classes: An optional list of parent classes names for dot notation.
-
-        Returns:
-            A set of methods and parent classes names. E.g. {(API, main), (API.Core,login)}
-        """
-        if parent_classes is None:
-            parent_classes = []
+    def get_methods(self):
         methods = set()
-        class_id = ".".join(parent_classes + [self.name])
-        for method in self.methods:
-            methods.add((class_id, method.name))
-        for _class in self.classes:
-            methods = methods | _class.get_methods_set(parent_classes + [self.name])
+        for component in self.components:
+            if isinstance(component, Method):
+                methods.add(component)
         return methods
 
-    def get_lines_set(self, parent_classes=None):
-        """ Get the set of lines of code names.
-
-        It uses dot notation for nested classes.
-
-        Args:
-            parent_classes: An optional list of parent classes names for dot notation.
-
-        Returns:
-            A set of lines of code names. E.g. {(API, main), (API.Core,login)}
-        """
-        if parent_classes is None:
-            parent_classes = []
+    def get_lines(self):
         lines = set()
-        class_id = ".".join(parent_classes + [self.name])
-        for line in self.lines:
-            lines.add((class_id, line.name))
-        for _class in self.classes:
-            lines = lines | _class.get_lines_set(parent_classes + [self.name])
+        for component in self.components:
+            if isinstance(component, Line):
+                lines.add(component)
+            elif isinstance(component, (Method, Class)):
+                lines.update(component.get_lines())
         return lines
-
-
-class Method(Component):
-    """A Method is a member of a class.
-
-    Is basically the same thing as a function but with another meaning. It is
-    a subclass of Component.
-    """
 
 
 class Function(Component):
     """A Function component representation.
 
-    It isn't a member of a class but a top level function of a file.
+    It is not a member of a class but a top level function of a file.
     It is a subclass of Component.
+    """
 
+    def __init__(self, name, start_line, end_line, parent):
+        super().__init__(name, start_line, end_line, parent)
+
+    def get_lines(self):
+        lines = set()
+        for component in self.components:
+            if isinstance(component, Line):
+                lines.add(component)
+        return lines
+
+
+class Method(Function):
+    """A Method is a member of a class.
+
+    It is, basically, the same thing as a Function but with another meaning.
+    It is a subclass of Function.
     """
 
 
@@ -249,5 +217,7 @@ class Line(Component):
     """A Line component representation.
 
     It is a subclass of Component and represents a line of code.
-
     """
+
+    def __init__(self, name, start_line, end_line, parent):
+        super().__init__(name, start_line, end_line, parent)
