@@ -132,7 +132,7 @@ class File(Component):
         functions = set()
         for component in self.components:
             if isinstance(component, Function):
-                functions.add(component) # TODO what about functions in functions?
+                functions.update(component.get_functions())
             elif isinstance(component, Class):
                 functions.update(component.get_methods())
         return functions
@@ -176,7 +176,7 @@ class Class(Component):
         methods = set()
         for component in self.components:
             if isinstance(component, Method):
-                methods.add(component)
+                methods.update(component.get_methods())
         return methods
 
     def get_lines(self):
@@ -199,6 +199,14 @@ class Function(Component):
     def __init__(self, name, start_line, end_line, parent):
         super().__init__(name, start_line, end_line, parent)
 
+    def get_functions(self):
+        functions = set()
+        functions.add(self)
+        for component in self.components:
+            if isinstance(component, Function):
+                functions.update(component.get_functions())
+        return functions
+
     def get_lines(self):
         lines = set()
         for component in self.components:
@@ -214,6 +222,13 @@ class Method(Function):
     It is a subclass of Function.
     """
 
+    def get_methods(self):
+        methods = set()
+        methods.add(self)
+        for component in self.components:
+            if isinstance(component, Method):
+                methods.update(component.get_methods())
+        return methods
 
 class Line(Component):
     """A Line component representation.
