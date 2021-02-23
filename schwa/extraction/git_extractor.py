@@ -153,7 +153,7 @@ class GitExtractor(AbstractExtractor):
                 # Classes
                 classes = file_parsed.get_classes()
                 for c in classes:
-                    diffs_list.append(DiffClass(parent=file_parsed, class_b=c, added=True))
+                    diffs_list.append(DiffClass(parent=c.parent, class_b=c, added=True))
                     if self.granularity == Granularity.LINE:
                         # Lines of a class
                         lines = c.get_lines()
@@ -163,7 +163,7 @@ class GitExtractor(AbstractExtractor):
                 if self.granularity == Granularity.METHOD or self.granularity == Granularity.LINE:
                     methods = file_parsed.get_functions()
                     for m in methods:
-                        diffs_list.append(DiffMethod(parent=file_parsed, method_b=m, added=True))
+                        diffs_list.append(DiffMethod(parent=m.parent, method_b=m, added=True))
                         if self.granularity == Granularity.LINE:
                             # Lines of a method
                             lines = m.get_lines()
