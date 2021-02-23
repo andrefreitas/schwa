@@ -200,23 +200,23 @@ class RepositoryAnalytics(Metrics):
     It stores the files analytics using a dict.
 
     Attributes:
-        files_analytics: A dict that maps files paths to FileAnalytics instances.
+        analytics: A dict that maps files paths to FileAnalytics instances.
     """
 
     def __init__(self):
         super().__init__()
-        self.files_analytics = {}
+        self.analytics = {}
 
     def is_empty(self):
-        return len(self.files_analytics) == 0
+        return len(self.analytics) == 0
 
     def compute_defect_probability(self):
         """ Computes the defect probability for every child """
         self.defect_prob = self.defect_probability()
-        for file_analytics in self.files_analytics.values():
-            file_analytics.compute_defect_probability()
+        for analytics in self.analytics.values():
+            analytics.compute_defect_probability()
 
-    def to_dict(self):
+    def to_dict(self, name="root", type=None):
         """ Converts repository analytics to a dict.
 
         It traverses child analytics to convert and adds some information useful
@@ -226,120 +226,60 @@ class RepositoryAnalytics(Metrics):
             A dict of all the analytics collected from the repository.
         """
 
-        children = [f_metrics.to_dict(f_path) for f_path, f_metrics in self.files_analytics.items()]
-        metrics = {
-            "name": "root",
-            "children": children
-        }
-        return metrics
+        metrics_dict = super().to_dict()
+        metrics_dict["name"] = name
+        metrics_dict["type"] = type
+        metrics_dict["children"] = [metrics.to_dict(name) for name, metrics in self.analytics.items()]
+
+        return metrics_dict
 
 
-class FileAnalytics(Metrics):
+class FileAnalytics(RepositoryAnalytics):
     """ A class to represent File Analytics.
 
-    It stores child lines and classes with a dict.
-
-    Attributes:
-        lines_analytics: A dict that maps lines names to LineAnalytics instances.
-        classes_analytics: A dict that maps classes names to ClassAnalytics instances.
+    It may stores child lines and classes.
     """
 
     def __init__(self):
         super().__init__()
-        self.lines_analytics = {}
-        self.classes_analytics = {}
 
-    def compute_defect_probability(self):
-        self.defect_prob = self.defect_probability()
-        for line_analytics in self.lines_analytics.values():
-            line_analytics.compute_defect_probability()
-        for class_analytics in self.classes_analytics.values():
-            class_analytics.compute_defect_probability()
-
-    def to_dict(self, path):
-        metrics_dict = super().to_dict()
-        metrics_dict["type"] = "file"
-        metrics_dict["path"] = path
-        metrics_dict["name"] = strip_path(path)
-        metrics_dict["children"] = [l_metrics.to_dict(l_name) for l_name, l_metrics in self.lines_analytics.items()]
-        metrics_dict["children"].extend([c_metrics.to_dict(c_name) for c_name, c_metrics in self.classes_analytics.items()])
-        return metrics_dict
+    def to_dict(self, name):
+        return super().to_dict(name, "file") # TODO strip_path(path)
 
 
-class ClassAnalytics(Metrics):
+class ClassAnalytics(RepositoryAnalytics):
     """ A class to represent Class Analytics.
 
-    It stores child lines, methods, and classes with a dict.
-
-    Attributes:
-        lines_analytics: A dict that maps lines names to LineAnalytics instances.
-        methods_analytics: A dict that maps methods names to MethodAnalytics instances.
-        classes_analytics: A dict that maps classes names to ClassAnalytics instances.
+    It may stores child classes, methods, and lines.
     """
 
     def __init__(self):
         super().__init__()
-        self.lines_analytics = {}
-        self.methods_analytics = {}
-        self.classes_analytics = {}
-
-    def compute_defect_probability(self):
-        self.defect_prob = self.defect_probability()
-        for line_analytics in self.lines_analytics.values():
-            line_analytics.compute_defect_probability()
-        for method_analytics in self.methods_analytics.values():
-            method_analytics.compute_defect_probability()
 
     def to_dict(self, name):
-        metrics_dict = super().to_dict()
-        metrics_dict["type"] = "class"
-        metrics_dict["name"] = name
-        metrics_dict["children"] = [l_metrics.to_dict(l_name) for l_name, l_metrics in self.lines_analytics.items()]
-        metrics_dict["children"].extend([m_metrics.to_dict(m_name) for m_name,
-                                                                       m_metrics in self.methods_analytics.items()])
-        metrics_dict["children"].extend([c_metrics.to_dict(c_name) for c_name,
-                                                                       c_metrics in self.classes_analytics.items()])
-        return metrics_dict
+        return super().to_dict(name, "class")
 
 
-class MethodAnalytics(Metrics):
+class MethodAnalytics(RepositoryAnalytics):
     """ A class to represent Method Analytics.
 
-    It stores child lines with a dict.
-
-    Attributes:
-        lines_analytics: A dict that maps lines names to LineAnalytics instances.
+    It may stores child methods, and lines.
     """
+
     def __init__(self):
         super().__init__()
-        self.lines_analytics = {}
-
-    def compute_defect_probability(self):
-        self.defect_prob = self.defect_probability()
-        for line_analytics in self.lines_analytics.values():
-            line_analytics.compute_defect_probability()
 
     def to_dict(self, name):
-        metrics_dict = super().to_dict()
-        metrics_dict["type"] = "method"
-        metrics_dict["name"] = name
-        metrics_dict["children"] = [l_metrics.to_dict(l_name) for l_name, l_metrics in self.lines_analytics.items()]
-        return metrics_dict
+        return super().to_dict(name, "method")
 
 
-class LineAnalytics(Metrics):
+class LineAnalytics(RepositoryAnalytics):
     """ A class to represent Line Analytics
 
-    It the leaf of analytics.
+    It is the leaf of analytics.
     """
     def __init__(self):
         super().__init__()
 
-    def compute_defect_probability(self):
-        self.defect_prob = self.defect_probability()
-
     def to_dict(self, name):
-        metrics_dict = super().to_dict()
-        metrics_dict["type"] = "line"
-        metrics_dict["name"] = name
-        return metrics_dict
+        return super().to_dict(name, "line")
