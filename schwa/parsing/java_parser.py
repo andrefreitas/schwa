@@ -107,7 +107,7 @@ class JavaParser(AbstractParser):
         """
         def traverse(parent, tree):
             p_component = None
-            if isinstance(tree, jl.tree.ClassDeclaration):
+            if isinstance(tree, (jl.tree.InterfaceDeclaration, jl.tree.ClassDeclaration)):
                 p_component = Class(name=tree.name, start_line=tree.position.line, end_line=end_line(tree), parent=parent)
             elif isinstance(tree, (jl.tree.ConstructorDeclaration, jl.tree.MethodDeclaration)):
                 p_component = Method(name=tree.name + parse_arguments(tree.parameters), start_line=tree.position.line, end_line=end_line(tree), parent=parent)
