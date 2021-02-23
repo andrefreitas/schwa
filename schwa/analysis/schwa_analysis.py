@@ -99,6 +99,7 @@ class SchwaAnalysis(AbstractAnalysis):
             # Class Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
                 try:  # Parent component can be already removed
+                    # TODO what if a class belongs to another class? find the oldest ancestor
                     parent_analytics_dict = analytics.files_analytics[str(diff.parent)].classes_analytics
                     class_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, ClassAnalytics())
                     if class_analytics:
@@ -109,6 +110,8 @@ class SchwaAnalysis(AbstractAnalysis):
             # Method Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
                 try:  # Parent component can be already removed
+                    # TODO what if a class belongs to another class? find the oldest ancestor, aka file
+                    # TODO this also assumes a method can't be in a method
                     parent_analytics_dict = analytics.files_analytics[str(diff.parent.parent)].classes_analytics[str(diff.parent)].methods_analytics
                     method_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, MethodAnalytics())
                     if method_analytics:
@@ -119,7 +122,14 @@ class SchwaAnalysis(AbstractAnalysis):
             # Line Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffLine)]:
                 try:  # Parent component can be already removed
-                    parent_analytics_dict = analytics.files_analytics[str(diff.parent.parent)].lines_analytics
+                    # TODO this sounds incorrect. find the oldest ancestor, aka file
+                    parent_analytics_dict = None
+                    if isinstance(diff.parent, Method):
+                        parent_analytics_dict = analytics.files_analytics[str(diff.parent.parent.parent)].classes_analytics[str(diff.parent.parent)].methods_analytics[str(diff.parent)].lines_analytics
+                    elif isinstance(diff.parent, Class):
+                        parent_analytics_dict = analytics.files_analytics[str(diff.parent.parent)].classes_analytics[str(diff.parent)].lines_analytics
+                    elif isinstance(diff.parent, File):
+                        parent_analytics_dict = analytics.files_analytics[str(diff.parent)].lines_analytics
                     line_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, LineAnalytics())
                     if line_analytics:
                         self.update_analytics(line_analytics, commit)

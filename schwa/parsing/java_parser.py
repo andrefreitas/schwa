@@ -22,9 +22,8 @@
 
 import difflib
 import re
-import plyj.parser as plyj
-from plyj.model import *
-from plyj.parser import *
+import javalang as jl
+from javalang.parser import JavaSyntaxError
 from .abstract_parser import AbstractParser
 from schwa.repository import *
 
@@ -34,14 +33,12 @@ parser = None
 class JavaParser(AbstractParser):
     """ A Java Parser.
 
-    It parses Java Code using Plyj.
+    It parses Java Code using [javalang](https://github.com/c2nes/javalang).
     """
 
     @staticmethod
     def parse(path, code):
         """ Parses Java code.
-
-        Uses a modified version of Plyj (line annotations) to parse Java.
 
         Args:
             path: Path to the Java code.
@@ -51,41 +48,70 @@ class JavaParser(AbstractParser):
             A File instance.
 
         Raises:
-            ParsingError: When the source code is not valid Java.
+            JavaSyntaxError: When the source code is not valid Java.
         """
-        global parser
-        if not parser:
-            parser = plyj.Parser()
-        tree = parser.parse_string(code)
-        tree.body = tree.type_declarations
+        tree = jl.parse.parse(code)
         file = File(path)
         JavaParser.parse_tree(file, tree)
         return file
 
     @staticmethod
     def parse_tree(parent, tree):
-        """ Parses a tree recursively.
-
-        It iterates trough methods and parses nested classes and methods.
+        """ Finds end line of code of a node (e.g., a class, or method)
 
         Args:
-            tree: A tree parsed from plyj.
+            A node from javalang.
+
+        Returns:
+            End line number of a node.
         """
+        def end_line(node):
+            max_line = node.position.line
 
-        # Child classes
-        for declaration in tree.body:
-            if isinstance(declaration, ClassDeclaration):
-                JavaParser.parse_tree(parent, declaration)
+            def find_end_line(node):
+                for child in node.children:
+                    if isinstance(child, list) and (len(child) > 0):
+                        for item in child:
+                            find_end_line(item)
+                    else:
+                        if hasattr(child, '_position'):
+                            nonlocal max_line
+                            if child._position.line > max_line:
+                                max_line = child._position.line
+                                return
 
-        # Is it a class?
-        if isinstance(tree, ClassDeclaration):
-            class_component = Class(name=tree.name, start_line=tree.start_line, end_line=tree.end_line, parent=parent)
-            for declaration in tree.body:
-                if isinstance(declaration, (MethodDeclaration, ConstructorDeclaration)):
-                    method = declaration
-                    method_component = Method(name=method.name, start_line=method.start_line, end_line=method.end_line, parent=class_component)
+            find_end_line(node)
+            return max_line
 
-        # TODO parse lines of code
+        """ Parses a tree recursively.
+
+        It iterates trough classes and parses nested classes, methods, and lines.
+
+        Args:
+            parent: An object representing a Component (i.e., File, Class, or Method)
+            tree: A tree parsed from javalang.
+        """
+        def traverse(parent, tree):
+            p_component = None
+            if isinstance(tree, jl.tree.ClassDeclaration):
+                p_component = Class(name=tree.name, start_line=tree.position.line, end_line=end_line(tree), parent=parent)
+            elif isinstance(tree, (jl.tree.ConstructorDeclaration, jl.tree.MethodDeclaration)):
+                p_component = Method(name=tree.name, start_line=tree.position.line, end_line=end_line(tree), parent=parent)
+
+            # Line where Class or Method is defined
+            if isinstance(tree, (jl.tree.ClassDeclaration, jl.tree.ConstructorDeclaration, jl.tree.MethodDeclaration)):
+                line_component = Line(name=tree.position.line, start_line=tree.position.line, end_line=tree.position.line, parent=p_component)
+
+            for child in tree.children:
+                if isinstance(child, list) and (len(child) > 0):
+                    for item in child:
+                        traverse(p_component if p_component != None else parent, item)
+                else:
+                    if hasattr(child, '_position'):
+                        line_component = Line(name=child._position.line, start_line=child._position.line, end_line=child._position.line, parent=parent)
+                        return
+
+        traverse(parent, tree)
 
 
     @staticmethod
@@ -171,7 +197,7 @@ class JavaParser(AbstractParser):
         try:
             parsed_file_a = JavaParser.parse(path_a, source_a)
             parsed_file_b = JavaParser.parse(path_b, source_b)
-        except ParsingError:
+        except JavaSyntaxError:
             return diffs
         changed_a = set()
         changed_b = set()

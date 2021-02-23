@@ -25,7 +25,7 @@ import os
 import git
 from .abstract_extractor import *
 from schwa.repository import *
-from schwa.parsing import JavaParser, ParsingError
+from schwa.parsing import JavaParser, JavaSyntaxError
 from schwa.repository import Granularity
 
 
@@ -184,7 +184,7 @@ class GitExtractor(AbstractExtractor):
                 source_a = GitExtractor.get_source(blob_a)
                 source_b = GitExtractor.get_source(blob_b)
                 diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
-        except ParsingError:
+        except JavaSyntaxError:
             pass
         return diffs_list
 
@@ -195,7 +195,7 @@ class GitExtractor(AbstractExtractor):
                 source_a = GitExtractor.get_source(blob_a)
                 source_b = GitExtractor.get_source(blob_b)
                 diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
-        except ParsingError:
+        except JavaSyntaxError:
             pass
         return diffs_list
 
@@ -208,7 +208,7 @@ class GitExtractor(AbstractExtractor):
             stream = blob.data_stream.read()
             source = stream.decode("UTF-8")
         except AttributeError:
-            raise ParsingError
+            raise JavaSyntaxError
         return source
 
     @staticmethod
@@ -217,7 +217,7 @@ class GitExtractor(AbstractExtractor):
             if "java" in path:
                 components = JavaParser.parse(path, source)
                 return components
-        except ParsingError:
+        except JavaSyntaxError:
             pass
         return False
 
@@ -227,6 +227,6 @@ class GitExtractor(AbstractExtractor):
             if "java" in file_a[0]:
                 components_diff = JavaParser.diff(file_a, file_b)
                 return components_diff
-        except ParsingError:
+        except JavaSyntaxError:
             pass
         return []

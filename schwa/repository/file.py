@@ -20,6 +20,8 @@
 
 """ A module for representing software components. """
 
+import sys
+
 
 class Component:
     """A class for representing a generic Software component. A component can be
@@ -101,7 +103,7 @@ class File(Component):
     """
 
     def __init__(self, path=None):
-        super().__init__(path, 0, 0) # TODO get proper/real start_line and end_line
+        super().__init__(path, 1, sys.maxsize) # TODO get proper/real start_line and end_line
         self.path = path
 
     def get_classes(self):
