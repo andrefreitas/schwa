@@ -40,15 +40,15 @@ class Component:
         self.end_line = end_line
         self.parent = parent
         self.components = set()
-
         if self.parent != None:
             parent.components.add(self)
 
     def __key(self):
-        # Same class, method/function, and line in different versions may have
-        # different line numbers and different children, thus, 'name' is the
-        # only property that could used
-        return (self.name)
+        # A class or method/function in different versions but with the same
+        # 'path', may represent the same class or method/function
+        if self.parent == None:
+            return str(self.name)
+        return str(self.parent.__key()) + "." + str(self.name)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__key() == other.__key()
