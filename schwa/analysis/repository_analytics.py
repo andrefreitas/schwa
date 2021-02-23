@@ -226,9 +226,11 @@ class RepositoryAnalytics(Metrics):
             A dict of all the analytics collected from the repository.
         """
 
-        metrics_dict = super().to_dict()
+        metrics_dict = {}
+        if self.__class__.__name__ != RepositoryAnalytics.__name__:
+            metrics_dict = super().to_dict()
+            metrics_dict["type"] = type
         metrics_dict["name"] = name
-        metrics_dict["type"] = type
         metrics_dict["children"] = [metrics.to_dict(name) for name, metrics in self.analytics.items()]
 
         return metrics_dict
