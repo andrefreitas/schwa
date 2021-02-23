@@ -83,6 +83,20 @@ class JavaParser(AbstractParser):
             find_end_line(node)
             return max_line
 
+        def get_composed_arg_str(type):
+            if type.sub_type == None:
+                return type.name
+            return type.name + "." + get_composed_arg_str(type.sub_type)
+
+        def parse_arguments(args):
+            str_args = []
+            for arg in args:
+                if isinstance(arg.type, jl.tree.BasicType):
+                    str_args.append(arg.type.name)
+                elif isinstance(arg.type, jl.tree.ReferenceType):
+                    str_args.append(get_composed_arg_str(arg.type))
+            return "(" + ','.join(str_args) + ")"
+
         """ Parses a tree recursively.
 
         It iterates trough classes and parses nested classes, methods, and lines.
@@ -96,7 +110,7 @@ class JavaParser(AbstractParser):
             if isinstance(tree, jl.tree.ClassDeclaration):
                 p_component = Class(name=tree.name, start_line=tree.position.line, end_line=end_line(tree), parent=parent)
             elif isinstance(tree, (jl.tree.ConstructorDeclaration, jl.tree.MethodDeclaration)):
-                p_component = Method(name=tree.name, start_line=tree.position.line, end_line=end_line(tree), parent=parent)
+                p_component = Method(name=tree.name + parse_arguments(tree.parameters), start_line=tree.position.line, end_line=end_line(tree), parent=parent)
 
             # Line where Class or Method is defined
             if isinstance(tree, (jl.tree.ClassDeclaration, jl.tree.ConstructorDeclaration, jl.tree.MethodDeclaration)):
