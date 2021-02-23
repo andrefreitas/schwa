@@ -184,7 +184,7 @@ class Class(Component):
         for component in self.components:
             if isinstance(component, Line):
                 lines.add(component)
-            elif isinstance(component, (Method, Class)):
+            elif isinstance(component, Method):
                 lines.update(component.get_lines())
         return lines
 
