@@ -47,29 +47,29 @@ class SchwaAnalysis(AbstractAnalysis):
     def create_analytics_from_diff(self, parent_analytics, diff, commit, instance):
         if diff.added:
             # Create analytics
-            analytics = instance(str(diff.version_b), str(diff.version_b.name), parent_analytics)
+            analytics = instance(repr(diff.version_b), repr(diff.version_b.name), parent_analytics)
 
         elif diff.modified:
-            analytics = parent_analytics.get_analytics(str(diff.version_b))
+            analytics = parent_analytics.get_analytics(repr(diff.version_b))
             if analytics == None:
                 # Create new analytics
-                analytics = instance(str(diff.version_b), str(diff.version_b.name), parent_analytics)
+                analytics = instance(repr(diff.version_b), repr(diff.version_b.name), parent_analytics)
 
         elif diff.renamed:
-            analytics = parent_analytics.get_analytics(str(diff.version_a))
+            analytics = parent_analytics.get_analytics(repr(diff.version_a))
             child_analytics = set()
             if analytics != None:
                 # Before removing it, get version A's children
                 child_analytics = copy.deepcopy(analytics.analytics)
                 # Remove version_a
-                parent_analytics.del_analytics(str(diff.version_a))
+                parent_analytics.del_analytics(repr(diff.version_a))
             # Create new analytics and update it with children of version A (if any)
-            analytics = instance(str(diff.version_b), str(diff.version_b.name), parent_analytics)
+            analytics = instance(repr(diff.version_b), repr(diff.version_b.name), parent_analytics)
             analytics.analytics = child_analytics
 
         elif diff.removed:
             # Remove version_a
-            parent_analytics.del_analytics(str(diff.version_a))
+            parent_analytics.del_analytics(repr(diff.version_a))
 
         if not diff.removed:
             # Update analytics
@@ -97,7 +97,7 @@ class SchwaAnalysis(AbstractAnalysis):
 
             # Class Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
-                parent_analytics = analytics.get_analytics(str(diff.parent))
+                parent_analytics = analytics.get_analytics(repr(diff.parent))
                 if parent_analytics == None:
                     # Parent component (i.e., file or class) no longer exist,
                     # thus no analytics is required
@@ -106,7 +106,7 @@ class SchwaAnalysis(AbstractAnalysis):
 
             # Method Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
-                parent_analytics = analytics.get_analytics(str(diff.parent))
+                parent_analytics = analytics.get_analytics(repr(diff.parent))
                 if parent_analytics == None:
                     # Parent component (i.e., file, class, or method) no longer
                     # exist, thus no analytics is required
@@ -115,7 +115,7 @@ class SchwaAnalysis(AbstractAnalysis):
 
             # Line Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffLine)]:
-                parent_analytics = analytics.get_analytics(str(diff.parent))
+                parent_analytics = analytics.get_analytics(repr(diff.parent))
                 if parent_analytics == None:
                     # Parent component (i.e., file, class, or method) no longer
                     # exist, thus no analytics is required
