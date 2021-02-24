@@ -124,6 +124,7 @@ class DiffFile(Diff):
 
     def __init__(self, file_a=None, file_b=None, renamed=False, modified=False, added=False, removed=False):
         super().__init__(file_a, file_b, renamed, modified, added, removed)
+        self.parent = None
 
     def __eq__(self, other):
         if isinstance(other, DiffFile):
@@ -195,7 +196,7 @@ class DiffLine(Diff):
         line_a: A Line object with version A of the line.
         line_a: A Line object with version B of the line.
     """
-    def __init__(self, parent=None, line_a=None, line_b=None, renamed=False, modified=False, added=False, removed=False):
+    def __init__(self, parent, line_a=None, line_b=None, renamed=False, modified=False, added=False, removed=False):
         super().__init__(line_a, line_b, renamed, modified, added, removed)
         self.parent = parent
 
