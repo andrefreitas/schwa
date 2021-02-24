@@ -26,7 +26,6 @@ import git
 from .abstract_extractor import *
 from schwa.repository import *
 from schwa.parsing import JavaParser, JavaSyntaxError
-from schwa.repository import Granularity
 
 
 current_repo = None  # Curent repository wrapper
@@ -137,7 +136,8 @@ class GitExtractor(AbstractExtractor):
                         diffs_list.extend(self.get_renamed_file_diffs(diff.a_blob, diff.b_blob))
                     # Deleted file
                     elif diff.deleted_file:
-                        diffs_list.append(DiffFile(file_a=diff.a_blob.path, removed=True))
+                        file = File(path=diff.a_blob.path)
+                        diffs_list.append(DiffFile(file_a=file, removed=True))
                     # Modified file
                     else:
                         diffs_list.extend(self.get_modified_file_diffs(diff.a_blob, diff.b_blob))
@@ -145,7 +145,8 @@ class GitExtractor(AbstractExtractor):
         return Commit(_id, message, author, timestamp, diffs_list) if len(diffs_list) > 0 else None
 
     def get_new_file_diffs(self, blob):
-        diffs_list = [DiffFile(file_b=blob.path, added=True)]
+        file = File(path=blob.path)
+        diffs_list = [DiffFile(file_b=file, added=True)]
         if can_parse_file(blob.path) and self.granularity != Granularity.FILE:
             source = GitExtractor.get_source(blob)
             file_parsed = GitExtractor.parse(blob.path, source)
@@ -170,15 +171,16 @@ class GitExtractor(AbstractExtractor):
                             for l in lines:
                                 diffs_list.append(DiffLine(parent=m, line_b=l, added=True))
         if self.granularity == Granularity.LINE:
-            file = File(path=blob.path)
             # Lines of a file (independent of whether Schwa is able to parse the file or not)
-            lines_set = file_parsed.get_lines()
+            lines_set = file.get_lines()
             for l in lines_set:
                 diffs_list.append(DiffLine(parent=file, line_b=l, added=True))
         return diffs_list
 
     def get_modified_file_diffs(self, blob_a, blob_b):
-        diffs_list = [DiffFile(file_a=blob_a.path, file_b=blob_b.path, modified=True)]
+        file_a = File(path=blob_a.path)
+        file_b = File(path=blob_b.path)
+        diffs_list = [DiffFile(file_a=file_a, file_b=file_b, modified=True)]
         try:
             if (can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.granularity == Granularity.METHOD) or self.granularity == Granularity.LINE:
                 source_a = GitExtractor.get_source(blob_a)
@@ -189,7 +191,9 @@ class GitExtractor(AbstractExtractor):
         return diffs_list
 
     def get_renamed_file_diffs(self, blob_a, blob_b):
-        diffs_list = [DiffFile(file_a=blob_a.path, file_b=blob_b.path, renamed=True)]
+        file_a = File(path=blob_a.path)
+        file_b = File(path=blob_b.path)
+        diffs_list = [DiffFile(file_a=file_a, file_b=file_b, renamed=True)]
         try:
             if (can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.granularity == Granularity.METHOD) or self.granularity == Granularity.LINE:
                 source_a = GitExtractor.get_source(blob_a)
