@@ -108,6 +108,8 @@ class JavaParser(AbstractParser):
         def traverse(parent, tree):
             # FIXME add support to classes in classes
             # https://github.com/c2nes/javalang/issues/93
+            # as of today (24/Feb/2021) classes that are in classes are considered
+            # children of the Java file
 
             p_component = None
             if isinstance(tree, (jl.tree.InterfaceDeclaration, jl.tree.ClassDeclaration)):
