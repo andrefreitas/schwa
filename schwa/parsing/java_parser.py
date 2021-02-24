@@ -86,17 +86,19 @@ class JavaParser(AbstractParser):
     @staticmethod
     def end_line(node):
         max_line = node.position.line
+
         def find_end_line(node):
-            for child in node.children:
-                if isinstance(child, list) and (len(child) > 0):
-                    for item in child:
-                        find_end_line(item)
-                else:
-                    if hasattr(child, '_position'):
-                        nonlocal max_line
-                        if child._position.line > max_line:
-                            max_line = child._position.line
-                            return
+            if hasattr(node, 'children'):
+                for child in node.children:
+                    if isinstance(child, list) and (len(child) > 0):
+                        for item in child:
+                            find_end_line(item)
+                    else:
+                        if hasattr(child, '_position'):
+                            nonlocal max_line
+                            if child._position.line > max_line:
+                                max_line = child._position.line
+                                return
         find_end_line(node)
         return max_line
 
