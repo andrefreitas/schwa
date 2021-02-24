@@ -203,20 +203,47 @@ class RepositoryAnalytics(Metrics):
         analytics: A dict that maps files paths to FileAnalytics instances.
     """
 
-    def __init__(self):
+    def __init__(self, id="root", name="root", type="", parent=None):
         super().__init__()
-        self.analytics = {}
+        self.id = id
+        self.name = name
+        self.type = type
+        self.parent = parent
+        self.analytics = set()
+        if self.parent != None:
+            parent.analytics.add(self)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
     def is_empty(self):
         return len(self.analytics) == 0
 
+    def get_analytics(self, id):
+        if self.id == id:
+            return self
+        for analytics in self.analytics:
+            a = analytics.get_analytics(id)
+            if a != None:
+                return a
+        return None
+
+    def del_analytics(self, id):
+        for analytics in self.analytics:
+            if analytics.id == id:
+                self.analytics.remove(analytics)
+                return
+
     def compute_defect_probability(self):
         """ Computes the defect probability for every child """
         self.defect_prob = self.defect_probability()
-        for analytics in self.analytics.values():
+        for analytics in self.analytics:
             analytics.compute_defect_probability()
 
-    def to_dict(self, name="root", type=None):
+    def to_dict(self):
         """ Converts repository analytics to a dict.
 
         It traverses child analytics to convert and adds some information useful
@@ -226,27 +253,24 @@ class RepositoryAnalytics(Metrics):
             A dict of all the analytics collected from the repository.
         """
 
-        metrics_dict = {}
+        analytics_dict = {}
         if self.__class__.__name__ != RepositoryAnalytics.__name__:
-            metrics_dict = super().to_dict()
-            metrics_dict["type"] = type
-        metrics_dict["name"] = name
-        metrics_dict["children"] = [metrics.to_dict(name) for name, metrics in self.analytics.items()]
+            analytics_dict = super().to_dict()
+            analytics_dict["type"] = self.type
+        analytics_dict["name"] = self.name
+        analytics_dict["children"] = [analytics.to_dict() for analytics in self.analytics]
 
-        return metrics_dict
+        return analytics_dict
 
 
 class FileAnalytics(RepositoryAnalytics):
     """ A class to represent File Analytics.
 
-    It may stores child lines and classes.
+    It may stores child classes, functions, and lines.
     """
 
-    def __init__(self):
-        super().__init__()
-
-    def to_dict(self, name):
-        return super().to_dict(name, "file") # TODO strip_path(path)
+    def __init__(self, id, name, parent):
+        super().__init__(id=id, name=name, type="file", parent=parent)
 
 
 class ClassAnalytics(RepositoryAnalytics):
@@ -255,11 +279,8 @@ class ClassAnalytics(RepositoryAnalytics):
     It may stores child classes, methods, and lines.
     """
 
-    def __init__(self):
-        super().__init__()
-
-    def to_dict(self, name):
-        return super().to_dict(name, "class")
+    def __init__(self, id, name, parent):
+        super().__init__(id=id, name=name, type="class", parent=parent)
 
 
 class MethodAnalytics(RepositoryAnalytics):
@@ -268,11 +289,8 @@ class MethodAnalytics(RepositoryAnalytics):
     It may stores child methods, and lines.
     """
 
-    def __init__(self):
-        super().__init__()
-
-    def to_dict(self, name):
-        return super().to_dict(name, "method")
+    def __init__(self, id, name, parent):
+        super().__init__(id=id, name=name, type="method", parent=parent)
 
 
 class LineAnalytics(RepositoryAnalytics):
@@ -280,8 +298,5 @@ class LineAnalytics(RepositoryAnalytics):
 
     It is the leaf of analytics.
     """
-    def __init__(self):
-        super().__init__()
-
-    def to_dict(self, name):
-        return super().to_dict(name, "line")
+    def __init__(self, id, name, parent):
+        super().__init__(id=id, name=name, type="line", parent=parent)

@@ -43,35 +43,36 @@ class SchwaAnalysis(AbstractAnalysis):
         analytics.update(ts=commit.timestamp, begin_ts=self.repository.begin_ts, current_ts=self.repository.last_ts,
                          is_bug_fixing=commit.is_bug_fixing(), author=commit.author)
 
-    @staticmethod
-    def get_analytics_from_tree(parent_analytics_dict, diff, instance):
-        analytics = None
-
+    def create_analytics_from_diff(self, parent_analytics, diff, commit, instance):
         if diff.added:
-            analytics = instance
-            parent_analytics_dict[str(diff.component_b())] = analytics
+            # Create analytics
+            analytics = instance(str(diff.version_b), str(diff.version_b.name), parent_analytics)
 
         elif diff.modified:
-            if str(diff.component_b()) not in parent_analytics_dict:
-                analytics = instance
-                parent_analytics_dict[str(diff.component_b())] = analytics
-            else:
-                analytics = parent_analytics_dict[str(diff.component_b())]
+            analytics = parent_analytics.get_analytics(str(diff.version_b))
+            if analytics == None:
+                # Create new analytics
+                analytics = instance(str(diff.version_b), str(diff.version_b.name), parent_analytics)
 
         elif diff.renamed:
-            if str(diff.component_a()) not in parent_analytics_dict:
-                analytics = instance
-                parent_analytics_dict[str(diff.component_b())] = analytics
-            else:
-                analytics = parent_analytics_dict.pop(str(diff.component_a()))
-                parent_analytics_dict[str(diff.component_b())] = analytics
+            analytics = parent_analytics.get_analytics(str(diff.version_a))
+            child_analytics = set()
+            if analytics != None:
+                # Before removing it, get version A's children
+                child_analytics = copy.deepcopy(analytics.analytics)
+                # Remove version_a
+                parent_analytics.del_analytics(str(diff.version_a))
+            # Create new analytics and update it with children of version A (if any)
+            analytics = instance(str(diff.version_b), str(diff.version_b.name), parent_analytics)
+            analytics.analytics = child_analytics
 
         elif diff.removed:
-            if str(diff.component_a()) in parent_analytics_dict:
-                del parent_analytics_dict[str(diff.component_a())]
-            return False
+            # Remove version_a
+            parent_analytics.del_analytics(str(diff.version_a))
 
-        return analytics
+        if not diff.removed:
+            # Update analytics
+            self.update_analytics(analytics, commit)
 
     def analyze(self):
         """ Analyzes a repository and creates analytics.
@@ -90,50 +91,35 @@ class SchwaAnalysis(AbstractAnalysis):
             self.update_analytics(analytics, commit)
 
             # File Granularity
-            parent_analytics_dict = analytics.analytics
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
-                file_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, FileAnalytics())
-                if file_analytics:
-                    self.update_analytics(file_analytics, commit)
+                self.create_analytics_from_diff(analytics, diff, commit, FileAnalytics)
 
             # Class Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
-                try:  # Parent component can be already removed
-                    parent_analytics_dict = analytics.analytics[str(diff.parent)].analytics
-                    class_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, ClassAnalytics())
-                    if class_analytics:
-                        self.update_analytics(class_analytics, commit)
-                except KeyError:
+                parent_analytics = analytics.get_analytics(str(diff.parent))
+                if parent_analytics == None:
+                    # Parent component (i.e., file or class) no longer exist,
+                    # thus no analytics is required
                     continue
+                self.create_analytics_from_diff(parent_analytics, diff, commit, ClassAnalytics)
 
             # Method Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
-                try:  # Parent component can be already removed
-                    # TODO what if a class belongs to another class? find the oldest ancestor, aka file
-                    # TODO this also assumes a method can't be in a method
-                    parent_analytics_dict = analytics.analytics[str(diff.parent.parent)].analytics[str(diff.parent)].analytics
-                    method_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, MethodAnalytics())
-                    if method_analytics:
-                        self.update_analytics(method_analytics, commit)
-                except KeyError:
+                parent_analytics = analytics.get_analytics(str(diff.parent))
+                if parent_analytics == None:
+                    # Parent component (i.e., file, class, or method) no longer
+                    # exist, thus no analytics is required
                     continue
+                self.create_analytics_from_diff(parent_analytics, diff, commit, MethodAnalytics)
 
             # Line Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffLine)]:
-                try:  # Parent component can be already removed
-                    # TODO this sounds incorrect. find the oldest ancestor, aka file
-                    parent_analytics_dict = None
-                    if isinstance(diff.parent, Method):
-                        parent_analytics_dict = analytics.analytics[str(diff.parent.parent.parent)].analytics[str(diff.parent.parent)].analytics[str(diff.parent)].analytics
-                    elif isinstance(diff.parent, Class):
-                        parent_analytics_dict = analytics.analytics[str(diff.parent.parent)].analytics[str(diff.parent)].analytics
-                    elif isinstance(diff.parent, File):
-                        parent_analytics_dict = analytics.analytics[str(diff.parent)].analytics
-                    line_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, LineAnalytics())
-                    if line_analytics:
-                        self.update_analytics(line_analytics, commit)
-                except KeyError:
+                parent_analytics = analytics.get_analytics(str(diff.parent))
+                if parent_analytics == None:
+                    # Parent component (i.e., file, class, or method) no longer
+                    # exist, thus no analytics is required
                     continue
+                self.create_analytics_from_diff(parent_analytics, diff, commit, LineAnalytics)
 
         analytics.compute_defect_probability()
 
