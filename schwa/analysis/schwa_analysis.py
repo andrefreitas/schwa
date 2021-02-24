@@ -20,6 +20,7 @@
 
 """ Module for the analysis algorithm. """
 
+import copy
 import re
 from schwa.analysis import *
 from schwa.repository import *
