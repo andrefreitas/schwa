@@ -52,89 +52,112 @@ class JavaParser(AbstractParser):
         """
         tree = jl.parse.parse(code)
         file = File(path)
-        JavaParser.parse_tree(granularity, file, tree)
+        JavaParser.traverse_for_classes(granularity, file, tree)
         return file
 
     @staticmethod
-    def parse_tree(granularity, parent, tree):
-        """ Finds end line of code of a node (e.g., a class, or method)
+    def traverse_for_lines(granularity, parent, node):
 
-        Args:
-            A node from javalang.
-
-        Returns:
-            End line number of a node.
-        """
-        def end_line(node):
-            max_line = node.position.line
-
-            def find_end_line(node):
-                for child in node.children:
-                    if isinstance(child, list) and (len(child) > 0):
-                        for item in child:
-                            find_end_line(item)
-                    else:
-                        if hasattr(child, '_position'):
-                            nonlocal max_line
-                            if child._position.line > max_line:
-                                max_line = child._position.line
-                                return
-
-            find_end_line(node)
-            return max_line
-
-        def get_composed_arg_str(type):
-            if type.sub_type == None:
-                return type.name
-            return type.name + "." + get_composed_arg_str(type.sub_type)
-
-        def parse_arguments(args):
-            str_args = []
-            for arg in args:
-                if isinstance(arg.type, jl.tree.BasicType):
-                    str_args.append(arg.type.name)
-                elif isinstance(arg.type, jl.tree.ReferenceType):
-                    str_args.append(get_composed_arg_str(arg.type))
-            return "(" + ','.join(str_args) + ")"
-
-        """ Parses a tree recursively.
-
-        It iterates trough classes and parses nested classes, methods, and lines.
-
-        Args:
-            parent: An object representing a Component (i.e., File, Class, or Method)
-            tree: A tree parsed from javalang.
-        """
-        def traverse(parent, tree):
-            # FIXME add support to classes in classes
-            # https://github.com/c2nes/javalang/issues/93
-            # as of today (24/Feb/2021) classes that are in classes are considered
-            # children of the Java file
-
-            p_component = None
-            if isinstance(tree, (jl.tree.InterfaceDeclaration, jl.tree.ClassDeclaration)):
-                if granularity == Granularity.CLASS or granularity == Granularity.METHOD or granularity == Granularity.LINE:
-                    p_component = Class(name=tree.name, start_line=tree.position.line, end_line=end_line(tree), parent=parent)
-            elif isinstance(tree, (jl.tree.ConstructorDeclaration, jl.tree.MethodDeclaration)):
-                if granularity == Granularity.METHOD or granularity == Granularity.LINE:
-                    p_component = Method(name=tree.name + parse_arguments(tree.parameters), start_line=tree.position.line, end_line=end_line(tree), parent=parent)
-
-            # Line where Class or Method is defined
-            if isinstance(tree, (jl.tree.ClassDeclaration, jl.tree.ConstructorDeclaration, jl.tree.MethodDeclaration)):
-                if granularity == Granularity.LINE:
-                    line_component = Line(name=tree.position.line, start_line=tree.position.line, end_line=tree.position.line, parent=p_component)
-
-            for child in tree.children:
+        if hasattr(node, 'children'):
+            for child in node.children:
                 if isinstance(child, list) and (len(child) > 0):
                     for item in child:
-                        traverse(p_component if p_component != None else parent, item)
+                        JavaParser.traverse_for_lines(granularity, parent, item)
                 else:
                     if hasattr(child, '_position'):
-                        if granularity == Granularity.LINE:
-                            line_component = Line(name=child._position.line, start_line=child._position.line, end_line=child._position.line, parent=parent)
-                        return
+                        Line(name=child._position.line, start_line=child._position.line, end_line=child._position.line, parent=parent)
 
-        traverse(parent, tree)
+    @staticmethod
+    def get_composed_arg_str(type):
+        if type.sub_type == None:
+            return type.name
+        return type.name + "." + JavaParser.get_composed_arg_str(type.sub_type)
+
+    @staticmethod
+    def parse_arguments(args):
+        str_args = []
+        for arg in args:
+            if isinstance(arg.type, jl.tree.BasicType):
+                str_args.append(arg.type.name)
+            elif isinstance(arg.type, jl.tree.ReferenceType):
+                str_args.append(JavaParser.get_composed_arg_str(arg.type))
+        return "(" + ','.join(str_args) + ")"
+
+    @staticmethod
+    def end_line(node):
+        max_line = node.position.line
+        def find_end_line(node):
+            for child in node.children:
+                if isinstance(child, list) and (len(child) > 0):
+                    for item in child:
+                        find_end_line(item)
+                else:
+                    if hasattr(child, '_position'):
+                        nonlocal max_line
+                        if child._position.line > max_line:
+                            max_line = child._position.line
+                            return
+        find_end_line(node)
+        return max_line
+
+    @staticmethod
+    def traverse_for_methods(granularity, parent, node):
+
+        p_component = parent
+
+        if isinstance(node, jl.tree.ConstructorDeclaration) or isinstance(node, jl.tree.MethodDeclaration):
+            p_component = Method(name=node.name + str(JavaParser.parse_arguments(node.parameters)),
+                start_line=node.position.line, end_line=JavaParser.end_line(node), parent=parent)
+
+            if granularity == Granularity.LINE:
+                # Method's declaration line
+                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.start_line, parent=p_component)
+                # Traverse lines of this method
+                JavaParser.traverse_for_lines(granularity, p_component, node)
+
+        elif isinstance(node, jl.tree.ClassDeclaration):
+            if parent.name != node.name:
+                # Do not go any futher as any further method is a method of an
+                # inner/anonymous class
+                return
+
+        elif isinstance(node, jl.tree.ClassCreator): # Anonymous classes
+            JavaParser.traverse_for_classes(granularity, p_component, node)
+
+        if hasattr(node, 'children'):
+            for child in node.children:
+                if isinstance(child, list) and (len(child) > 0):
+                    for item in child:
+                        JavaParser.traverse_for_methods(granularity, p_component, item)
+                else:
+                    JavaParser.traverse_for_methods(granularity, p_component, child)
+
+    @staticmethod
+    def traverse_for_classes(granularity, parent, node):
+
+        if granularity == Granularity.FILE:
+            return
+
+        p_component = parent
+
+        if isinstance(node, (jl.tree.InterfaceDeclaration, jl.tree.ClassDeclaration)):
+            p_component = Class(name=node.name, start_line=node.position.line, end_line=JavaParser.end_line(node), parent=parent)
+
+            if granularity == Granularity.LINE:
+                # Class's declaration line
+                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.start_line, parent=p_component)
+
+            if granularity == Granularity.METHOD or granularity == Granularity.LINE:
+                # Traverse methods of this class
+                JavaParser.traverse_for_methods(granularity, p_component, node)
+
+        if hasattr(node, 'children'):
+            for child in node.children:
+                if isinstance(child, list) and (len(child) > 0):
+                    for item in child:
+                        JavaParser.traverse_for_classes(granularity, p_component, item)
+                else:
+                    JavaParser.traverse_for_classes(granularity, p_component, child)
 
 
     @staticmethod
