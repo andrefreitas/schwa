@@ -37,7 +37,7 @@ class JavaParser(AbstractParser):
     """
 
     @staticmethod
-    def parse(path, code):
+    def parse(granularity, path, code):
         """ Parses Java code.
 
         Args:
@@ -52,11 +52,11 @@ class JavaParser(AbstractParser):
         """
         tree = jl.parse.parse(code)
         file = File(path)
-        JavaParser.parse_tree(file, tree)
+        JavaParser.parse_tree(granularity, file, tree)
         return file
 
     @staticmethod
-    def parse_tree(parent, tree):
+    def parse_tree(granularity, parent, tree):
         """ Finds end line of code of a node (e.g., a class, or method)
 
         Args:
@@ -108,13 +108,16 @@ class JavaParser(AbstractParser):
         def traverse(parent, tree):
             p_component = None
             if isinstance(tree, (jl.tree.InterfaceDeclaration, jl.tree.ClassDeclaration)):
-                p_component = Class(name=tree.name, start_line=tree.position.line, end_line=end_line(tree), parent=parent)
+                if granularity == Granularity.CLASS or granularity == Granularity.METHOD or granularity == Granularity.LINE:
+                    p_component = Class(name=tree.name, start_line=tree.position.line, end_line=end_line(tree), parent=parent)
             elif isinstance(tree, (jl.tree.ConstructorDeclaration, jl.tree.MethodDeclaration)):
-                p_component = Method(name=tree.name + parse_arguments(tree.parameters), start_line=tree.position.line, end_line=end_line(tree), parent=parent)
+                if granularity == Granularity.METHOD or granularity == Granularity.LINE:
+                    p_component = Method(name=tree.name + parse_arguments(tree.parameters), start_line=tree.position.line, end_line=end_line(tree), parent=parent)
 
             # Line where Class or Method is defined
             if isinstance(tree, (jl.tree.ClassDeclaration, jl.tree.ConstructorDeclaration, jl.tree.MethodDeclaration)):
-                line_component = Line(name=tree.position.line, start_line=tree.position.line, end_line=tree.position.line, parent=p_component)
+                if granularity == Granularity.LINE:
+                    line_component = Line(name=tree.position.line, start_line=tree.position.line, end_line=tree.position.line, parent=p_component)
 
             for child in tree.children:
                 if isinstance(child, list) and (len(child) > 0):
@@ -122,7 +125,8 @@ class JavaParser(AbstractParser):
                         traverse(p_component if p_component != None else parent, item)
                 else:
                     if hasattr(child, '_position'):
-                        line_component = Line(name=child._position.line, start_line=child._position.line, end_line=child._position.line, parent=parent)
+                        if granularity == Granularity.LINE:
+                            line_component = Line(name=child._position.line, start_line=child._position.line, end_line=child._position.line, parent=parent)
                         return
 
         traverse(parent, tree)
@@ -193,7 +197,7 @@ class JavaParser(AbstractParser):
         return changed_sequences
 
     @staticmethod
-    def diff(file_a, file_b):
+    def diff(granularity, file_a, file_b):
         """ Computes diffs between 2 version of a file.
 
         By giving files paths and source code, outputs Diffs instances.
@@ -209,8 +213,8 @@ class JavaParser(AbstractParser):
         path_a, source_a = file_a
         path_b, source_b = file_b
         try:
-            parsed_file_a = JavaParser.parse(path_a, source_a)
-            parsed_file_b = JavaParser.parse(path_b, source_b)
+            parsed_file_a = JavaParser.parse(granularity, path_a, source_a)
+            parsed_file_b = JavaParser.parse(granularity, path_b, source_b)
         except JavaSyntaxError:
             return diffs
         changed_a = set()

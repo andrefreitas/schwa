@@ -148,8 +148,8 @@ class GitExtractor(AbstractExtractor):
         file = File(path=blob.path)
         diffs_list = [DiffFile(file_b=file, added=True)]
         if can_parse_file(blob.path) and self.granularity != Granularity.FILE:
-            source = GitExtractor.get_source(blob)
-            file_parsed = GitExtractor.parse(blob.path, source)
+            source = self.get_source(blob)
+            file_parsed = self.parse(blob.path, source)
             if file_parsed:
                 # Classes
                 classes = file_parsed.get_classes()
@@ -182,10 +182,10 @@ class GitExtractor(AbstractExtractor):
         file_b = File(path=blob_b.path)
         diffs_list = [DiffFile(file_a=file_a, file_b=file_b, modified=True)]
         try:
-            if (can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.granularity == Granularity.METHOD) or self.granularity == Granularity.LINE:
-                source_a = GitExtractor.get_source(blob_a)
-                source_b = GitExtractor.get_source(blob_b)
-                diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
+            if can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.granularity != Granularity.FILE:
+                source_a = self.get_source(blob_a)
+                source_b = self.get_source(blob_b)
+                diffs_list.extend(self.diff((blob_a.path, source_a), (blob_b.path, source_b)))
         except JavaSyntaxError:
             pass
         return diffs_list
@@ -195,10 +195,10 @@ class GitExtractor(AbstractExtractor):
         file_b = File(path=blob_b.path)
         diffs_list = [DiffFile(file_a=file_a, file_b=file_b, renamed=True)]
         try:
-            if (can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.granularity == Granularity.METHOD) or self.granularity == Granularity.LINE:
-                source_a = GitExtractor.get_source(blob_a)
-                source_b = GitExtractor.get_source(blob_b)
-                diffs_list.extend(GitExtractor.diff((blob_a.path, source_a), (blob_b.path, source_b)))
+            if can_parse_file(blob_a.path) and can_parse_file(blob_b.path) and self.granularity != Granularity.FILE:
+                source_a = self.get_source(blob_a)
+                source_b = self.get_source(blob_b)
+                diffs_list.extend(self.diff((blob_a.path, source_a), (blob_b.path, source_b)))
         except JavaSyntaxError:
             pass
         return diffs_list
@@ -206,8 +206,7 @@ class GitExtractor(AbstractExtractor):
     def is_good_blob(self, blob):
         return blob and is_code_file(blob.path) and not re.search(self.ignore_regex, blob.path)
 
-    @staticmethod
-    def get_source(blob):
+    def get_source(self, blob):
         try:
             stream = blob.data_stream.read()
             source = stream.decode("UTF-8")
@@ -215,21 +214,19 @@ class GitExtractor(AbstractExtractor):
             raise JavaSyntaxError
         return source
 
-    @staticmethod
-    def parse(path, source):
+    def parse(self, path, source):
         try:
             if "java" in path:
-                components = JavaParser.parse(path, source)
+                components = JavaParser.parse(self.granularity, path, source)
                 return components
         except JavaSyntaxError:
             pass
         return False
 
-    @staticmethod
-    def diff(file_a, file_b):
+    def diff(self, file_a, file_b):
         try:
             if "java" in file_a[0]:
-                components_diff = JavaParser.diff(file_a, file_b)
+                components_diff = JavaParser.diff(self. granularity, file_a, file_b)
                 return components_diff
         except JavaSyntaxError:
             pass
