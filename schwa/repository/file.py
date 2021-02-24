@@ -43,21 +43,18 @@ class Component:
         if self.parent != None:
             parent.components.add(self)
 
-    def __key(self):
-        # A class or method/function in different versions but with the same
-        # 'path', may represent the same class or method/function
-        if self.parent == None:
-            return str(self.name)
-        return str(self.parent.__key()) + "." + str(self.name)
-
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.__key() == other.__key()
+        return isinstance(other, self.__class__) and self.__repr__() == other.__repr__()
 
     def __hash__(self):
-        return hash(self.__key())
+        return hash(self.__repr__())
 
     def __repr__(self):
-        return "%s" % (self.name)
+        # A class or method/function in different versions but with the same
+        # 'fullname', may represent the same class or method/function
+        if self.parent == None:
+            return str(self.name)
+        return str(self.parent.__repr__()) + "." + str(self.name)
 
     def range_hit(self, start_line, end_line):
         return self.start_line <= start_line <= self.end_line or self.start_line <= end_line <= self.end_line
