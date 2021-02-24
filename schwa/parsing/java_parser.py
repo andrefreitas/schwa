@@ -262,10 +262,10 @@ class JavaParser(AbstractParser):
         lines_removed = lines_a - lines_b
         lines_modified = (lines_changed_a | lines_changed_b) - (lines_added | lines_removed)
         for l in lines_added:
-            diffs.append(DiffLine(parent=l.parent, line_b=l.start_line, added=True))
+            diffs.append(DiffLine(parent=l.parent, line_b=l, added=True))
         for l in lines_removed:
-            diffs.append(DiffLine(parent=l.parent, line_a=l.start_line, removed=True))
+            diffs.append(DiffLine(parent=l.parent, line_a=l, removed=True))
         for l in lines_modified:
-            diffs.append(DiffLine(parent=l.parent, line_a=l.start_line, line_b=l.start_line, modified=True))
+            diffs.append(DiffLine(parent=l.parent, line_a=l, line_b=l, modified=True))
 
         return diffs
