@@ -106,6 +106,9 @@ class JavaParser(AbstractParser):
             tree: A tree parsed from javalang.
         """
         def traverse(parent, tree):
+            # FIXME add support to classes in classes
+            # https://github.com/c2nes/javalang/issues/93
+
             p_component = None
             if isinstance(tree, (jl.tree.InterfaceDeclaration, jl.tree.ClassDeclaration)):
                 if granularity == Granularity.CLASS or granularity == Granularity.METHOD or granularity == Granularity.LINE:
