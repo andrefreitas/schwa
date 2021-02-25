@@ -26,7 +26,6 @@ is computed. Science is being done here! We use Decimal from the standard librar
 since results were accumulating errors.
 """
 
-import re
 from decimal import Decimal
 
 
@@ -190,8 +189,11 @@ class Metrics:
 
 def strip_path(path):
     """ Extracts only the file name of a path """
-    name_re = re.compile("[^/]*\.([a-z]+)$")
-    return name_re.search(path).group(0)
+    path = path.replace("'", '')
+    pos = path.rfind("/")
+    if pos == -1:
+        return path
+    return path[pos+1:]
 
 
 class RepositoryAnalytics(Metrics):
@@ -258,6 +260,8 @@ class RepositoryAnalytics(Metrics):
             analytics_dict = super().to_dict()
             analytics_dict["type"] = self.type
         analytics_dict["name"] = self.name
+        if hasattr(self, 'path'):
+            analytics_dict["path"] = self.path
         analytics_dict["children"] = [analytics.to_dict() for analytics in self.analytics]
 
         return analytics_dict
@@ -270,7 +274,8 @@ class FileAnalytics(RepositoryAnalytics):
     """
 
     def __init__(self, id, name, parent):
-        super().__init__(id=id, name=name, type="file", parent=parent)
+        super().__init__(id=id, name=strip_path(name), type="file", parent=parent)
+        self.path = name.replace("'", '')
 
 
 class ClassAnalytics(RepositoryAnalytics):
