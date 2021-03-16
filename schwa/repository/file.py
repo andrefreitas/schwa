@@ -60,7 +60,9 @@ class Component:
         return str(self.parent.__repr__()) + "." + str(self.name)
 
     def __str__(self):
-        return "%s<%i,%i>" % (self.name, self.start_line, self.end_line)
+        if self.start_line != None and self.end_line != None:
+            return "%s<%i,%i>" % (self.name, self.start_line, self.end_line)
+        return "%s" % (self.name)
 
     def range_hit(self, start_line, end_line):
         return self.start_line <= start_line <= self.end_line or self.start_line <= end_line <= self.end_line
