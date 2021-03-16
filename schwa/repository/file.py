@@ -120,6 +120,7 @@ class File(Component):
         classes = set()
         for component in self.components:
             if isinstance(component, Class):
+                classes.add(component)
                 classes.update(component.get_classes())
         return classes
 
@@ -169,9 +170,9 @@ class Class(Component):
 
     def get_classes(self):
         classes = set()
-        classes.add(self)
         for component in self.components:
             if isinstance(component, Class):
+                classes.add(component)
                 classes.update(component.get_classes())
         return classes
 
