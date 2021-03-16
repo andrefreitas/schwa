@@ -226,7 +226,7 @@ class GitExtractor(AbstractExtractor):
     def diff(self, file_a, file_b):
         try:
             if "java" in file_a[0]:
-                components_diff = JavaParser.diff(self. granularity, file_a, file_b)
+                components_diff = JavaParser.diff(self.granularity, file_a, file_b)
                 return components_diff
         except JavaSyntaxError:
             pass
