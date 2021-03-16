@@ -247,12 +247,19 @@ class JavaParser(AbstractParser):
         methods_added = methods_b - methods_a
         methods_removed = methods_a - methods_b
         methods_modified = (methods_changed_a | methods_changed_b) - (methods_added | methods_removed)
-        for m in methods_added:
-            diffs.append(DiffMethod(parent=m.parent, method_b=m, added=True))
-        for m in methods_removed:
-            diffs.append(DiffMethod(parent=m.parent, method_a=m, removed=True))
-        for m in methods_modified:
-            diffs.append(DiffMethod(parent=m.parent, method_a=m, method_b=m, modified=True))
+        for method_b in methods_added:
+            diffs.append(DiffMethod(parent=method_b.parent, method_b=method_b, added=True))
+        for method_a in methods_removed:
+            diffs.append(DiffMethod(parent=method_a.parent, method_a=method_a, removed=True))
+        for method_a in methods_modified:
+            # find version_b
+            method_b = None
+            for m_b in methods_b:
+                if m_b.name == method_a.name:
+                    method_b = m_b
+                    break
+            assert method_b != None
+            diffs.append(DiffMethod(parent=method_b.parent, method_a=method_a, method_b=method_b, modified=True))
 
         # Class granularity differences
         classes_changed_a = set(c for c in changed_a if isinstance(c, Class))
@@ -262,12 +269,19 @@ class JavaParser(AbstractParser):
         classes_added = classes_b - classes_a
         classes_removed = classes_a - classes_b
         classes_modified = (classes_changed_a | classes_changed_b) - (classes_added | classes_removed)
-        for c in classes_added:
-            diffs.append(DiffClass(parent=c.parent, class_b=c, added=True))
-        for c in classes_removed:
-            diffs.append(DiffClass(parent=c.parent, class_a=c, removed=True))
-        for c in classes_modified:
-            diffs.append(DiffClass(parent=c.parent, class_a=c, class_b=c, modified=True))
+        for class_b in classes_added:
+            diffs.append(DiffClass(parent=class_b.parent, class_b=class_b, added=True))
+        for class_a in classes_removed:
+            diffs.append(DiffClass(parent=class_a.parent, class_a=class_a, removed=True))
+        for class_a in classes_modified:
+            # find version_b
+            class_b = None
+            for c_b in classes_b:
+                if c_b.name == class_a.name:
+                    class_b = c_b
+                    break
+            assert class_b != None
+            diffs.append(DiffClass(parent=class_b.parent, class_a=class_a, class_b=class_b, modified=True))
 
         lines_changed_a = set(c for c in changed_a if isinstance(c, Line))
         lines_changed_b = set(c for c in changed_b if isinstance(c, Line))
@@ -276,11 +290,18 @@ class JavaParser(AbstractParser):
         lines_added = lines_b - lines_a
         lines_removed = lines_a - lines_b
         lines_modified = (lines_changed_a | lines_changed_b) - (lines_added | lines_removed)
-        for l in lines_added:
-            diffs.append(DiffLine(parent=l.parent, line_b=l, added=True))
-        for l in lines_removed:
-            diffs.append(DiffLine(parent=l.parent, line_a=l, removed=True))
-        for l in lines_modified:
-            diffs.append(DiffLine(parent=l.parent, line_a=l, line_b=l, modified=True))
+        for line_b in lines_added:
+            diffs.append(DiffLine(parent=line_b.parent, line_b=line_b, added=True))
+        for line_a in lines_removed:
+            diffs.append(DiffLine(parent=line_a.parent, line_a=line_a, removed=True))
+        for line_a in lines_modified:
+            # find version_b
+            line_b = None
+            for l_b in lines_b:
+                if l_b.name == line_a.name:
+                    line_b = l_b
+                    break
+            assert line_b != None
+            diffs.append(DiffLine(parent=line_b.parent, line_a=line_a, line_b=line_b, modified=True))
 
         return diffs
