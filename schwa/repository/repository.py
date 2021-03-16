@@ -95,6 +95,9 @@ class Diff:
             self.renamed == other.renamed and self.modified == other.modified and self.added == other.added \
             and self.removed == other.removed
 
+    def __lt__(self, other):
+        return self.__repr__() < other.__repr__()
+
     def __repr__(self):
         if self.renamed:
             return "renamed"

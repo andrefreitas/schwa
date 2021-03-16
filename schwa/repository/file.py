@@ -46,6 +46,9 @@ class Component:
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__repr__() == other.__repr__()
 
+    def __lt__(self, other):
+        return self.__repr__() < other.__repr__()
+
     def __hash__(self):
         return hash(self.__repr__())
 
