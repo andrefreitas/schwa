@@ -85,14 +85,44 @@ class Component:
                 components_hit.update(component.get_components_hit(start_line, end_line))
         return components_hit
 
+    def __get_components_of_type(self, type):
+        comps = set()
+        for component in self.components:
+            if isinstance(component, type):
+                comps.add(component)
+        return comps
+
     def get_classes(self):
-        raise Exception("get_classes function not implemented in the Component class")
+        return self.__get_components_of_type(Class)
+
+    def get_functions(self):
+        return self.__get_components_of_type(Function)
 
     def get_methods(self):
-        raise Exception("get_methods function not implemented in the Component class")
+        return self.__get_components_of_type(Method)
 
     def get_lines(self):
-        raise Exception("get_lines function not implemented in the Component class")
+        return self.__get_components_of_type(Line)
+
+    def __get_all_components_of_type(self, type):
+        comps = set()
+        for component in self.components:
+            if isinstance(component, type):
+                comps.add(component)
+            comps.update(component.__get_all_components_of_type(type))
+        return comps
+
+    def get_all_classes(self):
+        return self.__get_all_components_of_type(Class)
+
+    def get_all_functions(self):
+        return self.__get_all_components_of_type(Function)
+
+    def get_all_methods(self):
+        return self.__get_all_components_of_type(Method)
+
+    def get_all_lines(self):
+        return self.__get_all_components_of_type(Line)
 
 
 class File(Component):
@@ -121,7 +151,7 @@ class File(Component):
         for component in self.components:
             if isinstance(component, Class):
                 classes.add(component)
-                classes.update(component.get_classes())
+            classes.update(component.get_all_classes())
         return classes
 
     def get_functions(self):
@@ -137,9 +167,8 @@ class File(Component):
         for component in self.components:
             if isinstance(component, Function):
                 functions.add(component)
-                functions.update(component.get_functions())
-            elif isinstance(component, Class):
-                functions.update(component.get_methods())
+            functions.update(component.get_all_functions())
+            functions.update(component.get_all_methods())
         return functions
 
     def get_lines(self):
@@ -155,7 +184,7 @@ class File(Component):
                 lines.add(line)
             else:
                 # lines in a function, class, or class' method
-                lines.update(component.get_lines())
+                lines.update(component.get_all_lines())
         return lines
 
 
@@ -169,32 +198,6 @@ class Class(Component):
     def __init__(self, name, start_line, end_line, parent):
         super().__init__(name, start_line, end_line, parent)
 
-    def get_classes(self):
-        classes = set()
-        for component in self.components:
-            if isinstance(component, Class):
-                classes.add(component)
-                classes.update(component.get_classes())
-        return classes
-
-    def get_methods(self):
-        methods = set()
-        for component in self.components:
-            if isinstance(component, Method):
-                methods.add(component)
-                methods.update(component.get_methods())
-        return methods
-
-    def get_lines(self):
-        lines = set()
-        for component in self.components:
-            if isinstance(component, Line):
-                lines.add(component)
-            elif isinstance(component, Method):
-                lines.update(component.get_lines())
-        return lines
-
-
 class Function(Component):
     """A Function component representation.
 
@@ -205,21 +208,6 @@ class Function(Component):
     def __init__(self, name, start_line, end_line, parent):
         super().__init__(name, start_line, end_line, parent)
 
-    def get_functions(self):
-        functions = set()
-        for component in self.components:
-            if isinstance(component, Function):
-                functions.add(component)
-                functions.update(component.get_functions())
-        return functions
-
-    def get_lines(self):
-        lines = set()
-        for component in self.components:
-            if isinstance(component, Line):
-                lines.add(component)
-        return lines
-
 
 class Method(Function):
     """A Method is a member of a class.
@@ -228,13 +216,8 @@ class Method(Function):
     It is a subclass of Function.
     """
 
-    def get_methods(self):
-        methods = set()
-        for component in self.components:
-            if isinstance(component, Method):
-                methods.add(component)
-                methods.update(component.get_methods())
-        return methods
+    def __init__(self, name, start_line, end_line, parent):
+        super().__init__(name, start_line, end_line, parent)
 
 class Line(Component):
     """A Line component representation.
