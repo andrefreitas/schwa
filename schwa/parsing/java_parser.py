@@ -64,7 +64,8 @@ class JavaParser(AbstractParser):
                     for item in child:
                         JavaParser.traverse_for_lines(granularity, parent, item)
                 else:
-                    if hasattr(child, 'start_position') and hasattr(child, 'end_position'):
+                    if hasattr(child, 'start_position') and hasattr(child, 'end_position') and \
+                        child.start_position != None and child.end_position != None:
                         Line(name=child.start_position.line, start_line=child.start_position.line, end_line=child.end_position.line, parent=parent)
 
     @staticmethod
