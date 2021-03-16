@@ -136,6 +136,7 @@ class File(Component):
         functions = set()
         for component in self.components:
             if isinstance(component, Function):
+                functions.add(component)
                 functions.update(component.get_functions())
             elif isinstance(component, Class):
                 functions.update(component.get_methods())
@@ -180,6 +181,7 @@ class Class(Component):
         methods = set()
         for component in self.components:
             if isinstance(component, Method):
+                methods.add(component)
                 methods.update(component.get_methods())
         return methods
 
@@ -205,9 +207,9 @@ class Function(Component):
 
     def get_functions(self):
         functions = set()
-        functions.add(self)
         for component in self.components:
             if isinstance(component, Function):
+                functions.add(component)
                 functions.update(component.get_functions())
         return functions
 
@@ -228,9 +230,9 @@ class Method(Function):
 
     def get_methods(self):
         methods = set()
-        methods.add(self)
         for component in self.components:
             if isinstance(component, Method):
+                methods.add(component)
                 methods.update(component.get_methods())
         return methods
 
