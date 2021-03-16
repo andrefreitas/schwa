@@ -51,7 +51,7 @@ class JavaParser(AbstractParser):
             JavaSyntaxError: When the source code is not valid Java.
         """
         tree = jl.parse.parse(code)
-        file = File(path)
+        file = File(path=path, start_line=tree.start_position.line, end_line=tree.end_position.line)
         JavaParser.traverse_for_classes(granularity, file, tree)
         return file
 
@@ -64,8 +64,8 @@ class JavaParser(AbstractParser):
                     for item in child:
                         JavaParser.traverse_for_lines(granularity, parent, item)
                 else:
-                    if hasattr(child, '_position'):
-                        Line(name=child._position.line, start_line=child._position.line, end_line=child._position.line, parent=parent)
+                    if hasattr(child, 'start_position') and hasattr(child, 'end_position'):
+                        Line(name=child.start_position.line, start_line=child.start_position.line, end_line=child.end_position.line, parent=parent)
 
     @staticmethod
     def get_composed_arg_str(type):
@@ -84,36 +84,17 @@ class JavaParser(AbstractParser):
         return "(" + ','.join(str_args) + ")"
 
     @staticmethod
-    def end_line(node):
-        max_line = node.position.line
-
-        def find_end_line(node):
-            if hasattr(node, 'children'):
-                for child in node.children:
-                    if isinstance(child, list) and (len(child) > 0):
-                        for item in child:
-                            find_end_line(item)
-                    else:
-                        if hasattr(child, '_position'):
-                            nonlocal max_line
-                            if child._position.line > max_line:
-                                max_line = child._position.line
-                                return
-        find_end_line(node)
-        return max_line
-
-    @staticmethod
     def traverse_for_methods(granularity, parent, node):
 
         p_component = parent
 
         if isinstance(node, jl.tree.ConstructorDeclaration) or isinstance(node, jl.tree.MethodDeclaration):
             p_component = Method(name=node.name + str(JavaParser.parse_arguments(node.parameters)),
-                start_line=node.position.line, end_line=JavaParser.end_line(node), parent=parent)
+                start_line=node.start_position.line, end_line=node.end_position.line, parent=parent)
 
             if granularity == Granularity.LINE:
                 # Method's declaration line
-                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.start_line, parent=p_component)
+                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.end_line, parent=p_component)
                 # Traverse lines of this method
                 JavaParser.traverse_for_lines(granularity, p_component, node)
 
@@ -143,11 +124,11 @@ class JavaParser(AbstractParser):
         p_component = parent
 
         if isinstance(node, (jl.tree.InterfaceDeclaration, jl.tree.ClassDeclaration)):
-            p_component = Class(name=node.name, start_line=node.position.line, end_line=JavaParser.end_line(node), parent=parent)
+            p_component = Class(name=node.name, start_line=node.start_position.line, end_line=node.end_position.line, parent=parent)
 
             if granularity == Granularity.LINE:
                 # Class's declaration line
-                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.start_line, parent=p_component)
+                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.end_line, parent=p_component)
 
             if granularity == Granularity.METHOD or granularity == Granularity.LINE:
                 # Traverse methods of this class

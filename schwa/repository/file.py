@@ -102,8 +102,8 @@ class File(Component):
         path: An optional string that is the file path.
     """
 
-    def __init__(self, path=None):
-        super().__init__(path, 1, sys.maxsize) # FIXME get proper/real start_line and end_line
+    def __init__(self, path=None, start_line=None, end_line=None):
+        super().__init__(path, start_line, end_line)
         self.path = path
 
     def get_classes(self):
