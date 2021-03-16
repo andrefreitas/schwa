@@ -1,6 +1,6 @@
 GitPython==0.3.6
 nose==1.3.4
 bottle==0.12.7
-javalang==0.13.0
+six==1.15.0
 deap==1.0.1
 PyYAML==3.11
