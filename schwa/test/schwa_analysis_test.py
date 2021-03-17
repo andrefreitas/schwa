@@ -39,23 +39,42 @@ class TestSchwaAnalysis(unittest.TestCase):
         author = "petergriffin@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=14).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_b="API.java", added=True))
-        diffs.append(DiffClass(file_name="API.java", class_b="API", added=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_b="login", added=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_b="register", added=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_b="getShows", added=True))
-        diffs.append(DiffFile(file_b="Core.java", added=True))
-        diffs.append(DiffClass(file_name="Core.java", class_b="Core", added=True))
-        diffs.append(DiffMethod(file_name="Core.java", class_name="Core", method_b="auth", added=True))
-        diffs.append(DiffFile(file_b="Database.java", added=True))
-        diffs.append(DiffClass(file_name="Database.java", class_b="Database", added=True))
-        diffs.append(DiffMethod(file_name="Database.java", class_name="Database", method_b="query", added=True))
-        diffs.append(DiffFile(file_b="GUI.java", added=True))
-        diffs.append(DiffClass(file_name="GUI.java", class_b="GUI", added=True))
-        diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_b="login", added=True))
-        diffs.append(DiffFile(file_b="CLI.java", added=True))
-        diffs.append(DiffClass(file_name="CLI.java", class_b="CLI", added=True))
-        diffs.append(DiffMethod(file_name="CLI.java", class_name="CLI", method_b="login", added=True))
+
+        api_file      = File(path="API.java")
+        api_class     = Class("API", 1, 1, api_file)
+        api_method_a  = Method("login", 1, 1, api_class)
+        api_method_b  = Method("register", 1, 1, api_class)
+        api_method_c  = Method("getShows", 1, 1, api_class)
+        core_file     = File(path="Core.java")
+        core_class    = Class("Core", 1, 1, core_file)
+        core_method   = Method("auth", 1, 1, core_class)
+        database_file   = File(path="Database.java")
+        database_class  = Class("Database", 1, 1, database_file)
+        database_method = Method("query", 1, 1, database_class)
+        gui_file      = File(path="GUI.java")
+        gui_class     = Class("GUI", 1, 1, gui_file)
+        gui_method    = Method("login", 1, 1, gui_class)
+        cli_file      = File(path="CLI.java")
+        cli_class     = Class("CLI", 1, 1, cli_file)
+        cli_method    = Method("login", 1, 1, cli_class)
+
+        diffs.append(DiffFile(file_b=api_file, added=True))
+        diffs.append(DiffClass(parent=api_file, class_b=api_class, added=True))
+        diffs.append(DiffMethod(parent=api_class, method_b=api_method_a, added=True))
+        diffs.append(DiffMethod(parent=api_class, method_b=api_method_b, added=True))
+        diffs.append(DiffMethod(parent=api_class, method_b=api_method_c, added=True))
+        diffs.append(DiffFile(file_b=core_file, added=True))
+        diffs.append(DiffClass(parent=core_file, class_b=core_class, added=True))
+        diffs.append(DiffMethod(parent=core_class, method_b=core_method, added=True))
+        diffs.append(DiffFile(file_b=database_file, added=True))
+        diffs.append(DiffClass(parent=database_file, class_b=database_class, added=True))
+        diffs.append(DiffMethod(parent=database_class, method_b=database_method, added=True))
+        diffs.append(DiffFile(file_b=gui_file, added=True))
+        diffs.append(DiffClass(parent=gui_file, class_b=gui_class, added=True))
+        diffs.append(DiffMethod(parent=gui_class, method_b=gui_method, added=True))
+        diffs.append(DiffFile(file_b=cli_file, added=True))
+        diffs.append(DiffClass(parent=cli_file, class_b=cli_class, added=True))
+        diffs.append(DiffMethod(parent=cli_class, method_b=cli_method, added=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Second Commit """
@@ -64,10 +83,12 @@ class TestSchwaAnalysis(unittest.TestCase):
         author = "petergriffin@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=12).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_a="API.java", file_b="API.java", modified=True))
-        diffs.append(DiffClass(file_name="API.java", class_a="API", class_b="API", modified=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_a="register", method_b="register",
-                                modified=True))
+        api_file      = File(path="API.java")
+        api_class     = Class("API", 1, 1, api_file)
+        api_method    = Method("register", 1, 1, api_class)
+        diffs.append(DiffFile(file_a=api_file, file_b=api_file, modified=True))
+        diffs.append(DiffClass(parent=api_file, class_a=api_class, class_b=api_class, modified=True))
+        diffs.append(DiffMethod(parent=api_class, method_a=api_method, method_b=api_method, modified=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Third Commit """
@@ -76,10 +97,13 @@ class TestSchwaAnalysis(unittest.TestCase):
         author = "petergriffin@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=10).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_a="API.java", file_b="API.java", modified=True))
-        diffs.append(DiffClass(file_name="API.java", class_a="API", class_b="API", modified=True))
-        diffs.append(DiffMethod(file_name="API.java", class_name="API", method_a="login", method_b="register",
-                                modified=True))
+        api_file      = File(path="API.java")
+        api_class     = Class("API", 1, 1, api_file)
+        api_method_a  = Method("login", 1, 1, api_class)
+        api_method_b  = Method("register", 1, 1, api_class)
+        diffs.append(DiffFile(file_a=api_file, file_b=api_file, modified=True))
+        diffs.append(DiffClass(parent=api_file, class_a=api_class, class_b=api_class, modified=True))
+        diffs.append(DiffMethod(parent=api_class, method_a=api_method_a, method_b=api_method_b, modified=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Forth Commit """
@@ -88,14 +112,18 @@ class TestSchwaAnalysis(unittest.TestCase):
         author = "petergriffin@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=5).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_a="Database.java", file_b="Database.java", modified=True))
-        diffs.append(DiffClass(file_name="Database.java", class_a="Database", class_b="Database", modified=True))
-        diffs.append(DiffMethod(file_name="Database.java", class_name="Database", method_a="query", method_b="query",
-                                modified=True))
-        diffs.append(DiffFile(file_a="GUI.java", file_b="GUI.java", modified=True))
-        diffs.append(DiffClass(file_name="GUI.java", class_a="GUI", class_b="GUI", modified=True))
-        diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_a="login", method_b="login",
-                                modified=True))
+        database_file   = File(path="Database.java")
+        database_class  = Class("Database", 1, 1, database_file)
+        database_method = Method("query", 1, 1, database_class)
+        diffs.append(DiffFile(file_a=database_file, file_b=database_file, modified=True))
+        diffs.append(DiffClass(parent=database_file, class_a=database_class, class_b=database_class, modified=True))
+        diffs.append(DiffMethod(parent=database_class, method_a=database_method, method_b=database_method, modified=True))
+        gui_file      = File(path="GUI.java")
+        gui_class     = Class("GUI", 1, 1, gui_file)
+        gui_method    = Method("login", 1, 1, gui_class)
+        diffs.append(DiffFile(file_a=gui_file, file_b=gui_file, modified=True))
+        diffs.append(DiffClass(parent=gui_file, class_a=gui_class, class_b=gui_class, modified=True))
+        diffs.append(DiffMethod(parent=gui_class, method_a=gui_method, method_b=gui_method, modified=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Fifth Commit """
@@ -104,13 +132,15 @@ class TestSchwaAnalysis(unittest.TestCase):
         author = "stewie@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=2).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_a="GUI.java", file_b="GUI.java", modified=True))
-        diffs.append(DiffClass(file_name="GUI.java", class_a="GUI", class_b="GUI", modified=True))
-        diffs.append(DiffClass(file_name="GUI.java", class_b="GUIWindows", added=True))
-        diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_a="login", method_b="login",
-                                modified=True))
-        diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_b="recover",
-                                added=True))
+        gui_file      = File(path="GUI.java")
+        gui_class     = Class("GUI", 1, 1, gui_file)
+        gui_method_a  = Method("login", 1, 1, gui_class)
+        gui_method_b  = Method("recover", 1, 1, gui_class)
+        diffs.append(DiffFile(file_a=gui_file, file_b=gui_file, modified=True))
+        diffs.append(DiffClass(parent=gui_file, class_a=gui_class, class_b=gui_class, modified=True))
+        diffs.append(DiffClass(parent=gui_file, class_b=Class("GUIWindows", 1, 1, gui_file), added=True))
+        diffs.append(DiffMethod(parent=gui_class, method_a=gui_method_a, method_b=gui_method_a, modified=True))
+        diffs.append(DiffMethod(parent=gui_class, method_b=gui_method_b, added=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Sixth Commit """
@@ -119,10 +149,15 @@ class TestSchwaAnalysis(unittest.TestCase):
         author = "louis@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=2).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_a="CLI.java", file_b="LinuxCLI.java", renamed=True))
-        diffs.append(DiffClass(file_name="LinuxCLI.java", class_a="CLI", class_b="LinuxCLI", renamed=True))
-        diffs.append(DiffMethod(file_name="LinuxCLI.java", class_name="LinuxCLI", method_a="login",
-                                method_b="LinuxLogin", renamed=True))
+        cli_file       = File(path="CLI.java")
+        # cli_class      = Class("CLI", 1, 1, cli_file)
+        # cli_method     = Method("login", 1, 1, cli_file)
+        linux_cli_file   = File(path="LinuxCLI.java")
+        # linux_cli_class  = Class("LinuxCLI", 1, 1, linux_cli_file)
+        # linux_cli_method = Method("LinuxLogin", 1, 1, linux_cli_file)
+        diffs.append(DiffFile(file_a=cli_file, file_b=linux_cli_file, renamed=True))
+        # diffs.append(DiffClass(parent=cli_file, class_a=cli_class, class_b=linux_cli_class, renamed=True))
+        # diffs.append(DiffMethod(parent=cli_class, method_a=cli_method, method_b=linux_cli_method, renamed=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Seventh Commit """
@@ -131,38 +166,70 @@ class TestSchwaAnalysis(unittest.TestCase):
         author = "louis@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=1).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_a="LinuxCLI.java", removed=True))
-        diffs.append(DiffClass(file_name="LinuxCLI.java", class_a="LinuxCLI", removed=True))
-        diffs.append(DiffMethod(file_name="LinuxCLI.java", class_name="LinuxCLI", method_a="LinuxLogin",
-                                removed=True))
 
-        diffs.append(DiffFile(file_a="GUI.java", file_b="GUI.java", modified=True))
-        diffs.append(DiffClass(file_name="GUI.java", class_a="GUIWindows", removed=True))
-        diffs.append(DiffMethod(file_name="GUI.java", class_name="GUI", method_a="recover",
-                                removed=True))
+        linux_cli_file   = File(path="LinuxCLI.java")
+        # linux_cli_class  = Class("LinuxCLI", 1, 1, linux_cli_file)
+        # linux_cli_method = Method("LinuxLogin", 1, 1, linux_cli_file)
+        diffs.append(DiffFile(file_a=linux_cli_file, removed=True))
+        # diffs.append(DiffClass(parent=linux_cli_file, class_a=linux_cli_class, removed=True))
+        # diffs.append(DiffMethod(parent=linux_cli_class, method_a=linux_cli_method, removed=True))
+
+        gui_file      = File(path="GUI.java")
+        gui_class     = Class("GUI", 1, 1, gui_file)
+        gui_method    = Method("recover", 1, 1, gui_class)
+        diffs.append(DiffFile(file_a=gui_file, file_b=gui_file, modified=True))
+        diffs.append(DiffClass(parent=gui_file, class_a=Class("GUIWindows", 1, 1, gui_file), removed=True))
+        diffs.append(DiffMethod(parent=gui_class, method_a=gui_method, removed=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
-
 
         """ Create repository """
         self.repository = Repository(commits, current_ts, timestamp)
         self.analysis = SchwaAnalysis(self.repository)
 
     def test_revisions_importance(self):
-        analytics = self.analysis.analyze()
-        self.assertTrue(analytics.files_analytics["API.java"].defect_prob >
-                        analytics.files_analytics["Core.java"].defect_prob,
-                        msg="It should give importance to revisions")
+        analytics = self.analysis.analyze().analytics
+
+        api_java  = None
+        core_java = None
+        for analytic in analytics:
+            if analytic.name == "API.java":
+                api_java = analytic
+            if analytic.name == "Core.java":
+                core_java = analytic
+        self.assertTrue(api_java != None)
+        self.assertTrue(core_java != None)
+
+        self.assertTrue(api_java.defect_prob > core_java.defect_prob, msg="It should give importance to revisions")
 
     def test_fixes_importance(self):
-        analytics = self.analysis.analyze()
-        self.assertTrue(analytics.files_analytics["Database.java"].defect_prob >
-                        analytics.files_analytics["API.java"].defect_prob, msg="It should give importance to fixes")
+        analytics = self.analysis.analyze().analytics
+
+        database_java  = None
+        api_java = None
+        for analytic in analytics:
+            if analytic.name == "Database.java":
+                database_java = analytic
+            if analytic.name == "API.java":
+                api_java = analytic
+        self.assertTrue(database_java != None)
+        self.assertTrue(api_java != None)
+
+        self.assertTrue(database_java.defect_prob > api_java.defect_prob, msg="It should give importance to fixes")
 
     def test_authors_importance(self):
-        analytics = self.analysis.analyze()
-        self.assertTrue(analytics.files_analytics["GUI.java"].defect_prob >
-                        analytics.files_analytics["Database.java"].defect_prob,
-                        msg="It should give importance to authors")
+        analytics = self.analysis.analyze().analytics
+
+        database_java  = None
+        gui_java = None
+        for analytic in analytics:
+            if analytic.name == "Database.java":
+                database_java = analytic
+            if analytic.name == "GUI.java":
+                gui_java = analytic
+        self.assertTrue(database_java != None)
+        self.assertTrue(gui_java != None)
+
+        self.assertTrue(gui_java.defect_prob > database_java.defect_prob, msg="It should give importance to authors")
 
     def test_granularity_analysis(self):
         """ Whitebox testing for  granularity analysis. """
@@ -171,30 +238,58 @@ class TestSchwaAnalysis(unittest.TestCase):
         repository = Repository(self.repository.commits[-3:], self.repository.begin_ts,
                                 self.repository.commits[-1].timestamp)
         analysis = SchwaAnalysis(repository)
-        analytics = analysis.analyze()
-        self.assertTrue("GUI.java" in analytics.files_analytics, msg="It should deal with non added files")
+        analytics = analysis.analyze().analytics
+        gui_java = None
+        for analytic in analytics:
+            if analytic.name == "GUI.java":
+                gui_java = analytic
+                break
+        self.assertTrue(gui_java != None, msg="It should deal with non added files")
 
         repository = Repository(self.repository.commits[:-1], self.repository.begin_ts,
                                 self.repository.commits[:-1][-1].timestamp) # Except last commit
         analysis = SchwaAnalysis(repository)
-        analytics = analysis.analyze()
-        self.assertTrue("LinuxCLI.java" in analytics.files_analytics, msg="It should deal with renamed files")
-        self.assertEqual(analytics.files_analytics["LinuxCLI.java"].revisions, 2,
-                         msg="It should deal with renamed files")
+        analytics = analysis.analyze().analytics
+        linux_cli_java = None
+        for analytic in analytics:
+            if analytic.name == "LinuxCLI.java":
+                linux_cli_java = analytic
+                break
+        self.assertTrue(linux_cli_java != None, msg="It should deal with renamed files")
+        self.assertEqual(2, linux_cli_java.revisions, msg="It should deal with renamed files")
 
-        analytics = self.analysis.analyze()
-        self.assertTrue("LinuxCLI.java" not in analytics.files_analytics, msg="It should deal with removed files")
+        analytics = self.analysis.analyze().analytics
+        linux_cli_java = None
+        for analytic in analytics:
+            if analytic.name == "LinuxCLI.java":
+                linux_cli_java = analytic
+                break
+        self.assertTrue(linux_cli_java == None, msg="It should deal with removed files")
 
-        self.assertEqual(len(analytics.files_analytics["GUI.java"].authors), 3)
-        self.assertEqual(analytics.files_analytics["GUI.java"].fixes, 1)
-        self.assertEqual(analytics.files_analytics["GUI.java"].revisions, 4)
+        gui_java = None
+        for analytic in analytics:
+            if analytic.name == "GUI.java":
+                gui_java = analytic
+                break
+        self.assertTrue(gui_java != None)
+        self.assertTrue(3, len(gui_java.authors))
+        self.assertTrue(1, gui_java.fixes)
+        self.assertTrue(4, gui_java.revisions)
 
         # Class granularity
-        self.assertTrue("GUIWindows" not in analytics.files_analytics["GUI.java"].classes_analytics,
-                        msg="It should recognize removed classes")
+        gui_windows_java = None
+        for analytic in analytics:
+            if analytic.name == "GUIWindows.java":
+                for a in analytic.analytics:
+                    if a.name == "GUIWindows":
+                        gui_windows_java = a
+        self.assertTrue(gui_windows_java == None, msg="It should recognize removed classes")
 
         # Method granularity
-        self.assertTrue("recover" not in analytics.files_analytics["GUI.java"].classes_analytics["GUI"].methods_analytics,
-                        msg="It should recognize removed methods")
-
-
+        gui_method = None
+        for a in gui_java.analytics:
+            if a.name == "GUI":
+                for b in a.analytics:
+                    if b.name == "recover":
+                        gui_method = b
+        self.assertTrue(gui_method == None, msg="It should recognize removed methods")

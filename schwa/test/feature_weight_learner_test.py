@@ -24,7 +24,7 @@ import unittest
 import time
 import datetime
 from schwa.learning import FeatureWeightLearner
-from schwa.repository import Repository, DiffMethod, DiffFile, DiffClass, Commit
+from schwa.repository import Repository, DiffMethod, DiffFile, DiffClass, Commit, File
 
 
 class TestFeatureWeightLearner(unittest.TestCase):
@@ -38,11 +38,11 @@ class TestFeatureWeightLearner(unittest.TestCase):
         author = "petergriffin@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=14).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_b="API.java", added=True))
-        diffs.append(DiffFile(file_b="Core.java", added=True))
-        diffs.append(DiffFile(file_b="Database.java", added=True))
-        diffs.append(DiffFile(file_b="GUI.java", added=True))
-        diffs.append(DiffFile(file_b="CLI.java", added=True))
+        diffs.append(DiffFile(file_b=File(path="API.java"), added=True))
+        diffs.append(DiffFile(file_b=File(path="Core.java"), added=True))
+        diffs.append(DiffFile(file_b=File(path="Database.java"), added=True))
+        diffs.append(DiffFile(file_b=File(path="GUI.java"), added=True))
+        diffs.append(DiffFile(file_b=File(path="CLI.java"), added=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Second Commit """
@@ -51,7 +51,7 @@ class TestFeatureWeightLearner(unittest.TestCase):
         author = "petergriffin@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=2).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_a="API.java", file_b="API.java", modified=True))
+        diffs.append(DiffFile(file_a=File(path="API.java"), file_b=File(path="API.java"), modified=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         """ Third Commit """
@@ -60,7 +60,7 @@ class TestFeatureWeightLearner(unittest.TestCase):
         author = "petergriffin@familyguy.com"
         timestamp = current_ts - datetime.timedelta(days=1).total_seconds()
         diffs = []
-        diffs.append(DiffFile(file_a="API.java", file_b="API.java", modified=True))
+        diffs.append(DiffFile(file_a=File(path="API.java"), file_b=File(path="API.java"), modified=True))
         commits.append(Commit(_id, message, author, timestamp, diffs))
 
         self.repository = Repository(commits, current_ts, timestamp)

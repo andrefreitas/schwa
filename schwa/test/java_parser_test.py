@@ -87,49 +87,31 @@ class TestJavaParser(unittest.TestCase):
                 }
             }"""
 
-    def is_in(self, file, klass=None, method=None, line=None):
-
-        if klass != None and method == None:
-            classes_repr = [str(c) for c in file.get_classes()]
-            print(str(klass))
-            print(str(classes_repr))
-            self.assertTrue(klass in classes_repr)
-            return
-        elif klass != None and method != None:
-            for c in file.get_classes():
-                if str(c) == klass:
-                    methods_repr = [str(m) for m in c.get_methods()]
-                    print(str(method))
-                    print(str(methods_repr))
-                    self.assertTrue(method in methods_repr)
-                    return
-        elif klass != None and method != None and line != None:
-            for c in file.get_classes():
-                if str(c) == klass:
-                    for m in c.get_methods():
-                        if str(m) == method:
-                            lines_repr = [str(l) for l in m.get_lines()]
-                            print(str(l))
-                            print(str(lines_repr))
-                            self.assertTrue(line in lines_repr)
-                            return
-
-        self.fail("No condition has been met")
+    def set_to_str(self, set):
+        return [str(x) for x in set]
 
     def test_parse(self):
         file = JavaParser.parse(Granularity.LINE, "dummy.java", self.code)
         # Classes
-        self.is_in(file=file, klass='API<8,53>')
-        self.is_in(file=file, klass='SOAPAPI<55,59>')
+        classes = sorted(file.get_classes())
+        clazz_a = classes[0]
+        self.assertEquals('API<8,53>', str(clazz_a))
+        clazz_b = classes[1]
+        self.assertEquals('SOAPAPI<55,59>', str(clazz_b))
         # Methods of API
-        self.is_in(file=file, klass='API<8,53>', method='getUrl()<9,11>')
-        self.is_in(file=file, klass='API<8,53>', method='API(String)<21,23>')
-        self.is_in(file=file, klass='API<8,53>', method='API()<25,27>')
-        self.is_in(file=file, klass='API<8,53>', method='login(String,String,AsyncHttpResponseHandler)<30,35>')
-        self.is_in(file=file, klass='API<8,53>', method='register(String,String,String,String,String,String,String,AsyncHttpResponseHandler)<37,47>')
-        self.is_in(file=file, klass='API<8,53>', method='getShows(AsyncHttpResponseHandler)<49,51>')
+        clazz_a_methods = self.set_to_str(clazz_a.get_methods())
+        self.assertEquals(7, len(clazz_a_methods))
+        self.assertTrue('getUrl()<9,11>' in clazz_a_methods)
+        self.assertTrue('setUrl(String)<13,15>' in clazz_a_methods)
+        self.assertTrue('API(String)<21,23>' in clazz_a_methods)
+        self.assertTrue('API()<25,27>' in clazz_a_methods)
+        self.assertTrue('login(String,String,AsyncHttpResponseHandler)<30,35>' in clazz_a_methods)
+        self.assertTrue('register(String,String,String,String,String,String,String,AsyncHttpResponseHandler)<37,47>' in clazz_a_methods)
+        self.assertTrue('getShows(AsyncHttpResponseHandler)<49,51>' in clazz_a_methods)
         # Methods of SOAPAPI
-        self.is_in(file=file, klass='SOAPAPI<55,59>', method='login(String)<56,58>')
+        clazz_b_methods = self.set_to_str(clazz_b.get_methods())
+        self.assertEquals(1, len(clazz_b_methods))
+        self.assertTrue('login(String)<56,58>' in clazz_b_methods)
 
     def test_parse_with_anonymous_classes(self):
         code = """import javafx.event.ActionEvent;
@@ -165,11 +147,17 @@ class TestJavaParser(unittest.TestCase):
                 }"""
         file = JavaParser.parse(Granularity.LINE, "dummy.java", code)
         # Class
-        self.is_in(file=file, klass='HelloWorld<8,31>')
+        clazz = list(file.get_classes())[0]
+        self.assertEquals('HelloWorld<8,31>', str(clazz))
         # Methods
-        self.is_in(file=file, klass='HelloWorld<8,31>', method='main(String)<9,11>')
-        self.is_in(file=file, klass='HelloWorld<8,31>', method='start(Stage)<14,30>')
-        self.is_in(file=file, klass='HelloWorld<8,31>', method='handle(ActionEvent)<21,23>')
+        clazz_methods = list(sorted(clazz.get_methods()))
+        self.assertEquals(2, len(clazz_methods))
+        self.assertEquals('main(String)<9,11>', str(clazz_methods[0]))
+        self.assertEquals('start(Stage)<14,30>', str(clazz_methods[1]))
+        # Methods of methods
+        method_methods = list(clazz_methods[1].get_methods())
+        self.assertEquals(1, len(method_methods))
+        self.assertEquals('handle(ActionEvent)<21,23>', str(method_methods[0]))
 
     def test_parse_nested_classes(self):
         code = """public class ShadowTest {
@@ -196,11 +184,18 @@ class TestJavaParser(unittest.TestCase):
 
         file = JavaParser.parse(Granularity.LINE, "dummy.java", code)
         # Classes
-        self.is_in(file=file, klass='ShadowTest<1,21>')
-        self.is_in(file=file, klass='FirstLevel<5,14>')
+        classes = sorted(file.get_classes())
+        clazz_a = classes[0]
+        clazz_b = classes[1]
+        self.assertEquals('ShadowTest<1,21>', str(clazz_a))
+        self.assertEquals('FirstLevel<5,14>', str(clazz_b))
         # Methods
-        self.is_in(file=file, klass='ShadowTest<1,21>', method='main(String)<16,20>')
-        self.is_in(file=file, klass='FirstLevel<5,14>', method='methodInFirstLevel(int)<9,13>')
+        clazz_a_methods = self.set_to_str(clazz_a.get_methods())
+        self.assertEquals(1, len(clazz_a_methods))
+        self.assertTrue('main(String)<16,20>' in clazz_a_methods)
+        clazz_b_methods = self.set_to_str(clazz_b.get_methods())
+        self.assertEquals(1, len(clazz_b_methods))
+        self.assertTrue('methodInFirstLevel(int)<9,13>' in clazz_b_methods)
 
     def test_compressed_code(self):
         code = """public class ShadowTest{public int x=0;class FirstLevel{public int x=1;void methodInFirstLevel""" \
@@ -210,11 +205,18 @@ class TestJavaParser(unittest.TestCase):
             + "fl.methodInFirstLevel(23);}}"""
         file = JavaParser.parse(Granularity.LINE, "dummy.java", code)
         # Classes
-        self.is_in(file=file, klass='ShadowTest<1,1>')
-        self.is_in(file=file, klass='FirstLevel<1,1>')
+        classes = sorted(file.get_classes())
+        clazz_a = classes[0]
+        clazz_b = classes[1]
+        self.assertEquals('ShadowTest<1,1>', str(clazz_a))
+        self.assertEquals('FirstLevel<1,1>', str(clazz_b))
         # Methods
-        self.is_in(file=file, klass='ShadowTest<1,1>', method='main(String)<1,1>')
-        self.is_in(file=file, klass='FirstLevel<1,1>', method='methodInFirstLevel(int)<1,1>')
+        clazz_a_methods = self.set_to_str(clazz_a.get_methods())
+        self.assertEquals(1, len(clazz_a_methods))
+        self.assertTrue('main(String)<1,1>' in clazz_a_methods)
+        clazz_b_methods = self.set_to_str(clazz_b.get_methods())
+        self.assertEquals(1, len(clazz_b_methods))
+        self.assertTrue('methodInFirstLevel(int)<1,1>' in clazz_b_methods)
 
     def test_abstract_class(self):
         code = """public abstract class GraphicObject {
@@ -224,9 +226,12 @@ class TestJavaParser(unittest.TestCase):
         }"""
         file = JavaParser.parse(Granularity.LINE, "dummy.java", code)
         # Class
-        self.is_in(file=file, klass='GraphicObject<1,5>')
+        clazz = list(file.get_classes())[0]
+        self.assertEquals('GraphicObject<1,5>', str(clazz))
         # Method
-        self.is_in(file=file, klass='GraphicObject<1,5>', method='draw()<4,4>')
+        clazz_methods = self.set_to_str(clazz.get_methods())
+        self.assertEquals(1, len(clazz_methods))
+        self.assertTrue('draw()<4,4>' in clazz_methods)
 
     def test_empty_methods(self):
         code = """private class SOAPAPI{
@@ -240,10 +245,13 @@ class TestJavaParser(unittest.TestCase):
 
         file = JavaParser.parse(Granularity.LINE, "dummy.java", code)
         # Class
-        self.is_in(file=file, klass='SOAPAPI<1,8>')
+        clazz = list(file.get_classes())[0]
+        self.assertEquals('SOAPAPI<1,8>', str(clazz))
         # Methods
-        self.is_in(file=file, klass='SOAPAPI<1,8>', method='login(String)<2,5>')
-        self.is_in(file=file, klass='SOAPAPI<1,8>', method='login2(String)<6,8>')
+        clazz_methods = self.set_to_str(clazz.get_methods())
+        self.assertEquals(2, len(clazz_methods))
+        self.assertTrue('login(String)<2,5>' in clazz_methods)
+        self.assertTrue('login2(String)<6,8>' in clazz_methods)
 
     def test_methods_with_same_name_but_different_signature(self):
         code = """public class Foo {
@@ -264,12 +272,15 @@ class TestJavaParser(unittest.TestCase):
 
         file = JavaParser.parse(Granularity.LINE, "dummy.java", code)
         # Class
-        self.is_in(file=file, klass='Foo<1,14>')
+        clazz = list(file.get_classes())[0]
+        self.assertEquals('Foo<1,14>', str(clazz))
         # Methods
-        self.is_in(file=file, klass='Foo<1,14>', method='bar()<2,4>')
-        self.is_in(file=file, klass='Foo<1,14>', method='bar(int)<5,7>')
-        self.is_in(file=file, klass='Foo<1,14>', method='bar(java.util.List)<8,10>')
-        self.is_in(file=file, klass='Foo<1,14>', method='bar(java.util.ArrayList)<11,13>')
+        clazz_methods = self.set_to_str(clazz.get_methods())
+        self.assertEquals(4, len(clazz_methods))
+        self.assertTrue('bar()<2,4>' in clazz_methods)
+        self.assertTrue('bar(int)<5,7>' in clazz_methods)
+        self.assertTrue('bar(java.util.List)<8,10>' in clazz_methods)
+        self.assertTrue('bar(java.util.ArrayList)<11,13>' in clazz_methods)
 
     def test_diff_case_a(self):
         code_b = """
@@ -336,44 +347,98 @@ class TestJavaParser(unittest.TestCase):
             }
             """
 
-        diffs = JavaParser.diff(Granularity.METHOD, ("API.java", self.code), ("API.java", code_b))
-        self.assertEqual(len(diffs), 9)
+        diffs = sorted(JavaParser.diff(Granularity.METHOD, ("API.java", self.code), ("API.java", code_b)))
+        self.assertEqual(9, len(diffs))
 
-        print(diffs) # FIXME remove me
-        print(str(len(diffs)))
+        # added class None,JSONAPI<56,62> in API.java<2,62>
+        added_class = diffs[0]
+        self.assertFalse(added_class.renamed)
+        self.assertFalse(added_class.modified)
+        self.assertTrue(added_class.added)
+        self.assertFalse(added_class.removed)
+        self.assertEquals(None, added_class.version_a)
+        self.assertEquals('JSONAPI<56,62>', str(added_class.version_b))
+        self.assertEquals('API.java<2,62>', str(added_class.version_b.parent))
 
-        # TODO: Test nested classes
+        # added method None,outputShows(AsyncHttpResponseHandler)<46,48> in API<8,54>
+        added_method = diffs[1]
+        self.assertFalse(added_method.renamed)
+        self.assertFalse(added_method.modified)
+        self.assertTrue(added_method.added)
+        self.assertFalse(added_method.removed)
+        self.assertEquals(None, added_method.version_a)
+        self.assertEquals('outputShows(AsyncHttpResponseHandler)<46,48>', str(added_method.version_b))
+        self.assertEquals('API<8,54>', str(added_method.version_b.parent))
 
-# added class None,JSONAPI<56,60> in API.java<1,9223372036854775807>
-# removed class SOAPAPI<55,57>,None in API.java<1,9223372036854775807>
-# modified class API<8,50>,API<8,50> in API.java<1,9223372036854775807>
-# ---
-# added method None,recover(String)<57,60> in JSONAPI<56,60>
-# added method None,outputShows(AsyncHttpResponseHandler)<46,47> in API<8,51>
-# added method None,recover(String)<39,42> in API<8,51>
-# removed method login(String)<56,57>,None in SOAPAPI<55,57>
-# removed method register(String,String,String,String,String,String,String,AsyncHttpResponseHandler)<37,46>,None in API<8,50>
-# modified method login(String,String,AsyncHttpResponseHandler)<30,34>,login(String,String,AsyncHttpResponseHandler)<30,34> in API<8,50>
+        # added method None,recover(String)<39,43> in API<8,54>
+        added_method = diffs[2]
+        self.assertFalse(added_method.renamed)
+        self.assertFalse(added_method.modified)
+        self.assertTrue(added_method.added)
+        self.assertFalse(added_method.removed)
+        self.assertEquals(None, added_method.version_a)
+        self.assertEquals('recover(String)<39,43>', str(added_method.version_b))
+        self.assertEquals('API<8,54>', str(added_method.version_b.parent))
 
-        self.assertTrue(DiffClass("API.java", class_a="API", class_b="API", modified=True) in diffs,
-                        msg="It should recognize modified classes")
-        # self.assertTrue(DiffMethod("API.java", class_name="API", method_a="login(String, String, AsyncHttpResponseHandler)", method_b="login(String, String, AsyncHttpResponseHandler)", modified=True)
-        #                 in diffs, msg="It should recognize modified methods")
-        # self.assertTrue(DiffMethod("API.java", class_name="API", method_a="register(String, String, String, String, String, String, String, AsyncHttpResponseHandler)", removed=True) in diffs,
-        #                 msg="It should recognize removed methods")
-        # self.assertTrue(DiffMethod("API.java", class_name="API", method_b="recover(String)", added=True) in diffs,
-        #                 msg="It should recognize added methods")
-        # self.assertTrue(DiffMethod("API.java", class_name="API", method_b="outputShows(AsyncHttpResponseHandler)", added=True) in diffs,
-        #                 msg="It should recognize added methods")
-        # self.assertTrue(DiffClass("API.java", class_a="SOAPAPI", removed=True) in diffs,
-        #                 msg="It should recognize removed classes")
-        # self.assertTrue(DiffClass("API.java", class_b="JSONAPI", added=True) in diffs,
-        #                 msg="It should recognize added classes")
-        # self.assertTrue(DiffMethod("API.java", class_name="SOAPAPI", method_a="login(String)", removed=True) in diffs,
-        #                 msg="It should recognize removed methods")
-        # self.assertTrue(DiffMethod("API.java", class_name="JSONAPI", method_b="recover(String)", added=True) in diffs,
-        #                 msg="It should recognize added methods")
+        # added method None,recover(String)<57,61> in JSONAPI<56,62>
+        added_method = diffs[3]
+        self.assertFalse(added_method.renamed)
+        self.assertFalse(added_method.modified)
+        self.assertTrue(added_method.added)
+        self.assertFalse(added_method.removed)
+        self.assertEquals(None, added_method.version_a)
+        self.assertEquals('recover(String)<57,61>', str(added_method.version_b))
+        self.assertEquals('JSONAPI<56,62>', str(added_method.version_b.parent))
 
+        # modified class API<8,53>,API<8,54> in API.java<2,62>
+        modified_class = diffs[4]
+        self.assertFalse(modified_class.renamed)
+        self.assertTrue(modified_class.modified)
+        self.assertFalse(modified_class.added)
+        self.assertFalse(modified_class.removed)
+        self.assertEquals('API<8,53>', str(modified_class.version_a))
+        self.assertEquals('API<8,54>', str(modified_class.version_b))
+        self.assertEquals('API.java<2,62>', str(modified_class.version_b.parent))
+
+        # modified method login(String,String,AsyncHttpResponseHandler)<30,35>,login(String,String,AsyncHttpResponseHandler)<30,34> in API<8,54>
+        modified_method = diffs[5]
+        self.assertFalse(modified_method.renamed)
+        self.assertTrue(modified_method.modified)
+        self.assertFalse(modified_method.added)
+        self.assertFalse(modified_method.removed)
+        self.assertEquals('login(String,String,AsyncHttpResponseHandler)<30,35>', str(modified_method.version_a))
+        self.assertEquals('login(String,String,AsyncHttpResponseHandler)<30,34>', str(modified_method.version_b))
+        self.assertEquals('API<8,54>', str(modified_method.version_b.parent))
+
+        # removed class SOAPAPI<55,59>,None in API.java<2,59>
+        removed_class = diffs[6]
+        self.assertFalse(removed_class.renamed)
+        self.assertFalse(removed_class.modified)
+        self.assertFalse(removed_class.added)
+        self.assertTrue(removed_class.removed)
+        self.assertEquals('SOAPAPI<55,59>', str(removed_class.version_a))
+        self.assertEquals(None, removed_class.version_b)
+        self.assertEquals('API.java<2,59>', str(removed_class.version_a.parent))
+
+        # removed method login(String)<56,58>,None in SOAPAPI<55,59>
+        removed_method = diffs[7]
+        self.assertFalse(removed_method.renamed)
+        self.assertFalse(removed_method.modified)
+        self.assertFalse(removed_method.added)
+        self.assertTrue(removed_method.removed)
+        self.assertEquals('login(String)<56,58>', str(removed_method.version_a))
+        self.assertEquals(None, removed_method.version_b)
+        self.assertEquals('SOAPAPI<55,59>', str(removed_method.version_a.parent))
+
+        # removed method register(String,String,String,String,String,String,String,AsyncHttpResponseHandler)<37,47>,None in API<8,53>
+        removed_method = diffs[8]
+        self.assertFalse(removed_method.renamed)
+        self.assertFalse(removed_method.modified)
+        self.assertFalse(removed_method.added)
+        self.assertTrue(removed_method.removed)
+        self.assertEquals('register(String,String,String,String,String,String,String,AsyncHttpResponseHandler)<37,47>', str(removed_method.version_a))
+        self.assertEquals(None, removed_method.version_b)
+        self.assertEquals('API<8,53>', str(removed_method.version_a.parent))
 
 if __name__ == '__main__':
     unittest.main()
