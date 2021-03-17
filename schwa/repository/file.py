@@ -55,7 +55,7 @@ class Component:
     def __repr__(self):
         # A class or method/function in different versions but with the same
         # 'fullname', may represent the same class or method/function
-        if self.parent == None:
+        if self.parent == None or isinstance(self.parent, File):
             return str(self.name)
         return str(self.parent.__repr__()) + "." + str(self.name)
 
