@@ -31,7 +31,7 @@ class Component:
         name: A string with the name of the component.
         start_line: A number with the line number of the beginning of the component.
         end_line: A number with the line number of the end of the component.
-        components: An optional list of Component instances.
+        parent: An optional parent Component instance.
     """
 
     def __init__(self, name, start_line, end_line, parent=None):
@@ -144,8 +144,6 @@ class File(Component):
     def get_classes(self):
         """ Get the set of classes.
 
-        It uses dot notation for nested classes.
-
         Returns:
             A set of classes.
         """
@@ -158,9 +156,6 @@ class File(Component):
 
     def get_functions(self):
         """ Get the set of functions.
-
-        Remember that a class function is called method. Functions have an empty string
-        for the parent class.
 
         Returns:
             A set of functions.
