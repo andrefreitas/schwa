@@ -85,10 +85,6 @@ class FeatureWeightLearner:
         non_zero = lambda r, f, a: r * f * a > 0
         self.constraints.extend([sum_is_one, non_zero])
 
-    def update_analytics(self, analytics, commit):
-        analytics.update(ts=commit.timestamp, begin_ts=self.repo.begin_ts, current_ts=self.repo.last_ts,
-                         is_bug_fixing=commit.is_bug_fixing(), author=commit.author)
-
     def fitness_wrapper(self, individual):
         revisions_weight, fixes_weight, authors_weight = self.decode_individual(individual)
         return self.fitness(revisions_weight, fixes_weight, authors_weight),
@@ -121,20 +117,17 @@ class FeatureWeightLearner:
             involved_components = set()
 
             # Repository Granularity
-            self.update_analytics(analytics, commit)
+            SchwaAnalysis.update_analytics(self.repo, analytics, commit)
 
             # File Granularity
-            parent_analytics_dict = analytics.files_analytics
-            files_diffs = [diff for diff in commit.diffs if isinstance(diff, DiffFile)]
-            for diff in files_diffs:
+            for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
+                file_analytics = SchwaAnalysis.create_analytics_from_diff(self.repo, analytics, diff, commit, FileAnalytics)
 
-                file_analytics = SchwaAnalysis.get_analytics_from_tree(parent_analytics_dict, diff, FileAnalytics())
                 if diff.renamed or diff.removed:
-                    all_components.discard(diff.file_a)
+                    all_components.discard(diff.version_a)
                 if file_analytics:
-                    involved_components.add(diff.file_b)
-                    all_components.add(diff.file_b)
-                    self.update_analytics(file_analytics, commit)
+                    involved_components.add(diff.version_b)
+                    all_components.add(diff.version_b)
 
             # Compute distance
             if commit.is_bug_fixing():
@@ -160,7 +153,7 @@ class FeatureWeightLearner:
         schwa_sum = 0
         n = 0
         for component in components:
-            a = analytics.files_analytics[component]
+            a = analytics.get_analytics(repr(component))
             if a.last_twr:
                 revisions, fixes, authors = a.last_twr
                 schwa_prob = Metrics.compute_defect_probability(revisions, fixes, authors,

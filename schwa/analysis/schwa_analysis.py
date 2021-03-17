@@ -31,7 +31,8 @@ class SchwaAnalysis(AbstractAnalysis):
     def __init__(self, repository):
         super().__init__(repository)
 
-    def update_analytics(self, analytics, commit):
+    @staticmethod
+    def update_analytics(repository, analytics, commit):
         """ Updates analytics.
 
         By giving commit data, updates the component analytics.
@@ -41,10 +42,11 @@ class SchwaAnalysis(AbstractAnalysis):
             commit: A commit instance.
         """
 
-        analytics.update(ts=commit.timestamp, begin_ts=self.repository.begin_ts, current_ts=self.repository.last_ts,
+        analytics.update(ts=commit.timestamp, begin_ts=repository.begin_ts, current_ts=repository.last_ts,
                          is_bug_fixing=commit.is_bug_fixing(), author=commit.author)
 
-    def create_analytics_from_diff(self, parent_analytics, diff, commit, instance):
+    @staticmethod
+    def create_analytics_from_diff(repository, parent_analytics, diff, commit, instance):
         analytics = None
 
         if diff.added:
@@ -73,7 +75,9 @@ class SchwaAnalysis(AbstractAnalysis):
 
         if not diff.removed and analytics != None:
             # Update analytics
-            self.update_analytics(analytics, commit)
+            SchwaAnalysis.update_analytics(repository, analytics, commit)
+
+        return analytics
 
     def analyze(self):
         """ Analyzes a repository and creates analytics.
@@ -89,11 +93,11 @@ class SchwaAnalysis(AbstractAnalysis):
         for commit in self.repository.commits:
 
             # Repository Granularity
-            self.update_analytics(analytics, commit)
+            self.update_analytics(self.repository, analytics, commit)
 
             # File Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffFile)]:
-                self.create_analytics_from_diff(analytics, diff, commit, FileAnalytics)
+                SchwaAnalysis.create_analytics_from_diff(self.repository, analytics, diff, commit, FileAnalytics)
 
             # Class Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffClass)]:
@@ -102,7 +106,7 @@ class SchwaAnalysis(AbstractAnalysis):
                     # Parent component (i.e., file or class) no longer exist,
                     # thus no analytics is required
                     continue
-                self.create_analytics_from_diff(parent_analytics, diff, commit, ClassAnalytics)
+                SchwaAnalysis.create_analytics_from_diff(self.repository, parent_analytics, diff, commit, ClassAnalytics)
 
             # Method Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffMethod)]:
@@ -111,7 +115,7 @@ class SchwaAnalysis(AbstractAnalysis):
                     # Parent component (i.e., file, class, or method) no longer
                     # exist, thus no analytics is required
                     continue
-                self.create_analytics_from_diff(parent_analytics, diff, commit, MethodAnalytics)
+                SchwaAnalysis.create_analytics_from_diff(self.repository, parent_analytics, diff, commit, MethodAnalytics)
 
             # Line Granularity
             for diff in [diff for diff in commit.diffs if isinstance(diff, DiffLine)]:
@@ -120,7 +124,7 @@ class SchwaAnalysis(AbstractAnalysis):
                     # Parent component (i.e., file, class, or method) no longer
                     # exist, thus no analytics is required
                     continue
-                self.create_analytics_from_diff(parent_analytics, diff, commit, LineAnalytics)
+                SchwaAnalysis.create_analytics_from_diff(self.repository, parent_analytics, diff, commit, LineAnalytics)
 
         analytics.compute_defect_probability()
 
