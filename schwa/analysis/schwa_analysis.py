@@ -45,6 +45,8 @@ class SchwaAnalysis(AbstractAnalysis):
                          is_bug_fixing=commit.is_bug_fixing(), author=commit.author)
 
     def create_analytics_from_diff(self, parent_analytics, diff, commit, instance):
+        analytics = None
+
         if diff.added:
             # Create analytics
             analytics = instance(repr(diff.version_b), repr(diff.version_b.name), parent_analytics)
@@ -56,22 +58,20 @@ class SchwaAnalysis(AbstractAnalysis):
                 analytics = instance(repr(diff.version_b), repr(diff.version_b.name), parent_analytics)
 
         elif diff.renamed:
-            analytics = parent_analytics.get_analytics(repr(diff.version_a))
-            child_analytics = set()
-            if analytics != None:
-                # Before removing it, get version A's children
-                child_analytics = copy.deepcopy(analytics.analytics)
+            analytics_renamed = parent_analytics.get_analytics(repr(diff.version_a))
+            if analytics_renamed != None:
                 # Remove version_a
                 parent_analytics.del_analytics(repr(diff.version_a))
-            # Create new analytics and update it with children of version A (if any)
-            analytics = instance(repr(diff.version_b), repr(diff.version_b.name), parent_analytics)
-            analytics.analytics = child_analytics
+                # Create new analytics
+                analytics = instance(repr(diff.version_b), repr(diff.version_b.name), parent_analytics)
+                # Update its metrics
+                analytics.copy_metrics_from(analytics_renamed)
 
         elif diff.removed:
             # Remove version_a
             parent_analytics.del_analytics(repr(diff.version_a))
 
-        if not diff.removed:
+        if not diff.removed and analytics != None:
             # Update analytics
             self.update_analytics(analytics, commit)
 

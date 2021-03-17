@@ -71,6 +71,19 @@ class Metrics:
         self.defect_prob = 0
         self.last_twr = None
 
+    def copy_metrics_from(self, source):
+        self.revisions_timestamps = source.revisions_timestamps
+        self.fixes_timestamps = source.fixes_timestamps
+        self.authors_timestamps = source.authors_timestamps
+        self.revisions_twr = source.revisions_twr
+        self.fixes_twr = source.fixes_twr
+        self.authors_twr = source.authors_twr
+        self.authors = source.authors
+        self.fixes = source.fixes
+        self.revisions = source.revisions
+        self.defect_prob = source.defect_prob
+        self.last_twr = source.last_twr
+
     @staticmethod
     def twr(begin_ts, ts, current_ts):
         """ Computes a Time Weighted Risk parcel.
