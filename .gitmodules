@@ -1,3 +1,4 @@
 [submodule "javalang"]
 	path = javalang
 	url = https://github.com/jose/javalang
+	branch = schwa
