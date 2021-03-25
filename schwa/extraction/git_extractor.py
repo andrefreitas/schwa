@@ -209,10 +209,11 @@ class GitExtractor(AbstractExtractor):
     def get_source(self, blob):
         try:
             stream = blob.data_stream.read()
-            source = stream.decode("UTF-8", "ignore")
-        except AttributeError:
-            raise JavaSyntaxError
-        return source
+            source = stream.decode(encoding='UTF-8')
+            return source
+        except UnicodeDecodeError:
+            pass
+        return ""
 
     def parse(self, path, source):
         try:
