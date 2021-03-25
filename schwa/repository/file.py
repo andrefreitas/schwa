@@ -83,8 +83,8 @@ class Component:
         for component in self.components:
             if component.range_hit(start_line, end_line):
                 components_hit.add(component)
-                # and all components within start_line and end_line
-                components_hit.update(component.get_components_hit(start_line, end_line))
+            # and all components within start_line and end_line
+            components_hit.update(component.get_components_hit(start_line, end_line))
         return components_hit
 
     def __get_components_of_type(self, type):
