@@ -202,7 +202,7 @@ class Metrics:
 
 def strip_path(path):
     """ Extracts only the file name of a path """
-    path = path.replace("'", '')
+    path = path.replace("'", '').replace('"', '')
     pos = path.rfind("/")
     if pos == -1:
         return path
@@ -221,7 +221,7 @@ class RepositoryAnalytics(Metrics):
     def __init__(self, id="root", name="root", type="", parent=None):
         super().__init__()
         self.id = id
-        self.name = name
+        self.name = name.replace("'", '').replace('"', '')
         self.type = type
         self.parent = parent
         self.analytics = set()
@@ -288,7 +288,7 @@ class FileAnalytics(RepositoryAnalytics):
 
     def __init__(self, id, name, parent):
         super().__init__(id=id, name=strip_path(name), type="file", parent=parent)
-        self.path = name.replace("'", '')
+        self.path = name.replace("'", '').replace('"', '')
 
 
 class ClassAnalytics(RepositoryAnalytics):
