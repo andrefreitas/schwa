@@ -51,7 +51,9 @@ class JavaParser(AbstractParser):
             JavaSyntaxError: When the source code is not valid Java.
         """
         tree = jl.parse.parse(code)
-        file = File(path=path, start_line=tree.start_position.line, end_line=tree.end_position.line)
+        start_line = None if tree.start_position == None else tree.start_position.line
+        end_line = None if tree.end_position == None else tree.end_position.line
+        file = File(path=path, start_line=start_line, end_line=end_line)
         JavaParser.traverse_for_classes(granularity, file, tree)
         return file
 
