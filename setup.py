@@ -21,7 +21,6 @@
 """ Installation and deployment script. """
 
 
-from javalang import setup # load setup of javalang submodule
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
 import os
