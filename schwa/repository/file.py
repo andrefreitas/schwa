@@ -224,3 +224,4 @@ class Line(Component):
 
     def __init__(self, name, start_line, end_line, parent):
         super().__init__(name, start_line, end_line, parent)
+        assert start_line == end_line, "start line number (" + str(start_line) + ") of " + self.__repr__() + " is not equal to its end line number (" + str(end_line) + ")"

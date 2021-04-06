@@ -68,7 +68,8 @@ class JavaParser(AbstractParser):
                 else:
                     if hasattr(child, 'start_position') and hasattr(child, 'end_position') and \
                         child.start_position != None and child.end_position != None:
-                        Line(name=child.start_position.line, start_line=child.start_position.line, end_line=child.end_position.line, parent=parent)
+                        for line_number in range(child.start_position.line, child.end_position.line+1):
+                            Line(name=line_number, start_line=line_number, end_line=line_number, parent=parent)
 
     @staticmethod
     def get_composed_arg_str(type):
@@ -97,7 +98,7 @@ class JavaParser(AbstractParser):
 
             if granularity == Granularity.LINE:
                 # Method's declaration line
-                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.end_line, parent=p_component)
+                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.start_line, parent=p_component)
                 # Traverse lines of this method
                 JavaParser.traverse_for_lines(granularity, p_component, node)
 
@@ -131,7 +132,7 @@ class JavaParser(AbstractParser):
 
             if granularity == Granularity.LINE:
                 # Class's declaration line
-                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.end_line, parent=p_component)
+                Line(name=p_component.start_line, start_line=p_component.start_line, end_line=p_component.start_line, parent=p_component)
 
             if granularity == Granularity.METHOD or granularity == Granularity.LINE:
                 # Traverse methods of this class
