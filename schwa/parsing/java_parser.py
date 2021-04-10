@@ -22,8 +22,10 @@
 
 import difflib
 import re
+import traceback
 import javalang as jl
 from javalang.parser import JavaSyntaxError
+from javalang.tokenizer import LexerError
 from .abstract_parser import AbstractParser
 from schwa.repository import *
 
@@ -230,7 +232,8 @@ class JavaParser(AbstractParser):
         try:
             parsed_file_a = JavaParser.parse(granularity, path_a, source_a)
             parsed_file_b = JavaParser.parse(granularity, path_b, source_b)
-        except JavaSyntaxError:
+        except (JavaSyntaxError, LexerError):
+            traceback.print_exc()
             return diffs
         changed_a = set()
         changed_b = set()

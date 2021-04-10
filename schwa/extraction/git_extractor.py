@@ -23,9 +23,12 @@
 import multiprocessing
 import os
 import git
+import traceback
+from javalang.parser import JavaSyntaxError
+from javalang.tokenizer import LexerError
 from .abstract_extractor import *
 from schwa.repository import *
-from schwa.parsing import JavaParser, JavaSyntaxError
+from schwa.parsing import JavaParser
 
 
 current_repo = None  # Curent repository wrapper
@@ -220,7 +223,8 @@ class GitExtractor(AbstractExtractor):
             if "java" in path:
                 components = JavaParser.parse(self.granularity, path, source)
                 return components
-        except JavaSyntaxError:
+        except (JavaSyntaxError, LexerError):
+            traceback.print_exc()
             pass
         return False
 
